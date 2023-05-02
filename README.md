@@ -243,7 +243,7 @@ Details on the steps I took to create this project.
       * https://github.com/my-username/my-app-repo
       * my-app-repo
       */
-     base: '/vue3-web-app-template-2023/',
+     base: '/REPO_NAME/',
    })
    ```
 
@@ -338,7 +338,11 @@ Details on the steps I took to create this project.
    </html>
    ```
 
-1. Add icons, manifest file, and update `useMeta` in `~/src/App.vue`
+1. Update the `manifest.json` file in `~/public` with the project name and start URL
+
+1. Update `useMeta` in `~/src/App.vue`
+
+1. Add icons to the `~/public` directory (like `favicon.ico`)
 
 1. Run `git init` inside your project directory
 

@@ -1,7 +1,7 @@
 {
   "name": "Web Template App",
   "short_name": "Web Template App",
-  "start_url": "https://michael-255.github.io/vue3-web-app-template-2023/",
+  "start_url": "https://michael-255.github.io/vue3-web-app-template-v4/",
   "theme_color": "#1976D2",
   "background_color": "#000000",
   "display": "standalone",
