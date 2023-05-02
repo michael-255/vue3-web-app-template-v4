@@ -99,7 +99,7 @@ export enum Field {
   // CHILDREN
   NOTE = 'note',
   // EXAMPLES
-  NUMBER = 'number',
+  TEST_NUMBER = 'testNumber',
   // TESTS
   PERCENTAGE = 'percentage',
 }
@@ -244,10 +244,10 @@ export type Note = string
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record Number type for example records.
+ * Database record TestNumber type for example records.
  * @note Must be between Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER with steps of 0.01
  */
-export type Number = number
+export type TestNumber = number
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //

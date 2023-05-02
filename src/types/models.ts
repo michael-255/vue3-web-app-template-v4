@@ -1,9 +1,24 @@
 import type {
   DatabaseField,
   DatabaseType,
+  Description,
+  Details,
+  Field,
+  IsEnabled,
+  IsFavorited,
+  Label,
+  Message,
+  Name,
+  Note,
+  PK,
+  Percentage,
+  SK,
   SettingId,
   SettingValue,
   Severity,
+  Stack,
+  TestNumber,
+  Value,
 } from '@/types/database'
 import type { Optional } from '@/types/misc'
 
@@ -94,3 +109,77 @@ export type Test = Example
  * Test child type.
  */
 export type TestResult = ExampleResult
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Database Record interface. Contains all potential fields for a database record.
+ * @note Cast the result to a more specific tpye if known. Cast back when saving or updating the database.
+ */
+export interface Record {
+  // ALL
+  [Field.PK]: PK
+  [Field.SK]: SK
+  // LOGS
+  [Field.SEVERITY]?: Severity
+  [Field.LABEL]?: Label
+  [Field.DETAILS]?: Details
+  [Field.MESSAGE]?: Message
+  [Field.STACK]?: Stack
+  // SETTINGS
+  [Field.VALUE]?: Value
+  // PARENTS
+  [Field.NAME]?: Name
+  [Field.DESCRIPTION]?: Description
+  [Field.IS_ENABLED]?: IsEnabled
+  [Field.IS_FAVORITED]?: IsFavorited
+  // CHILDREN
+  [Field.NOTE]?: Note
+  // EXAMPLES
+  [Field.TEST_NUMBER]?: TestNumber
+  // TESTS
+  [Field.PERCENTAGE]?: Percentage
+}
+
+// /**
+//  * TODO
+//  */
+// export type Log = Pick<
+//   Record,
+//   Field.PK | Field.SK | Field.SEVERITY | Field.LABEL | Field.DETAILS | Field.MESSAGE | Field.STACK
+// >
+
+// /**
+//  * TODO
+//  */
+// export type Setting = Pick<Record, Field.PK | Field.SK | Field.VALUE>
+
+// /**
+//  * TODO
+//  */
+// export type ExampleParent = Pick<
+//   Record,
+//   Field.PK | Field.SK | Field.NAME | Field.DESCRIPTION | Field.IS_ENABLED | Field.IS_FAVORITED
+// >
+
+// /**
+//  * TODO
+//  */
+// export type TestParent = Pick<
+//   Record,
+//   Field.PK | Field.SK | Field.NAME | Field.DESCRIPTION | Field.IS_ENABLED | Field.IS_FAVORITED
+// >
+
+// /**
+//  * TODO
+//  */
+// export type ExampleChild = Pick<Record, Field.PK | Field.SK | Field.NOTE | Field.TEST_NUMBER>
+
+// /**
+//  * TODO
+//  */
+// export type TestChild = Pick<Record, Field.PK | Field.SK | Field.NOTE | Field.PERCENTAGE>
