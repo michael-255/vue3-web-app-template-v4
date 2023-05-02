@@ -141,7 +141,7 @@ onUnmounted(() => {
       <QTr :props="props">
         <!-- Do not show "hiddenType" and "hiddenId" -->
         <QTh
-          v-for="col in props.cols"
+          v-for="col in (props.cols as QTableColumn[])"
           v-show="col.name !== 'hiddenType' && col.name !== 'hiddenId'"
           :key="col.name"
           :props="props"
@@ -155,7 +155,7 @@ onUnmounted(() => {
     <!-- Rows -->
     <template v-slot:body="props">
       <QTr :props="props">
-        <QTd v-for="col in props.cols" :key="col.name" :props="props">
+        <QTd v-for="col in (props.cols as any[])" :key="col.name" :props="props">
           {{ col.value }}
         </QTd>
         <QTd auto-width>
