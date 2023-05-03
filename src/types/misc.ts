@@ -71,25 +71,13 @@ export enum Milliseconds {
 }
 
 /**
- * Log retention duration strings.
- */
-export enum LogRetention {
-  ONE_WEEK = '1 Week',
-  ONE_MONTH = '1 Month',
-  THREE_MONTHS = '3 Months',
-  SIX_MONTHS = '6 Months',
-  ONE_YEAR = '1 Year',
-  FOREVER = 'Forever',
-}
-
-/**
  * Chart graphing time options.
  */
 export enum ChartTime {
   ONE_MONTH = '1 Month',
   THREE_MONTHS = '3 Months',
   SIX_MONTHS = '6 Months',
-  ONE_YEAR = '1 Year',
+  ONE_YEAR = 'One Year',
   ALL_TIME = 'All Time',
 }
 

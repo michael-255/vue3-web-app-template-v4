@@ -1,11 +1,10 @@
 import type {
-  DatabaseField,
-  DatabaseType,
-  Description,
+  Severity,
+  Desc,
   Details,
+  Enabled,
+  Favorited,
   Field,
-  IsEnabled,
-  IsFavorited,
   Label,
   Message,
   Name,
@@ -13,112 +12,15 @@ import type {
   PK,
   Percentage,
   SK,
-  SettingId,
-  SettingValue,
-  Severity,
   Stack,
   TestNumber,
   Value,
 } from '@/types/database'
-import type { Optional } from '@/types/misc'
-
-/**
- * All database record types. Cast your result to the one you are currently working with if known.
- * Cast back to this type when saving or updating the database.
- */
-export interface DatabaseRecord {
-  // All
-  [DatabaseField.TYPE]: DatabaseType
-  [DatabaseField.ID]: string | SettingId
-  // Settings
-  [DatabaseField.VALUE]?: SettingValue
-  // Logs
-  [DatabaseField.CREATED_TIMESTAMP]?: number
-  [DatabaseField.SEVERITY]?: Severity
-  [DatabaseField.LABEL]?: string
-  [DatabaseField.DETAILS]?: Optional<any>
-  [DatabaseField.MESSAGE]?: Optional<string>
-  [DatabaseField.STACK]?: Optional<string>
-  // Parent
-  [DatabaseField.NAME]?: string
-  [DatabaseField.DESCRIPTION]?: Optional<string>
-  [DatabaseField.IS_FAVORITED]?: boolean
-  [DatabaseField.IS_ENABLED]?: boolean
-  // Child
-  [DatabaseField.PARENT_ID]?: string
-  [DatabaseField.NOTE]?: Optional<string>
-  // Examples & Tests
-  [DatabaseField.NUMBER]?: Optional<number>
-}
-
-/**
- * Core app setting type.
- */
-export type Setting = Pick<
-  DatabaseRecord,
-  DatabaseField.TYPE | DatabaseField.ID | DatabaseField.VALUE
->
-
-/**
- * Core app log type.
- */
-export type Log = Pick<
-  DatabaseRecord,
-  | DatabaseField.TYPE
-  | DatabaseField.ID
-  | DatabaseField.CREATED_TIMESTAMP
-  | DatabaseField.SEVERITY
-  | DatabaseField.LABEL
-  | DatabaseField.DETAILS
-  | DatabaseField.MESSAGE
-  | DatabaseField.STACK
->
-
-/**
- * Example parent type.
- */
-export type Example = Pick<
-  DatabaseRecord,
-  | DatabaseField.TYPE
-  | DatabaseField.ID
-  | DatabaseField.NAME
-  | DatabaseField.DESCRIPTION
-  | DatabaseField.IS_FAVORITED
-  | DatabaseField.IS_ENABLED
->
-
-/**
- * Example child type.
- */
-export type ExampleResult = Pick<
-  DatabaseRecord,
-  | DatabaseField.TYPE
-  | DatabaseField.ID
-  | DatabaseField.CREATED_TIMESTAMP
-  | DatabaseField.PARENT_ID
-  | DatabaseField.NOTE
-  | DatabaseField.NUMBER
->
-
-/**
- * Test parent type.
- */
-export type Test = Example
-
-/**
- * Test child type.
- */
-export type TestResult = ExampleResult
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Database Record interface. Contains all potential fields for a database record.
- * @note Cast the result to a more specific tpye if known. Cast back when saving or updating the database.
+ * - Cast the result to a more specific type if known after fetching from the database
+ * - Cast back to a generic Record when saving or updating the database record if necessary
  */
 export interface Record {
   // ALL
@@ -134,52 +36,75 @@ export interface Record {
   [Field.VALUE]?: Value
   // PARENTS
   [Field.NAME]?: Name
-  [Field.DESCRIPTION]?: Description
-  [Field.IS_ENABLED]?: IsEnabled
-  [Field.IS_FAVORITED]?: IsFavorited
+  [Field.DESC]?: Desc
+  [Field.ENABLED]?: Enabled
+  [Field.FAVORITED]?: Favorited
   // CHILDREN
   [Field.NOTE]?: Note
   // EXAMPLES
-  [Field.TEST_NUMBER]?: TestNumber
-  // TESTS
   [Field.PERCENTAGE]?: Percentage
+  // TESTS
+  [Field.TEST_NUMBER]?: TestNumber
 }
 
-// /**
-//  * TODO
-//  */
-// export type Log = Pick<
-//   Record,
-//   Field.PK | Field.SK | Field.SEVERITY | Field.LABEL | Field.DETAILS | Field.MESSAGE | Field.STACK
-// >
+/**
+ * Database Log record type.
+ * - pk: log-uid
+ * - sk: timestamp
+ */
+export type Log = RequiredLog & OptionalLog
 
-// /**
-//  * TODO
-//  */
-// export type Setting = Pick<Record, Field.PK | Field.SK | Field.VALUE>
+type RequiredLog = Required<Pick<Record, Field.PK | Field.SK | Field.SEVERITY | Field.LABEL>>
+type OptionalLog = Partial<Pick<Record, Field.DETAILS | Field.MESSAGE | Field.STACK>>
 
-// /**
-//  * TODO
-//  */
-// export type ExampleParent = Pick<
-//   Record,
-//   Field.PK | Field.SK | Field.NAME | Field.DESCRIPTION | Field.IS_ENABLED | Field.IS_FAVORITED
-// >
+/**
+ * Database Setting record type.
+ * - pk: setting
+ * - sk: SettingId
+ */
+export type Setting = RequiredSetting & OptionalSetting
 
-// /**
-//  * TODO
-//  */
-// export type TestParent = Pick<
-//   Record,
-//   Field.PK | Field.SK | Field.NAME | Field.DESCRIPTION | Field.IS_ENABLED | Field.IS_FAVORITED
-// >
+type RequiredSetting = Required<Pick<Record, Field.PK | Field.SK>>
+type OptionalSetting = Partial<Pick<Record, Field.VALUE>>
 
-// /**
-//  * TODO
-//  */
-// export type ExampleChild = Pick<Record, Field.PK | Field.SK | Field.NOTE | Field.TEST_NUMBER>
+/**
+ * Database ExampleParent record type.
+ * - pk: example-uid
+ * - sk: parent
+ */
+export type ExampleParent = RequiredExampleParent
 
-// /**
-//  * TODO
-//  */
-// export type TestChild = Pick<Record, Field.PK | Field.SK | Field.NOTE | Field.PERCENTAGE>
+type RequiredExampleParent = Required<
+  Pick<Record, Field.PK | Field.SK | Field.NAME | Field.DESC | Field.ENABLED | Field.FAVORITED>
+>
+
+/**
+ * Database TestParent record type.
+ * - pk: test-uid
+ * - sk: parent
+ */
+export type TestParent = RequiredTestParent
+
+type RequiredTestParent = Required<
+  Pick<Record, Field.PK | Field.SK | Field.NAME | Field.DESC | Field.ENABLED | Field.FAVORITED>
+>
+
+/**
+ * Database ExampleChild record type.
+ * - pk: example-uid
+ * - sk: timestamp
+ */
+export type ExampleChild = RequiredExampleChild
+
+type RequiredExampleChild = Required<
+  Pick<Record, Field.PK | Field.SK | Field.NOTE | Field.TEST_NUMBER>
+>
+
+/**
+ * Database TestChild record type.
+ * - pk: test-uid
+ * - sk: timestamp
+ */
+export type TestChild = RequiredTestChild
+
+type RequiredTestChild = Required<Pick<Record, Field.PK | Field.SK | Field.NOTE | Field.PERCENTAGE>>

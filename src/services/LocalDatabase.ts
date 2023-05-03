@@ -1,95 +1,111 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
-import type { DatabaseRecord, Log, Setting } from '@/types/models'
-import { LogRetention, Milliseconds, AppName } from '@/types/misc'
+import type { Log, Record, Setting } from '@/types/models'
+import { Milliseconds, AppName } from '@/types/misc'
 import { Dark, uid } from 'quasar'
 import {
-  DatabaseVersion,
-  DatabaseField,
-  DatabaseType,
   SettingId,
   Severity,
-  type DatabaseParentType,
-  type DatabaseChildType,
-  type SettingValue,
+  Version,
+  RecordsIndices,
+  Type,
+  Delimiter,
+  Field,
+  type PK,
+  type SK,
+  type Id,
+  type Label,
+  type Details,
+  type Value,
+  LogRetention,
+  Category,
 } from '@/types/database'
-import {
-  getChildCategoryTypes,
-  getParentCategoryTypes,
-  getUserCategoryTypes,
-} from '@/services/Blueprints'
-import { SettingDefault } from '@/services/Defaults'
 
 /**
  * A Dexie wrapper class that acts as a local database.
  */
 export class LocalDatabase extends Dexie {
-  Records!: Table<DatabaseRecord>
+  Records!: Table<Record>
 
   constructor(name: string) {
-    super(`${name} v${DatabaseVersion}`)
+    super(`${name} v${Version}`)
 
     this.version(1).stores({
-      Records: `&[${DatabaseField.TYPE}+${DatabaseField.ID}], [${DatabaseField.TYPE}+${DatabaseField.PARENT_ID}]`,
+      Records: RecordsIndices,
     })
   }
 
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
-  // MISCELLANEOUS                                                           //
+  //     MISCELLANEOUS                                                       //
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Combine a type and id into a primary key separated by a delimiter.
+   * @param type
+   * @param id
+   */
+  createPK(type: Type, id: Id): PK {
+    return `${type}${Delimiter}${id}`
+  }
+
+  /**
+   * Determines if the SK is of the 'parent' category.
+   * @param sk
+   */
+  isParent(sk: SK) {
+    return sk === Category.PARENT
+  }
+
+  /**
+   * Determines if the SK is a timestamp (child) category.
+   * @param sk
+   */
+  isTimestamp(sk: SK) {
+    return typeof sk === 'number'
+  }
 
   /**
    * Initializes all settings with existing or default values.
    */
   async initSettings() {
-    // Defaults are set after the nullish coalescing operator, which means no setting data was found
-    const showIntroduction =
-      (await this.getRecord(DatabaseType.SETTING, SettingId.SHOW_INTRODUCTION))?.[
-        DatabaseField.VALUE
-      ] ?? SettingDefault[SettingId.SHOW_INTRODUCTION]
-    const showDashboardDescriptions =
-      (await this.getRecord(DatabaseType.SETTING, SettingId.SHOW_DASHBOARD_DESCRIPTIONS))?.[
-        DatabaseField.VALUE
-      ] ?? SettingDefault[SettingId.SHOW_DASHBOARD_DESCRIPTIONS]
-    const darkMode =
-      (await this.getRecord(DatabaseType.SETTING, SettingId.DARK_MODE))?.[DatabaseField.VALUE] ??
-      SettingDefault[SettingId.DARK_MODE]
-    const showAllDataColumns =
-      (await this.getRecord(DatabaseType.SETTING, SettingId.SHOW_ALL_DATA_COLUMNS))?.[
-        DatabaseField.VALUE
-      ] ?? SettingDefault[SettingId.SHOW_ALL_DATA_COLUMNS]
-    const showConsoleLogs =
-      (await this.getRecord(DatabaseType.SETTING, SettingId.SHOW_CONSOLE_LOGS))?.[
-        DatabaseField.VALUE
-      ] ?? SettingDefault[SettingId.SHOW_CONSOLE_LOGS]
-    const showInfoMessages =
-      (await this.getRecord(DatabaseType.SETTING, SettingId.SHOW_INFO_MESSAGES))?.[
-        DatabaseField.VALUE
-      ] ?? SettingDefault[SettingId.SHOW_INFO_MESSAGES]
-    const logRetentionTime =
-      (await this.getRecord(DatabaseType.SETTING, SettingId.LOG_RETENTION_TIME))?.[
-        DatabaseField.VALUE
-      ] ?? SettingDefault[SettingId.LOG_RETENTION_TIME]
+    const lookupDefault: Readonly<{
+      [key in SettingId]: Value
+    }> = {
+      [SettingId.SHOW_INTRODUCTION]: true,
+      [SettingId.SHOW_DASHBOARD_DESCRIPTIONS]: true,
+      [SettingId.DARK_MODE]: true,
+      [SettingId.SHOW_ALL_DATA_COLUMNS]: false,
+      [SettingId.SHOW_CONSOLE_LOGS]: false,
+      [SettingId.SHOW_INFO_MESSAGES]: true,
+      [SettingId.LOG_RETENTION_TIME]: LogRetention.THREE_MONTHS,
+    }
+
+    const settingIds = Object.values(SettingId)
+
+    const settings = await Promise.all(
+      settingIds.map(async (settingId) => {
+        const setting = await this.getByPKSK(Type.SETTING, settingId)
+        const value = setting?.value ?? lookupDefault[settingId]
+
+        return {
+          settingId,
+          value,
+        }
+      })
+    )
 
     // Set Quasar dark mode
+    const darkMode = settings.find((s) => s.settingId === SettingId.DARK_MODE)?.value
     Dark.set(!!darkMode) // Cast to boolean
 
-    // Set all settings before continuing
-    await Promise.all([
-      this.setSetting(SettingId.SHOW_INTRODUCTION, showIntroduction),
-      this.setSetting(SettingId.SHOW_DASHBOARD_DESCRIPTIONS, showDashboardDescriptions),
-      this.setSetting(SettingId.DARK_MODE, darkMode),
-      this.setSetting(SettingId.SHOW_ALL_DATA_COLUMNS, showAllDataColumns),
-      this.setSetting(SettingId.SHOW_CONSOLE_LOGS, showConsoleLogs),
-      this.setSetting(SettingId.SHOW_INFO_MESSAGES, showInfoMessages),
-      this.setSetting(SettingId.LOG_RETENTION_TIME, logRetentionTime),
-    ])
+    // Set all Settings in the database
+    await Promise.all(settings.map((s) => this.setSetting(s.settingId, s.value)))
   }
 
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
-  // LIVE QUERIES                                                            //
+  //     LIVE QUERIES                                                        //
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
@@ -97,295 +113,302 @@ export class LocalDatabase extends Dexie {
    * Observable of the Settings database type.
    */
   liveSettings() {
-    return liveQuery(() =>
-      this.Records.where(DatabaseField.TYPE).equals(DatabaseType.SETTING).sortBy(DatabaseField.ID)
-    )
+    return liveQuery(() => this.Records.where(Field.PK).equals(Type.SETTING).sortBy(Field.SK))
   }
 
   /**
-   * Observable of the Settings, Examples, and Tests database types sorted by name (when present).
+   * Observable of the Settings, Examples, and Tests database types sorted by name.
    */
   liveDashboard() {
     return liveQuery(() =>
-      this.Records.where(DatabaseField.TYPE)
-        .anyOf(DatabaseType.SETTING, DatabaseType.EXAMPLE, DatabaseType.TEST)
-        .sortBy(DatabaseField.NAME)
+      this.Records.where(Field.PK)
+        .startsWithAnyOf(Type.SETTING, Type.EXAMPLE, Type.TEST)
+        .sortBy(Field.NAME)
     )
   }
 
   /**
    * Observable of the provided database type with preferred sorting.
    * @param type
+   * @param category
    */
-  liveDataType(type: DatabaseType) {
-    if (getParentCategoryTypes().includes(type as DatabaseParentType)) {
-      // Parent types are sorted by name
+  liveDataType(type: Type, category: Category) {
+    // Setting and Log queries have no parent or child SK categories
+    if (type === Type.SETTING) {
+      // Settings must match exactly on the PK and use SettingId as the SK
+      return liveQuery(() => this.Records.where(Field.PK).equals(Type.SETTING).sortBy(Field.SK))
+    } else if (type === Type.LOG) {
+      // Logs must start with 'log' as the PK (they also have a uid after) and use a timestamp as the SK
       return liveQuery(() =>
-        this.Records.where(DatabaseField.TYPE).equals(type).sortBy(DatabaseField.NAME)
+        this.Records.where(Field.PK).startsWithIgnoreCase(Type.LOG).reverse().sortBy(Field.SK)
       )
-    } else if (
-      getChildCategoryTypes().includes(type as DatabaseChildType) ||
-      type === DatabaseType.LOG
-    ) {
-      // Child types and Logs are sorted by created timestamp in reverse order (desc).
-      return liveQuery(() =>
-        this.Records.where(DatabaseField.TYPE)
-          .equals(type)
-          .reverse()
-          .sortBy(DatabaseField.CREATED_TIMESTAMP)
-      )
-    } else if (type === DatabaseType.SETTING) {
-      // Settings are sorted by id
-      return liveQuery(() =>
-        this.Records.where(DatabaseField.TYPE).equals(type).sortBy(DatabaseField.ID)
-      )
-    } else {
-      // Everything else is not sorted
-      return liveQuery(() => this.Records.where(DatabaseField.TYPE).equals(type).toArray())
+    }
+
+    // Queries that must seperate parent and child SK categories (parent and timestamp)
+    const userDataQueries = {
+      [Type.EXAMPLE]: {
+        [Category.PARENT]: () =>
+          this.Records.where(Field.PK)
+            .startsWithIgnoreCase(Type.EXAMPLE)
+            .filter((r) => this.isParent(r.sk))
+            .sortBy(Field.NAME),
+        [Category.CHILD]: () =>
+          this.Records.where(Field.PK)
+            .startsWithIgnoreCase(Type.EXAMPLE)
+            .filter((r) => this.isTimestamp(r.sk))
+            .reverse()
+            .sortBy(Field.SK),
+      },
+      [Type.TEST]: {
+        [Category.PARENT]: () =>
+          this.Records.where(Field.PK)
+            .startsWithIgnoreCase(Type.TEST)
+            .filter((r) => this.isParent(r.sk))
+            .sortBy(Field.NAME),
+        [Category.CHILD]: () =>
+          this.Records.where(Field.PK)
+            .startsWithIgnoreCase(Type.TEST)
+            .filter((r) => this.isTimestamp(r.sk))
+            .reverse()
+            .sortBy(Field.SK),
+      },
+    }
+
+    const query = userDataQueries[type][category]
+
+    if (query) {
+      return liveQuery(query)
     }
   }
 
   /**
-   * Observable of the Parent and Child category database types.
+   * Observable of all Parent and Child records that the user interacts with sorted by SK.
+   * These are the Records that are displayed in the Curing page if there is an issue.
    */
   liveRecordCuring() {
     return liveQuery(() =>
-      this.Records.where(DatabaseField.TYPE).anyOf(getUserCategoryTypes()).toArray()
+      this.Records.where(Field.PK).startsWithAnyOf(Type.EXAMPLE, Type.TEST).sortBy(Field.SK)
     )
   }
 
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
-  // CREATE                                                                  //
+  //     CREATE                                                              //
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Create a new log record with the provided severity, label, and details.
-   * @param severity
-   * @param label
-   * @param details
-   */
-  async addLog(severity: Severity, label: string, details?: any) {
-    const log = {
-      [DatabaseField.TYPE]: DatabaseType.LOG,
-      [DatabaseField.ID]: uid(),
-      [DatabaseField.CREATED_TIMESTAMP]: new Date().getTime(),
-      [DatabaseField.SEVERITY]: severity,
-      [DatabaseField.LABEL]: label,
-      // Remaining properties are determined by details
-    } as Log
-
-    // It's an error type if it has a message or stack
-    // This separation is required to prevent circular errors
-    if (
-      typeof details === 'object' &&
-      details !== null &&
-      ('message' in details || 'stack' in details)
-    ) {
-      log[DatabaseField.MESSAGE] = details.message
-      log[DatabaseField.STACK] = details.stack
-    } else {
-      log[DatabaseField.DETAILS] = JSON.stringify(details)
-    }
-
-    return await this.Records.add(log as DatabaseRecord)
-  }
-
-  /**
-   * Create a new record.
+   * Add new Record to the database.
    * @param record
    */
-  async addRecord(record: DatabaseRecord) {
+  async add(record: Record) {
     return await this.Records.add(record)
   }
 
   /**
-   * Bulk add records to the database. The new record ids will be returned.
+   * Bulk add records to the database. The new record ids will be returned in an array.
    * @param records
    */
-  async bulkAddRecords(records: DatabaseRecord[]) {
+  async blukAdd(records: Record[]) {
     return await this.Records.bulkAdd(records, { allKeys: true }) // allKeys returns the new record ids
+  }
+
+  /**
+   * Add new Log record with the provided severity, label, and optional details.
+   * @param severity
+   * @param label
+   * @param details
+   */
+  async addLog(severity: Severity, label: Label, details?: Details) {
+    const log: Log = {
+      pk: this.createPK(Type.LOG, uid()),
+      sk: Date.now(),
+      severity,
+      label,
+      // Remaining properties are determined by details
+    }
+
+    if (details && typeof details === 'object') {
+      if ('message' in details || 'stack' in details) {
+        // An object with a message or stack property is a JS Error
+        log.message = details?.message
+        log.stack = details?.stack
+      } else {
+        // Should be safe to stringify most other objects into the details property
+        log.details = JSON.stringify(details)
+      }
+    }
+
+    return await this.Records.add(log)
   }
 
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
-  // READ                                                                    //
+  //     READ                                                                //
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Gets ALL records from the database.
+   * Get exact Record by its primary key and secondary key.
+   * @param pk
+   * @param sk
    */
-  async getAllRecords() {
+  async getByPKSK(pk: PK, sk: SK) {
+    return await this.Records.get([pk, sk])
+  }
+
+  /**
+   * Get all Records.
+   */
+  async getAll() {
     return await this.Records.toArray()
   }
 
   /**
-   * Get specific record by database type and id.
+   * Get all Records with a matching primary key.
+   * @param pk
+   */
+  async getAllByPK(pk: PK) {
+    return await this.Records.where(Field.PK).equals(pk).toArray()
+  }
+
+  /**
+   * Get all Records with a matching secondary key.
+   * @param sk
+   */
+  async getAllBySK(sk: SK) {
+    return await this.Records.where(Field.SK).equals(sk).toArray()
+  }
+
+  /**
+   * Get all Records with a matching Type prefix on the primary key.
    * @param type
-   * @param id
    */
-  async getRecord(type: DatabaseType, id: string | SettingId) {
-    return await this.Records.get([type, id])
+  async getAllByType(type: Type) {
+    return await this.Records.where(Field.PK).startsWithIgnoreCase(type).toArray()
   }
 
   /**
-   * Get all records by database type.
+   * Get all enabled parent Records with a matching Type prefix on the primary key.
    * @param type
    */
-  async getRecordsByType(type: DatabaseType) {
-    return await this.Records.where(DatabaseField.TYPE).equals(type).toArray()
+  async getEnabledParentsByType(type: Type) {
+    return await this.Records.where(Field.PK)
+      .startsWithIgnoreCase(type)
+      .filter((r) => this.isParent(r.sk) && r.enabled === true)
+      .toArray()
   }
 
   /**
-   * Get all enabled records by database parent type.
-   * @param parentType
+   * Get previous child Record by primary key.
+   * @param pk
    */
-  async getEnabledParentRecords(parentType: DatabaseParentType) {
-    return await this.Records.where(DatabaseField.TYPE)
-      .equals(parentType)
-      .filter((r) => r[DatabaseField.IS_ENABLED] === true)
-      .sortBy(DatabaseField.NAME)
-  }
-
-  /**
-   * Gets the most recent child record by database child type and parent id.
-   * @param childType
-   * @param parentId
-   */
-  async getPreviousChildRecord(childType: DatabaseChildType, parentId: string) {
-    return (
-      await this.Records.where({
-        [DatabaseField.TYPE]: childType,
-        [DatabaseField.PARENT_ID]: parentId,
-      }).sortBy(DatabaseField.CREATED_TIMESTAMP)
-    ).reverse()[0]
-  }
-
-  /**
-   * Gets all child records by database child type and parent id.
-   * @param childType
-   * @param parentId
-   */
-  async getChildRecordsByParentId(childType: DatabaseChildType, parentId: string) {
-    return await this.Records.where({
-      [DatabaseField.TYPE]: childType,
-      [DatabaseField.PARENT_ID]: parentId,
-    }).sortBy(DatabaseField.CREATED_TIMESTAMP)
+  async getPreviousChildByPk(pk: PK) {
+    return (await this.Records.where(Field.PK).equals(pk).sortBy(Field.SK))
+      .filter((r) => this.isTimestamp(r.sk))
+      .reverse()[0]
   }
 
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
-  // UPDATE                                                                  //
+  //     UPDATE                                                              //
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Updates a setting record by id and value or creates a new one if it doesn't exist.
-   * @param id
+   * Update Record by its primary key and secondary key with the properties you want to change.
+   * @param pk
+   * @param sk
+   * @param changes
+   */
+  async update(pk: PK, sk: SK, changes: Partial<Record>) {
+    return await this.Records.update([pk, sk], changes)
+  }
+
+  /**
+   * Set Setting to a specific value (creates or updates).
+   * @param settingId - Setting Secondary Key (SK)
    * @param value
    */
-  async setSetting(id: SettingId, value: SettingValue) {
-    const existingSetting = await this.getRecord(DatabaseType.SETTING, id)
-
+  async setSetting(settingId: SettingId, value: Value) {
     // Set Quasar dark mode if the key is for dark mode
-    if (id === SettingId.DARK_MODE) {
+    if (settingId === SettingId.DARK_MODE) {
       Dark.set(!!value) // Cast to boolean just in case
     }
 
     const setting: Setting = {
-      [DatabaseField.TYPE]: DatabaseType.SETTING,
-      [DatabaseField.ID]: id,
-      [DatabaseField.VALUE]: value,
+      pk: Type.SETTING,
+      sk: settingId,
+      value,
     }
 
-    // Add or Update depending on if the Setting already exists
-    if (!existingSetting) {
-      return await this.Records.add(setting as DatabaseRecord)
+    if (!(await this.getByPKSK(setting.pk, setting.sk))) {
+      // Add Setting if it doesn't exist
+      return await this.Records.add(setting)
     } else {
-      return await this.Records.update([DatabaseType.SETTING, id], { value })
+      // Update Setting if it does exist
+      return await this.Records.update([setting.pk, setting.sk], { value: setting.value })
     }
   }
 
-  /**
-   * Updates a record by providing the database type, original id, and any properties you want to change.
-   * @param type
-   * @param originalId
-   * @param updateProps
-   */
-  async updateRecord(
-    type: DatabaseType,
-    originalId: string | SettingId,
-    updateProps: Partial<DatabaseRecord>
-  ) {
-    return await this.Records.update([type, originalId], updateProps)
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
-  // DELETE                                                                  //
+  //     DELETE                                                              //
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Deletes all logs that are older than the log retention time setting.
+   * Deletes all logs that are older than the log retention time Setting.
+   * Should run once every time the app starts.
    */
-  async purgeExpiredLogs() {
-    const logRetentionTime = (
-      await this.getRecord(DatabaseType.SETTING, SettingId.LOG_RETENTION_TIME)
-    )?.value
+  async deleteExpiredLogs() {
+    const logRetentionTime = (await this.getByPKSK(Type.SETTING, SettingId.LOG_RETENTION_TIME))
+      ?.value as LogRetention
 
     if (!logRetentionTime || logRetentionTime === LogRetention.FOREVER) {
       return 0 // No logs purged
     }
 
-    const getLogRetentionMilliseconds = (logRetention: LogRetention): number => {
-      return {
-        [LogRetention.ONE_WEEK]: Milliseconds.PER_WEEK,
-        [LogRetention.ONE_MONTH]: Milliseconds.PER_MONTH,
-        [LogRetention.THREE_MONTHS]: Milliseconds.PER_THREE_MONTHS,
-        [LogRetention.SIX_MONTHS]: Milliseconds.PER_SIX_MONTHS,
-        [LogRetention.ONE_YEAR]: Milliseconds.PER_YEAR,
-        [LogRetention.FOREVER]: Milliseconds.FOREVER, // This should never happen
-      }[logRetention]
+    const lookupMilliseconds: Readonly<{
+      [key in LogRetention]: number
+    }> = {
+      [LogRetention.ONE_WEEK]: Milliseconds.PER_WEEK,
+      [LogRetention.THREE_MONTHS]: Milliseconds.PER_THREE_MONTHS,
+      [LogRetention.ONE_YEAR]: Milliseconds.PER_YEAR,
+      [LogRetention.FOREVER]: Milliseconds.FOREVER,
     }
 
-    const logRetentionMilliseconds = getLogRetentionMilliseconds(logRetentionTime as LogRetention)
+    const logs = (await this.getAllByType(Type.LOG)) as Log[]
 
-    // Get all logs
-    const logs = (await this.Records.where(DatabaseField.TYPE)
-      .equals(DatabaseType.LOG)
-      .toArray()) as Log[]
+    // Find Logs that are older than the retention time and map them to their keys
+    const removableLogs = logs
+      .filter((log: Log) => {
+        const logTimestamp = (log.sk as number) ?? 0 // Log SK should be a timestamp
+        const logAgeMilliseconds = Date.now() - logTimestamp
+        return logAgeMilliseconds > lookupMilliseconds[logRetentionTime]
+      })
+      .map((log: Log) => [log.pk, log.sk] as [PK, SK]) // Map remaining Log keys for removal
 
-    const logsToDelete = logs.filter((log: Log) => {
-      const logCreatedTimestamp = log[DatabaseField.CREATED_TIMESTAMP] ?? 0
-      const logAgeMilliseconds = new Date().getTime() - logCreatedTimestamp
-      return logAgeMilliseconds > logRetentionMilliseconds
-    })
+    await this.Records.bulkDelete(removableLogs)
 
-    // Delete all logs that are older than the retention time
-    await this.Records.bulkDelete(logsToDelete.map((log: Log) => log[DatabaseField.ID]))
-
-    // Return the number of logs deleted
-    return logsToDelete.length
+    return removableLogs.length // Number of logs deleted
   }
 
   /**
-   * Delete specific record by database type and id.
-   * @param type
-   * @param id
+   * Delete specific record by primary key and secondary key.
+   * @param pk
+   * @param sk
    */
-  async deleteRecord(type: DatabaseType, id: string | SettingId) {
-    return await this.Records.delete([type, id])
+  async deleteRecord(pk: PK, sk: SK) {
+    return await this.Records.delete([pk, sk])
   }
 
   /**
-   * Delete all records by database type.
+   * Delete all Records of a specific Type.
    * @param type
    */
-  async clearRecordsByType(type: DatabaseType) {
-    await this.Records.where(DatabaseField.TYPE).equals(type).delete()
+  async clearByType(type: Type) {
+    await this.Records.where(Field.PK).startsWithIgnoreCase(type).delete()
   }
 
   /**

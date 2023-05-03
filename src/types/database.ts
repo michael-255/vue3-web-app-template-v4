@@ -1,80 +1,13 @@
-import type { LogRetention, Optional } from '@/types/misc'
-
-export const DatabaseVersion = 1
-
-export enum DatabaseAction {
-  INSPECT = 'Inspect',
-  CREATE = 'Create',
-  EDIT = 'Edit',
-  DELETE = 'Delete',
-  CHARTS = 'Charts',
-}
-
-export enum DatabaseType {
-  LOG = 'Logs', // First in order
-  SETTING = 'Settings',
-  EXAMPLE = 'Examples',
-  EXAMPLE_RESULT = 'Example Results',
-  TEST = 'Tests',
-  TEST_RESULT = 'Test Results',
-}
-
-export type DatabaseParentType = DatabaseType.EXAMPLE | DatabaseType.TEST
-
-export type DatabaseChildType = DatabaseType.EXAMPLE_RESULT | DatabaseType.TEST_RESULT
-
-export enum DatabaseCategory {
-  INTERNAL = 'Internal',
-  PARENT = 'Parent',
-  CHILD = 'Child',
-}
-
-export enum DatabaseField {
-  // All
-  TYPE = 'type',
-  ID = 'id',
-  // Settings
-  VALUE = 'value',
-  // Logs
-  CREATED_TIMESTAMP = 'createdTimestamp',
-  SEVERITY = 'severity',
-  LABEL = 'label',
-  DETAILS = 'details',
-  MESSAGE = 'message',
-  STACK = 'stack',
-  // Parent
-  NAME = 'name',
-  DESCRIPTION = 'description',
-  IS_FAVORITED = 'isFavorited',
-  IS_ENABLED = 'isEnabled',
-  // Child
-  PARENT_ID = 'parentId',
-  NOTE = 'note',
-  // Example & Test Results
-  NUMBER = 'number',
-}
-
-export type SettingValue = Optional<string | number | boolean | DatabaseType | LogRetention>
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 /**
  * Database Version constant. Incrementing forces database recreation in the browser on next deployment.
  */
 export const Version = 1 as const
 
 /**
- * Database record Delimiter constant for Primary Key (PK).
- * @note Must NOT be a slugified character (like '-') so it can be string split
- * @example
- * const pk = `test-str${Delimiter}abc-123` // -> 'test-str abc-123'
- * const arr = pk.split(Delimiter) // -> ['test-str', 'abc-123']
+ * Database record Delimiter constant for the compound main index.
+ * - Must be a URL friendly slug character like '-'
  */
-export const Delimiter = ' ' as const
+export const Delimiter = '-' as const
 
 /**
  * Database record Field enum defines all valid fields a Record model can have.
@@ -93,15 +26,31 @@ export enum Field {
   VALUE = 'value',
   // PARENTS
   NAME = 'name',
-  DESCRIPTION = 'description',
-  IS_ENABLED = 'isEnabled',
-  IS_FAVORITED = 'isFavorited',
+  DESC = 'desc',
+  ENABLED = 'enabled',
+  FAVORITED = 'favorited',
   // CHILDREN
   NOTE = 'note',
   // EXAMPLES
-  TEST_NUMBER = 'testNumber',
-  // TESTS
   PERCENTAGE = 'percentage',
+  // TESTS
+  TEST_NUMBER = 'testNumber',
+}
+
+/**
+ * Database Records table indices for Dexie.
+ * - Main index is the Primary Key (PK) and Secondary Key (SK) combination
+ * - The '&' character means that value must be unique in the database
+ */
+export const RecordsIndices = `&[${Field.PK}+${Field.SK}], ${Field.PK}, ${Field.SK}` as const
+
+/**
+ * Database Categories enum defines Secondary Key (SK) literals that may also be used by the router.
+ */
+export enum Category {
+  PARENT = 'parent',
+  CHILD = 'child',
+  // METADATA = 'metadata', // TODO
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -112,7 +61,8 @@ export enum Field {
 
 /**
  * Database record Type enum defines all valid Primary Key (PK) prefixes.
- * @note Must be a URL friendly slug
+ * - Must be a URL friendly slug
+ * - Don't create a Type that will match a startsWith() of another Type
  */
 export enum Type {
   LOG = 'log', // Intentionally first in order for auto selection purposes
@@ -123,9 +73,9 @@ export enum Type {
 
 /**
  * Database record Id type used as a suffix for the Primary Key (PK). SettingId is also specified for clarity.
- * @note Must be a URL friendly slug
+ * - Must be a URL friendly slug
  */
-export type Id = SettingId | string
+export type Id = string
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -135,18 +85,19 @@ export type Id = SettingId | string
 
 /**
  * Database record Primary Key (PK) type is the combination of the Type, Delimiter, and Id.
- * Used by all database records.
+ * Settings and Logs use the Type alone.
+ * - PK is used by all database records.
+ * - Must be a URL friendly slug
  * @example const pk = `${type}${Delimiter}${id}`
  */
 export type PK = string
 
 /**
- * Database record Secondary Key (SK) type identifies a record using a Timestamp or the internal, metadata, or parent literals.
- * Internal, metadata, and parent records are unique, and don't require a Timestamp to further identify them.
- * Used by all database records.
- * @note Must be a URL friendly slug
+ * Database record Secondary Key (SK) type identifies a record using a Timestamp, SettingId, or Category.
+ * - SK is used by all database records.
+ * - Must be a URL friendly slug
  */
-export type SK = number | 'internal' | 'metadata' | 'parent'
+export type SK = number | SettingId | Category
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -171,7 +122,7 @@ export type Label = string
 
 /**
  * Database record Details type for log records.
- * @note Use care when accessing details since it is an any type.
+ * - Use care when accessing details since it is an 'any' type
  */
 export type Details = any
 
@@ -193,9 +144,9 @@ export type Stack = string
 
 /**
  * Database record Value type for setting records. Settings can store many potential types.
- * @note Update the supported types as you add new setting values
+ * - Update the supported types as you add new setting values
  */
-export type Value = Optional<string | number | boolean | DatabaseType | LogRetention>
+export type Value = null | undefined | string | number | boolean | LogRetention
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -205,25 +156,25 @@ export type Value = Optional<string | number | boolean | DatabaseType | LogReten
 
 /**
  * Database record Name type is a required string for parent records.
- * @note Must enforce a minimum length of 1
+ * - Must enforce a minimum length of 1
  */
 export type Name = string
 
 /**
  * Database record Description type for parent records.
- * @note Must be at least an empty string
+ * - Must be at least an empty string
  */
-export type Description = string
+export type Desc = string
 
 /**
- * Database record IsEnabled type for parent records.
+ * Database record Enabled type for parent records determines if the record displays on the dashboard.
  */
-export type IsEnabled = boolean
+export type Enabled = boolean
 
 /**
- * Database record IsFavorited type for parent records.
+ * Database record Favorited type for parent records determines if the record is prioritized on the dashboard.
  */
-export type IsFavorited = boolean
+export type Favorited = boolean
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -232,8 +183,8 @@ export type IsFavorited = boolean
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record Note type for child records.
- * @note Must be at least an empty string
+ * Database record Note type for child records allows users to add readable notes to their records.
+ * - Must be at least an empty string
  */
 export type Note = string
 
@@ -244,10 +195,10 @@ export type Note = string
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record TestNumber type for example records.
- * @note Must be between Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER with steps of 0.01
+ * Database record Percentage type for example records.
+ * - Must be between 0 and 100 with steps of 0.01
  */
-export type TestNumber = number
+export type Percentage = number
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -256,10 +207,10 @@ export type TestNumber = number
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record Percentage type for test records.
- * @note Must be between 0 and 100 with steps of 0.01
+ * Database record TestNumber type for test records.
+ * - Must be between Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER with steps of 0.01
  */
-export type Percentage = number
+export type TestNumber = number
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -281,7 +232,7 @@ export enum SettingId {
 }
 
 /**
- * Database Actions enum defines the actions that a Type can support and helps with routing controls.
+ * Database Actions enum defines the actions that a Type can support and helps with action page routing.
  */
 export enum Action {
   INSPECT = 'Inspect',
@@ -301,4 +252,14 @@ export enum RecordIssue {
   NONE = 'None',
   UNUSED = 'Unused',
   ORPHANED = 'Orphaned',
+}
+
+/**
+ * Database LogRetention enum duration strings.
+ */
+export enum LogRetention {
+  ONE_WEEK = '7 Days',
+  THREE_MONTHS = '90 Days',
+  ONE_YEAR = 'One Year',
+  FOREVER = 'Forever',
 }
