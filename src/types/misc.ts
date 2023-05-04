@@ -8,7 +8,7 @@ import type {
   RecordIssue,
 } from '@/types/database'
 import type { Icon } from '@/types/icons'
-import type { DatabaseRecord } from '@/types/models'
+import type { DatabaseRecord, Log, Record, Setting } from '@/types/models'
 import type { QTableColumn } from 'quasar'
 
 /**
@@ -82,13 +82,14 @@ export enum ChartTime {
 }
 
 /**
- * Format of the JSON file from an export.
+ * Format of the JSON file from an export. Any table can be exported.
  */
 export type ExportData = {
   appName: string
   exportedTimestamp: number
-  recordsCount: number
-  records: DatabaseRecord[]
+  logs: Log[]
+  settings: Setting[]
+  records: Record[]
 }
 
 /**

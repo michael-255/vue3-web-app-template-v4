@@ -104,12 +104,6 @@ const router = createRouter({
       },
     },
     {
-      path: '/record-curing',
-      name: RouteName.RECORD_CURING,
-      meta: { layout: 'MenuLayout' },
-      component: () => import('../views/RecordCuringView.vue'),
-    },
-    {
       path: '/settings',
       name: RouteName.SETTINGS,
       meta: { layout: 'MenuLayout' },

@@ -1,36 +1,44 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
 import type { Log, Record, Setting } from '@/types/models'
 import { Milliseconds, AppName } from '@/types/misc'
-import { Dark, uid } from 'quasar'
+import { Dark } from 'quasar'
 import {
-  SettingId,
-  Severity,
-  Version,
-  RecordsIndices,
-  Type,
-  Delimiter,
-  Field,
-  type PK,
-  type SK,
   type Id,
   type Label,
   type Details,
   type Value,
+  type AutoId,
+  type Timestamp,
+  Severity,
+  Type,
+  Field,
   LogRetention,
-  Category,
+  LogIndex,
+  SettingIndex,
+  PrimaryCompoundIndex,
+  IdIndex,
+  RelationIndex,
+  Relation,
+  Key,
+  SettingField,
 } from '@/types/database'
 
 /**
  * A Dexie wrapper class that acts as a local database.
  */
 export class LocalDatabase extends Dexie {
+  Logs!: Table<Log>
+  Settings!: Table<Setting>
   Records!: Table<Record>
 
   constructor(name: string) {
-    super(`${name} v${Version}`)
+    super(name)
 
+    // TODO - Try incrementing schema to rebuild DB
     this.version(1).stores({
-      Records: RecordsIndices,
+      Logs: LogIndex,
+      Settings: SettingIndex,
+      Records: `${PrimaryCompoundIndex}, ${IdIndex}, ${RelationIndex}`,
     })
   }
 
@@ -41,66 +49,36 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Combine a type and id into a primary key separated by a delimiter.
-   * @param type
-   * @param id
-   */
-  createPK(type: Type, id: Id): PK {
-    return `${type}${Delimiter}${id}`
-  }
-
-  /**
-   * Determines if the SK is of the 'parent' category.
-   * @param sk
-   */
-  isParent(sk: SK) {
-    return sk === Category.PARENT
-  }
-
-  /**
-   * Determines if the SK is a timestamp (child) category.
-   * @param sk
-   */
-  isTimestamp(sk: SK) {
-    return typeof sk === 'number'
-  }
-
-  /**
    * Initializes all settings with existing or default values.
    */
   async initSettings() {
-    const lookupDefault: Readonly<{
-      [key in SettingId]: Value
+    const defaultSettings: Readonly<{
+      [key in Key]: Value
     }> = {
-      [SettingId.SHOW_INTRODUCTION]: true,
-      [SettingId.SHOW_DASHBOARD_DESCRIPTIONS]: true,
-      [SettingId.DARK_MODE]: true,
-      [SettingId.SHOW_ALL_DATA_COLUMNS]: false,
-      [SettingId.SHOW_CONSOLE_LOGS]: false,
-      [SettingId.SHOW_INFO_MESSAGES]: true,
-      [SettingId.LOG_RETENTION_TIME]: LogRetention.THREE_MONTHS,
+      [Key.SHOW_INTRODUCTION]: true,
+      [Key.SHOW_DASHBOARD_DESCRIPTIONS]: true,
+      [Key.DARK_MODE]: true,
+      [Key.SHOW_ALL_DATA_COLUMNS]: false,
+      [Key.SHOW_CONSOLE_LOGS]: false,
+      [Key.SHOW_INFO_MESSAGES]: true,
+      [Key.LOG_RETENTION_TIME]: LogRetention.THREE_MONTHS,
     }
 
-    const settingIds = Object.values(SettingId)
+    const keys = Object.values(Key)
 
+    // Replace Setting value with default if needed
     const settings = await Promise.all(
-      settingIds.map(async (settingId) => {
-        const setting = await this.getByPKSK(Type.SETTING, settingId)
-        const value = setting?.value ?? lookupDefault[settingId]
-
-        return {
-          settingId,
-          value,
-        }
-      })
+      keys.map(async (key) => ({
+        key,
+        value: (await this.Settings.get(key))?.value ?? defaultSettings[key],
+      }))
     )
 
-    // Set Quasar dark mode
-    const darkMode = settings.find((s) => s.settingId === SettingId.DARK_MODE)?.value
-    Dark.set(!!darkMode) // Cast to boolean
+    // Set Quasar dark mode - Casting to a boolean just in case
+    Dark.set(!!settings.find((s) => s.key === Key.DARK_MODE)?.value)
 
     // Set all Settings in the database
-    await Promise.all(settings.map((s) => this.setSetting(s.settingId, s.value)))
+    await Promise.all(settings.map((s) => this.setSetting(s.key, s.value)))
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -110,85 +88,54 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Observable of the Settings database type.
+   * Observable of Logs table with newest logs first.
    */
-  liveSettings() {
-    return liveQuery(() => this.Records.where(Field.PK).equals(Type.SETTING).sortBy(Field.SK))
+  liveLogs() {
+    return liveQuery(() => this.Logs.reverse().toArray())
   }
 
   /**
-   * Observable of the Settings, Examples, and Tests database types sorted by name.
+   * Observable of Settings table sorted by KEY.
+   */
+  liveSettings() {
+    return liveQuery(() => this.Settings.toCollection().sortBy(SettingField.KEY))
+  }
+
+  /**
+   * Observable of Records table with newest records first.
+   */
+  liveRecords() {
+    return liveQuery(() => this.Records.toCollection().sortBy(Field.TIMESTAMP))
+  }
+
+  /**
+   * Observable of Records table with enabled Parent Types sorted by name for the Dasboard.
    */
   liveDashboard() {
     return liveQuery(() =>
-      this.Records.where(Field.PK)
-        .startsWithAnyOf(Type.SETTING, Type.EXAMPLE, Type.TEST)
+      this.Records.where({ relation: Relation.PARENT })
+        .filter((r) => r.enabled === true)
         .sortBy(Field.NAME)
     )
   }
 
   /**
-   * Observable of the provided database type with preferred sorting.
+   * Observable for Data View with any table with Type and Relation to control results.
+   * @param relation
    * @param type
-   * @param category
    */
-  liveDataType(type: Type, category: Category) {
-    // Setting and Log queries have no parent or child SK categories
-    if (type === Type.SETTING) {
-      // Settings must match exactly on the PK and use SettingId as the SK
-      return liveQuery(() => this.Records.where(Field.PK).equals(Type.SETTING).sortBy(Field.SK))
-    } else if (type === Type.LOG) {
-      // Logs must start with 'log' as the PK (they also have a uid after) and use a timestamp as the SK
+  liveData(relation: Relation, type: Type) {
+    if (type === Type.LOG) {
+      return this.liveLogs()
+    } else if (type === Type.SETTING) {
+      return this.liveSettings()
+    } else {
       return liveQuery(() =>
-        this.Records.where(Field.PK).startsWithIgnoreCase(Type.LOG).reverse().sortBy(Field.SK)
+        this.Records.where({ relation })
+          .filter((r) => r.type === type)
+          .sortBy(Field.TIMESTAMP)
       )
     }
-
-    // Queries that must seperate parent and child SK categories (parent and timestamp)
-    const userDataQueries = {
-      [Type.EXAMPLE]: {
-        [Category.PARENT]: () =>
-          this.Records.where(Field.PK)
-            .startsWithIgnoreCase(Type.EXAMPLE)
-            .filter((r) => this.isParent(r.sk))
-            .sortBy(Field.NAME),
-        [Category.CHILD]: () =>
-          this.Records.where(Field.PK)
-            .startsWithIgnoreCase(Type.EXAMPLE)
-            .filter((r) => this.isTimestamp(r.sk))
-            .reverse()
-            .sortBy(Field.SK),
-      },
-      [Type.TEST]: {
-        [Category.PARENT]: () =>
-          this.Records.where(Field.PK)
-            .startsWithIgnoreCase(Type.TEST)
-            .filter((r) => this.isParent(r.sk))
-            .sortBy(Field.NAME),
-        [Category.CHILD]: () =>
-          this.Records.where(Field.PK)
-            .startsWithIgnoreCase(Type.TEST)
-            .filter((r) => this.isTimestamp(r.sk))
-            .reverse()
-            .sortBy(Field.SK),
-      },
-    }
-
-    const query = userDataQueries[type][category]
-
-    if (query) {
-      return liveQuery(query)
-    }
-  }
-
-  /**
-   * Observable of all Parent and Child records that the user interacts with sorted by SK.
-   * These are the Records that are displayed in the Curing page if there is an issue.
-   */
-  liveRecordCuring() {
-    return liveQuery(() =>
-      this.Records.where(Field.PK).startsWithAnyOf(Type.EXAMPLE, Type.TEST).sortBy(Field.SK)
-    )
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -214,20 +161,20 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Add new Log record with the provided severity, label, and optional details.
+   * Add new Log with the provided severity, label, and optional details.
    * @param severity
    * @param label
    * @param details
    */
   async addLog(severity: Severity, label: Label, details?: Details) {
+    // AutoId is handled by Dexie
     const log: Log = {
-      pk: this.createPK(Type.LOG, uid()),
-      sk: Date.now(),
+      timestamp: Date.now(),
       severity,
       label,
-      // Remaining properties are determined by details
     }
 
+    // Remaining properties determined by details
     if (details && typeof details === 'object') {
       if ('message' in details || 'stack' in details) {
         // An object with a message or stack property is a JS Error
@@ -239,7 +186,7 @@ export class LocalDatabase extends Dexie {
       }
     }
 
-    return await this.Records.add(log)
+    return await this.Logs.add(log)
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -249,63 +196,60 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Get exact Record by its primary key and secondary key.
-   * @param pk
-   * @param sk
+   * Get exact Log by its autoId.
+   * @param autoId
    */
-  async getByPKSK(pk: PK, sk: SK) {
-    return await this.Records.get([pk, sk])
+  async getLog(autoId: AutoId) {
+    return await this.Logs.get(autoId)
+  }
+
+  /**
+   * Get exact Setting by its key.
+   * @param key
+   */
+  async getSetting(key: Key) {
+    return await this.Settings.get(key)
   }
 
   /**
    * Get all Records.
    */
-  async getAll() {
+  async getAllRecords() {
     return await this.Records.toArray()
   }
 
   /**
-   * Get all Records with a matching primary key.
-   * @param pk
+   * Get exact Record by id and timestamp.
+   * @param id
+   * @param timestamp
    */
-  async getAllByPK(pk: PK) {
-    return await this.Records.where(Field.PK).equals(pk).toArray()
+  async getRecord(id: Id, timestamp: Timestamp) {
+    return await this.Records.get([id, timestamp])
   }
 
   /**
-   * Get all Records with a matching secondary key.
-   * @param sk
+   * Get the parent record by id only.
+   * @param id
    */
-  async getAllBySK(sk: SK) {
-    return await this.Records.where(Field.SK).equals(sk).toArray()
+  async getParent(id: Id) {
+    return (await this.Records.where({ id }).toArray()).find((r) => r.relation === Relation.PARENT)
   }
 
   /**
-   * Get all Records with a matching Type prefix on the primary key.
-   * @param type
+   * Get all Child Records for an id.
+   * @param id
    */
-  async getAllByType(type: Type) {
-    return await this.Records.where(Field.PK).startsWithIgnoreCase(type).toArray()
+  async getChildren(id: Id) {
+    return (await this.Records.where({ id }).toArray()).filter((r) => r.relation === Relation.CHILD)
   }
 
   /**
-   * Get all enabled parent Records with a matching Type prefix on the primary key.
-   * @param type
+   * Get previous child Record by Type.
+   * @param id
    */
-  async getEnabledParentsByType(type: Type) {
-    return await this.Records.where(Field.PK)
-      .startsWithIgnoreCase(type)
-      .filter((r) => this.isParent(r.sk) && r.enabled === true)
-      .toArray()
-  }
-
-  /**
-   * Get previous child Record by primary key.
-   * @param pk
-   */
-  async getPreviousChildByPk(pk: PK) {
-    return (await this.Records.where(Field.PK).equals(pk).sortBy(Field.SK))
-      .filter((r) => this.isTimestamp(r.sk))
+  async getPreviousChild(id: Id) {
+    return (await this.Records.where({ id }).toArray())
+      .filter((r) => r.relation === Relation.CHILD)
       .reverse()[0]
   }
 
@@ -316,38 +260,34 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Update Record by its primary key and secondary key with the properties you want to change.
-   * @param pk
-   * @param sk
+   * Update exact Record by id and timestamp with the properties you want to change.
+   * @param id
+   * @param timestamp
    * @param changes
    */
-  async update(pk: PK, sk: SK, changes: Partial<Record>) {
-    return await this.Records.update([pk, sk], changes)
+  async update(id: Id, timestamp: Timestamp, changes: Partial<Record>) {
+    return await this.Records.update([id, timestamp], changes)
   }
 
   /**
    * Set Setting to a specific value (creates or updates).
-   * @param settingId - Setting Secondary Key (SK)
+   * @param key
    * @param value
    */
-  async setSetting(settingId: SettingId, value: Value) {
+  async setSetting(key: Key, value: Value) {
     // Set Quasar dark mode if the key is for dark mode
-    if (settingId === SettingId.DARK_MODE) {
+    if (key === Key.DARK_MODE) {
       Dark.set(!!value) // Cast to boolean just in case
     }
 
-    const setting: Setting = {
-      pk: Type.SETTING,
-      sk: settingId,
-      value,
-    }
+    const setting: Setting = { key, value }
 
-    if (!(await this.getByPKSK(setting.pk, setting.sk))) {
+    if (!(await this.Settings.get(setting.key))) {
       // Add Setting if it doesn't exist
-      return await this.Records.add(setting)
+      return await this.Settings.add(setting)
     } else {
       // Update Setting if it does exist
-      return await this.Records.update([setting.pk, setting.sk], { value: setting.value })
+      return await this.Settings.update(setting.key, { value: setting.value })
     }
   }
 
@@ -362,7 +302,7 @@ export class LocalDatabase extends Dexie {
    * Should run once every time the app starts.
    */
   async deleteExpiredLogs() {
-    const logRetentionTime = (await this.getByPKSK(Type.SETTING, SettingId.LOG_RETENTION_TIME))
+    const logRetentionTime = (await this.Settings.get(Key.LOG_RETENTION_TIME))
       ?.value as LogRetention
 
     if (!logRetentionTime || logRetentionTime === LogRetention.FOREVER) {
@@ -378,16 +318,16 @@ export class LocalDatabase extends Dexie {
       [LogRetention.FOREVER]: Milliseconds.FOREVER,
     }
 
-    const logs = (await this.getAllByType(Type.LOG)) as Log[]
+    const logs = await this.Logs.toArray()
 
     // Find Logs that are older than the retention time and map them to their keys
     const removableLogs = logs
       .filter((log: Log) => {
-        const logTimestamp = (log.sk as number) ?? 0 // Log SK should be a timestamp
+        const logTimestamp = log.timestamp ?? 0
         const logAgeMilliseconds = Date.now() - logTimestamp
         return logAgeMilliseconds > lookupMilliseconds[logRetentionTime]
       })
-      .map((log: Log) => [log.pk, log.sk] as [PK, SK]) // Map remaining Log keys for removal
+      .map((log: Log) => [log.autoId, log.timestamp] as [AutoId, Timestamp]) // Map remaining Log keys for removal
 
     await this.Records.bulkDelete(removableLogs)
 
@@ -395,24 +335,47 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Delete specific record by primary key and secondary key.
-   * @param pk
-   * @param sk
+   * Delete exact Record by id and timestamp.
+   * @param id
+   * @param timestamp
    */
-  async deleteRecord(pk: PK, sk: SK) {
-    return await this.Records.delete([pk, sk])
+  async deleteRecord(id: Id, timestamp: Timestamp) {
+    return await this.Records.delete([id, timestamp])
   }
 
   /**
-   * Delete all Records of a specific Type.
+   * Delete all data of a specific Type.
    * @param type
    */
   async clearByType(type: Type) {
-    await this.Records.where(Field.PK).startsWithIgnoreCase(type).delete()
+    const clearCommand: Readonly<{
+      [key in Type]: () => any
+    }> = {
+      [Type.LOG]: () => this.Logs.clear(),
+      [Type.SETTING]: () => this.Settings.clear(),
+      [Type.EXAMPLE]: () =>
+        this.Records.toCollection()
+          .filter((r) => r.type === Type.EXAMPLE)
+          .delete(),
+      [Type.TEST]: () =>
+        this.Records.toCollection()
+          .filter((r) => r.type === Type.TEST)
+          .delete(),
+    }
+
+    // Run the clear command for the given type
+    return await clearCommand[type]()
   }
 
   /**
-   * Delete the entire database. This will require an app reload.
+   * Deletes all data from the database.
+   */
+  async clearAllData() {
+    return Promise.all([this.Logs.clear(), this.Settings.clear(), this.Records.clear()])
+  }
+
+  /**
+   * Delete the entire database. Require an app reload to reinitialize the database.
    */
   async deleteDatabase() {
     return await this.delete()

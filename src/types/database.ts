@@ -1,29 +1,33 @@
 /**
- * Database Version constant. Incrementing forces database recreation in the browser on next deployment.
+ * Database LogField enum defines all fields a Log model can have.
  */
-export const Version = 1 as const
-
-/**
- * Database record Delimiter constant for the compound main index.
- * - Must be a URL friendly slug character like '-'
- */
-export const Delimiter = '-' as const
-
-/**
- * Database record Field enum defines all valid fields a Record model can have.
- */
-export enum Field {
-  // ALL
-  PK = 'pk', // Primary Key (compound)
-  SK = 'sk', // Secondary Key
-  // LOGS
+export enum LogField {
+  AUTO_ID = 'autoId',
+  TIMESTAMP = 'timestamp', // match
   SEVERITY = 'severity',
   LABEL = 'label',
   DETAILS = 'details',
   MESSAGE = 'message',
   STACK = 'stack',
-  // SETTINGS
+}
+
+/**
+ * Database SettingField enum defines all fields a Setting model can have.
+ */
+export enum SettingField {
+  KEY = 'key',
   VALUE = 'value',
+}
+
+/**
+ * Database Field enum defines all fields a Record model can have.
+ */
+export enum Field {
+  // RECORDS
+  ID = 'id',
+  TIMESTAMP = 'timestamp', // match
+  TYPE = 'type',
+  RELATION = 'relation',
   // PARENTS
   NAME = 'name',
   DESC = 'desc',
@@ -37,67 +41,54 @@ export enum Field {
   TEST_NUMBER = 'testNumber',
 }
 
-/**
- * Database Records table indices for Dexie.
- * - Main index is the Primary Key (PK) and Secondary Key (SK) combination
- * - The '&' character means that value must be unique in the database
- */
-export const RecordsIndices = `&[${Field.PK}+${Field.SK}], ${Field.PK}, ${Field.SK}` as const
-
-/**
- * Database Categories enum defines Secondary Key (SK) literals that may also be used by the router.
- */
-export enum Category {
-  PARENT = 'parent',
-  CHILD = 'child',
-  // METADATA = 'metadata', // TODO
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     PRIMARY KEY - COMPOUND PARTS                                          //
+//     DATABASE INDICES                                                      //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record Type enum defines all valid Primary Key (PK) prefixes.
- * - Must be a URL friendly slug
- * - Don't create a Type that will match a startsWith() of another Type
+ * Database LogIndex uses an auto incrementing (++) auto id as its Primary Key.
+ * - Logs Table
  */
-export enum Type {
-  LOG = 'log', // Intentionally first in order for auto selection purposes
-  SETTING = 'setting',
-  EXAMPLE = 'example',
-  TEST = 'test',
-}
+export const LogIndex = `++${LogField.AUTO_ID}` as const
 
 /**
- * Database record Id type used as a suffix for the Primary Key (PK). SettingId is also specified for clarity.
- * - Must be a URL friendly slug
+ * Database SettingIndex uses key as its Primary Key.
+ * - Settings Table
  */
-export type Id = string
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     ALL                                                                   //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+export const SettingIndex = SettingField.KEY as const
 
 /**
- * Database record Primary Key (PK) type is the combination of the Type, Delimiter, and Id.
- * Settings and Logs use the Type alone.
- * - PK is used by all database records.
- * - Must be a URL friendly slug
- * @example const pk = `${type}${Delimiter}${id}`
+ * Database PrimaryCompoundIndex uses uniqueness enforced (&) compound id and timestamp.
+ * - Records Table
+ * - Used for exact record matches
+ * - Should NEVER alter the id after creation
+ * - Validate and provide warnings when altering the timestamp
+ * @example
+ * `id      timestamp   type     relation`
+ * `ex-123  1234567890  example  parent`
+ * `ex-123  1234567891  example  child`
+ * `ex-123  1234567892  example  child`
+ * `ex-123  1234567893  example  child`
  */
-export type PK = string
+export const PrimaryCompoundIndex = `&[${Field.ID}+${Field.TIMESTAMP}]` as const
 
 /**
- * Database record Secondary Key (SK) type identifies a record using a Timestamp, SettingId, or Category.
- * - SK is used by all database records.
- * - Must be a URL friendly slug
+ * Database IdIndex uses id.
+ * - Records Table
+ * - Used for Parent with Children queries
+ * - Filter on relation to get Parent
+ * - Filter on relation with reverse sorting to grab previous Child Record
  */
-export type SK = number | SettingId | Category
+export const IdIndex = Field.ID as const
+
+/**
+ * Database RelationIndex uses relation.
+ * - Records Table
+ * - Used for Dashboard and Data view queries to get all records by relation
+ */
+export const RelationIndex = Field.RELATION as const
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -106,7 +97,17 @@ export type SK = number | SettingId | Category
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record Severity enum for log records.
+ * Database Log AutoId type is an auto incrementing number used as the Primary Key for log records.
+ */
+export type AutoId = number
+
+/**
+ * Database Record Timestamp type is a required number for log and normal records.
+ */
+export type Timestamp = number
+
+/**
+ * Database Log Severity enum.
  */
 export enum Severity {
   DEBUG = 'DEBUG',
@@ -116,23 +117,23 @@ export enum Severity {
 }
 
 /**
- * Database record Label type for log records.
+ * Database Log Label type.
  */
 export type Label = string
 
 /**
- * Database record Details type for log records.
+ * Database Log Details type.
  * - Use care when accessing details since it is an 'any' type
  */
 export type Details = any
 
 /**
- * Database record Message type for log records should contain the message string from an error.
+ * Database Log Message type should contain the message string from an error.
  */
 export type Message = string
 
 /**
- * Database record Message type for log records should contain the stack trace string from an error.
+ * Database Log Message type should contain the stack trace string from an error.
  */
 export type Stack = string
 
@@ -143,10 +144,59 @@ export type Stack = string
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record Value type for setting records. Settings can store many potential types.
+ * Database Setting Key enum defines all valid settings that the app supports.
+ */
+export enum Key {
+  SHOW_INTRODUCTION = 'show-introduction',
+  SHOW_DASHBOARD_DESCRIPTIONS = 'show-dashboard-descriptions',
+  DARK_MODE = 'dark-mode',
+  SHOW_ALL_DATA_COLUMNS = 'show-all-data-columns',
+  SHOW_CONSOLE_LOGS = 'show-console-logs',
+  SHOW_INFO_MESSAGES = 'show-info-messages',
+  LOG_RETENTION_TIME = 'log-retention-time',
+}
+
+/**
+ * Database Setting Value type. Settings can store many potential types.
  * - Update the supported types as you add new setting values
  */
 export type Value = null | undefined | string | number | boolean | LogRetention
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     RECORDS                                                               //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Database Record Id type should normally be a random uid.
+ * - Must be a URL friendly slug
+ */
+export type Id = string
+
+// Reusing Timestamp from Logs
+
+/**
+ * Database Record Type enum defines all types of data stored in the database.
+ * - Must be a URL friendly slug
+ */
+export enum Type {
+  LOG = 'log', // Intentionally first in order for auto selection purposes
+  SETTING = 'setting',
+  EXAMPLE = 'example',
+  TEST = 'test',
+}
+
+/**
+ * Database Record Relation enum defines the record relationship with its peer records.
+ * - Must be a URL friendly slug
+ * - Parent and Metadata records are the top level records (with a 0 timestamp to prevent duplication)
+ * - Child records are the second level records which use a timestamp to ensure uniqueness
+ */
+export enum Relation {
+  PARENT = 'parent',
+  CHILD = 'child',
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -155,24 +205,24 @@ export type Value = null | undefined | string | number | boolean | LogRetention
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record Name type is a required string for parent records.
+ * Database Parent Name type is a required string.
  * - Must enforce a minimum length of 1
  */
 export type Name = string
 
 /**
- * Database record Description type for parent records.
+ * Database Parent Description type.
  * - Must be at least an empty string
  */
 export type Desc = string
 
 /**
- * Database record Enabled type for parent records determines if the record displays on the dashboard.
+ * Database Parent Enabled type for parent records determines if the record displays on the dashboard.
  */
 export type Enabled = boolean
 
 /**
- * Database record Favorited type for parent records determines if the record is prioritized on the dashboard.
+ * Database Parent Favorited type for parent records determines if the record is prioritized on the dashboard.
  */
 export type Favorited = boolean
 
@@ -183,31 +233,31 @@ export type Favorited = boolean
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record Note type for child records allows users to add readable notes to their records.
+ * Database Child Note type allows users to add readable notes to their records.
  * - Must be at least an empty string
  */
 export type Note = string
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     EXAMPLES                                                              //
+//     EXAMPLE CHILD                                                         //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record Percentage type for example records.
+ * Database Example Child Percentage type.
  * - Must be between 0 and 100 with steps of 0.01
  */
 export type Percentage = number
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     TESTS                                                                 //
+//     TEST CHILD                                                            //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database record TestNumber type for test records.
+ * Database Test Child TestNumber type.
  * - Must be between Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER with steps of 0.01
  */
 export type TestNumber = number
@@ -219,19 +269,6 @@ export type TestNumber = number
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database SettingId enum defines all valid settings that the app supports.
- */
-export enum SettingId {
-  SHOW_INTRODUCTION = 'show-introduction',
-  SHOW_DASHBOARD_DESCRIPTIONS = 'show-dashboard-descriptions',
-  DARK_MODE = 'dark-mode',
-  SHOW_ALL_DATA_COLUMNS = 'show-all-data-columns',
-  SHOW_CONSOLE_LOGS = 'show-console-logs',
-  SHOW_INFO_MESSAGES = 'show-info-messages',
-  LOG_RETENTION_TIME = 'log-retention-time',
-}
-
-/**
  * Database Actions enum defines the actions that a Type can support and helps with action page routing.
  */
 export enum Action {
@@ -240,18 +277,6 @@ export enum Action {
   EDIT = 'Edit',
   DELETE = 'Delete',
   CHARTS = 'Charts',
-}
-
-/**
- * Database RecordIssue enum defines the detectable problems that the Record Curing tool can discover.
- * - None: None issue is used as a filter to be removed before displaying
- * - Unused: Parent record with no children records
- * - Orphaned: Child record with no parent record
- */
-export enum RecordIssue {
-  NONE = 'None',
-  UNUSED = 'Unused',
-  ORPHANED = 'Orphaned',
 }
 
 /**
