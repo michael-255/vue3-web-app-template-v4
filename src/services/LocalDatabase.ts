@@ -1,4 +1,4 @@
-import Dexie, { liveQuery, type Table } from 'dexie'
+import Dexie, { liveQuery, type PromiseExtended, type Table } from 'dexie'
 import type { Log, Record, Setting } from '@/types/models'
 import { Milliseconds, AppName } from '@/types/misc'
 import { Dark } from 'quasar'
@@ -151,6 +151,36 @@ export class LocalDatabase extends Dexie {
   async add(record: Record) {
     return await this.Records.add(record)
   }
+
+  /**
+   * - Look at Record `type` to determine valid fields
+   * - Record must have required fields that pass minimum validity rules (Regex?)
+   * - Record must NOT already exist in the Database
+   * - Auto remediate small issues like undefined notes and descriptions
+   * @param record
+   */
+  // async addRecord(record: Record) {
+  //   const addCommand: Readonly<{
+  //     [key in Type]: () => any
+  //   }> = {
+  //     [Type.LOG]: () => {
+  //       throw new Error(`Invalid Record type: ${record.type}`)
+  //     },
+  //     [Type.SETTING]: () => {
+  //       throw new Error(`Invalid Record type: ${record.type}`)
+  //     },
+  //     [Type.EXAMPLE]: () =>
+  //       this.Records.toCollection()
+  //         .filter((r) => r.type === Type.EXAMPLE)
+  //         .delete(),
+  //     [Type.TEST]: () =>
+  //       this.Records.toCollection()
+  //         .filter((r) => r.type === Type.TEST)
+  //         .delete(),
+  //   }
+
+  //   return await this.Records.add(record)
+  // }
 
   /**
    * Bulk add records to the database. The new record ids will be returned in an array.
@@ -349,7 +379,7 @@ export class LocalDatabase extends Dexie {
    */
   async clearByType(type: Type) {
     const clearCommand: Readonly<{
-      [key in Type]: () => any
+      [key in Type]: () => PromiseExtended<void | number>
     }> = {
       [Type.LOG]: () => this.Logs.clear(),
       [Type.SETTING]: () => this.Settings.clear(),

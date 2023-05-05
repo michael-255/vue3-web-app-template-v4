@@ -266,7 +266,10 @@ Details on the steps I took to create this project.
    ```json
    {
      "compilerOptions": {
-       "module": "es2022"
+       "target": "es2022",
+       "module": "es2022",
+       "lib": ["es2022", "dom"],
+       "ignoreDeprecations": "5.0"
      }
    }
    ```

@@ -35,9 +35,14 @@ export enum Field {
   FAVORITED = 'favorited',
   // CHILDREN
   NOTE = 'note',
-  // EXAMPLES
-  PERCENTAGE = 'percentage',
-  // TESTS
+  // EXAMPLE PARENT
+  TEST_IDS = 'testIds',
+  // EXAMPLE CHILD
+  // ...
+  // TEST PARENT
+  TEST_INPUTS = 'testInputs',
+  // TEST CHILD
+  PERCENT = 'percent',
   TEST_NUMBER = 'testNumber',
 }
 
@@ -267,6 +272,14 @@ export type TestNumber = number
 //     MISCELLANEOUS                                                         //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Database Test Input enum defines the inputs that are selectable for the Test Parent.
+ */
+export enum TestInput {
+  PERCENT = 'Percentage',
+  TEST_NUMBER = 'Test Number',
+}
 
 /**
  * Database Actions enum defines the actions that a Type can support and helps with action page routing.
