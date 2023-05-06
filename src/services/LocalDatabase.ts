@@ -28,7 +28,6 @@ export class LocalDatabase extends Dexie {
   constructor(name: string) {
     super(name)
 
-    // TODO - Try incrementing schema to rebuild DB
     this.version(1).stores({
       Logs: LogIndex,
       Settings: SettingIndex,

@@ -58,62 +58,44 @@ export default function useDefaults() {
             return Math.random() >= 0.5
           }
 
-          const randomInt = (min: number, max: number) => {
-            return Math.floor(Math.random() * (max - min + 1) + min)
-          }
-
-          let initialTimestamp = Date.now() - 1000 * 60 * 60 * 24 * 365 * 2 // minus two year
-
-          const addDay = (timestamp: number) => {
-            const date = new Date(timestamp)
-            date.setDate(date.getDate() + 1)
-            return date.getTime()
-          }
+          const timestampOffset = (i: number) => 1 + i
 
           const records: Partial<Record>[] = []
 
-          const groupId = uid()
+          const createRecords = (
+            count: number,
+            type: Type.EXAMPLE | Type.TEST,
+            id: string = uid()
+          ) => {
+            // Create Parent (1)
+            records.push({
+              id,
+              timestamp: Date.now(),
+              type,
+              relation: Relation.PARENT,
+              name: randomGreekAlpha(),
+              desc: `${type} description...`,
+              enabled: true,
+              favorited: randomBoolean(),
+              testIds: [],
+            } as ExampleParent)
 
-          const createExamples = (count: number) => {
+            // Create Children (count)
             for (let i = 0; i < count; i++) {
               records.push({
-                id: groupId,
-                timestamp: initialTimestamp,
-                type: Type.EXAMPLE,
-                relation: Relation.PARENT,
-                name: randomGreekAlpha(),
-                desc: `Example description ${i}`,
-                enabled: true,
-                favorited: randomBoolean(),
-                testIds: [],
-              } as ExampleParent)
-
-              initialTimestamp = addDay(initialTimestamp)
-            }
-          }
-
-          const createExampleResults = (count: number) => {
-            for (let i = 0; i < count; i++) {
-              records.push({
-                id: groupId,
-                timestamp: initialTimestamp,
-                type: Type.EXAMPLE,
+                id,
+                timestamp: Date.now() + timestampOffset(i), // TODO - This okay?
+                type,
                 relation: Relation.CHILD,
-                note: '',
+                note: `Note ${i}`,
               } as ExampleChild)
-
-              initialTimestamp = addDay(initialTimestamp)
             }
           }
 
-          // Creating demo data
-          createExamples(1)
-          records.map(() => createExampleResults(725)) // about 2 years of records
-          // Unused parents and orphaned results
-          createExamples(2)
-          createExampleResults(2)
+          createRecords(3, Type.EXAMPLE)
+          createRecords(3, Type.TEST)
 
-          await DB.blukAdd(records as Record[])
+          await DB.bulkAdd(records as Record[])
 
           log.info('Defaults loaded', { count: records.length })
         } catch (error) {

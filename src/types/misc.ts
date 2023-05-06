@@ -152,3 +152,17 @@ export type AppSchema = {
   fieldCards: any[]
   chartCards: any[]
 }
+
+/**
+ * Card properties for Dashboard items.
+ */
+export type DashboardCard = {
+  id: string
+  timestamp: number
+  type: Type
+  name: string
+  desc: string
+  favorited: boolean
+  previousNote?: string
+  previousChildTimestamp?: number
+}
