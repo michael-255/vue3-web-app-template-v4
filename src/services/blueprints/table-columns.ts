@@ -1,263 +1,193 @@
-import { DatabaseField, DatabaseType, Severity } from '@/types/database'
-import type { AppObject } from '@/types/misc'
+import { Field, Key, LogField, SettingField, Severity } from '@/types/database'
 import { truncateString } from '@/utils/common'
 import { getDisplayDate } from '@/utils/common'
 import type { QTableColumn } from 'quasar'
 
-/*
-This file contains table column objects used by the Data view for the QTable component.
-Do NOT mutate these objects as they are used by multiple components.
-*/
-
 /**
- * Hidden Type column (required).
- * Used for data table row operations. User doesn't need to see this which saves horizontal space on the Data view.
- * (Must be at position 0 for Data Table props.cols[0])
+ * Creates standard properties for a QTable column.
+ * @param field
+ * @param required
  */
-export const requiredTypeColumn: QTableColumn = {
-  name: 'hiddenType',
-  label: '',
-  align: 'left',
-  sortable: false,
-  required: true,
-  field: (row: any) => row[DatabaseField.TYPE],
-  format: (val: DatabaseType) => `${val}`,
-  style: 'display: none', // Hide column in QTable
+function makeStandardColumn(field: any, required: boolean = false) {
+  return {
+    name: field,
+    align: 'left',
+    sortable: true,
+    required,
+    field: (row: any) => row[field],
+  } as QTableColumn
 }
 
 /**
- * Hidden Id column (required).
- * Used for data table row operations. User doesn't need to see this which saves horizontal space on the Data view.
- * (Must be at position 1 for Data Table props.cols[1])
+ * Creates required properties for a hidden QTable column.
+ * @param field
+ * @param name
  */
-export const requiredIdColumn: QTableColumn = {
-  name: 'hiddenId',
-  label: '',
-  align: 'left',
-  sortable: false,
-  required: true,
-  field: (row: any) => row[DatabaseField.ID],
-  format: (val: string) => `${val}`,
-  style: 'display: none', // Hide column in QTable
+function makeHiddenColumn(field: any, name: string) {
+  return {
+    name,
+    label: '',
+    align: 'left',
+    sortable: false,
+    required: true,
+    field: (row: any) => row[field],
+    format: (val: any) => `${val}`,
+    style: 'display: none', // Hide column in QTable
+  } as QTableColumn
 }
 
-/**
- * Type column used by all records.
- */
-export const typeColumn: QTableColumn = {
-  name: DatabaseField.TYPE,
-  label: 'Type',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.TYPE],
-  format: (val: DatabaseType) => `${val}`,
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     LOGS                                                                  //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+export const autoIdColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(LogField.AUTO_ID),
+  label: 'Auto Id',
+  format: (val: number) => `${val}`,
 }
 
-/**
- * Partial Id column used by all records. Format truncates id to provide more horizontal space on Data view.
- */
-export const partialIdColumn: QTableColumn = {
-  name: DatabaseField.ID,
-  label: 'Id*',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.ID],
-  format: (val: string) => truncateString(val, 8, '*'),
-}
-
-/**
- * Full Id column used by Settings since setting ids are short readable slugs.
- */
-export const idColumn: QTableColumn = {
-  name: DatabaseField.ID,
-  label: 'Id',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.ID],
-  format: (val: string) => `${val}`,
-}
-
-/**
- * Created Date column used by Logs and child records. Format converts the timestamp to a readable date.
- */
-export const createdTimestampColumn: QTableColumn = {
-  name: DatabaseField.CREATED_TIMESTAMP,
-  label: 'Created Date',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.CREATED_TIMESTAMP],
-  format: (val: number) => getDisplayDate(val),
-}
-
-/**
- * Setting Value column used by Settings. Format truncates value in case it is to large.
- */
-export const valueColumn: QTableColumn = {
-  name: DatabaseField.VALUE,
-  label: 'Setting Value',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.VALUE],
-  format: (val: any) => truncateString(JSON.stringify(val), 30, '...'),
-}
-
-/**
- * Severity column used by Logs.
- */
-export const severityColumn: QTableColumn = {
-  name: DatabaseField.SEVERITY,
+export const severityColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(LogField.SEVERITY),
   label: 'Severity',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.SEVERITY],
   format: (val: Severity) => `${val}`,
 }
 
-/**
- * Label column used by Logs. Format truncates value in case it is to large.
- */
-export const labelColumn: QTableColumn = {
-  name: DatabaseField.LABEL,
+export const labelColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(LogField.LABEL),
   label: 'Label',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.LABEL],
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
-/**
- * Details column used by Logs. Format truncates value in case it is to large.
- */
-export const detailsColumn: QTableColumn = {
-  name: DatabaseField.DETAILS,
+export const detailsColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(LogField.DETAILS),
   label: 'Details',
-  align: 'left',
-  sortable: false,
-  required: false,
-  field: (row: any) => row[DatabaseField.DETAILS],
   format: (val: any) => truncateString(JSON.stringify(val), 30, '...'),
 }
 
-/**
- * Message column used by Logs. Format truncates value in case it is to large.
- */
-export const messageColumn: QTableColumn = {
-  name: DatabaseField.MESSAGE,
+export const messageColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(LogField.MESSAGE),
   label: 'Message',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.MESSAGE],
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
-/**
- * Stack column used by Logs. Format truncates value in case it is to large.
- */
-export const stackColumn: QTableColumn = {
-  name: DatabaseField.STACK,
+export const stackColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(LogField.STACK),
   label: 'Stack',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.STACK],
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     SETTINGS                                                              //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+export const keyColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(SettingField.KEY),
+  label: 'Key',
+  format: (val: Key) => `${val}`,
+}
+
+export const valueColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(SettingField.VALUE),
+  label: 'Value',
+  format: (val: any) => truncateString(JSON.stringify(val), 30, '...'),
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     CORE                                                                  //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
 /**
- * Name column used by parent records. Format truncates value in case it is to large.
+ * Hidden id column (required). Saves horizontal space on the Data view by hiding from user.
+ * - Required for row operations (inspect, edit, delete, etc.)
+ * - Must be index 0 for Data Table props.cols[0]
  */
-export const nameColumn: QTableColumn = {
-  name: DatabaseField.NAME,
-  label: 'Name',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.NAME],
-  format: (val: string) => truncateString(val, 30, '...'),
+export const hiddenIdColumn: Readonly<QTableColumn> = {
+  ...makeHiddenColumn(Field.ID, 'hiddenId'),
 }
 
 /**
- * Description column used by parent records. Format truncates value in case it is to large.
+ * Hidden timestamp column (required). Saves horizontal space on the Data view by hiding from user.
+ * - Required for row operations (inspect, edit, delete, etc.)
+ * - Must be index 1 for Data Table props.cols[1]
  */
-export const descriptionColumn: QTableColumn = {
-  name: DatabaseField.DESCRIPTION,
-  label: 'Description',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.DESCRIPTION],
-  format: (val: string) => truncateString(val, 30, '...'),
+export const hiddenTimestampColumn: Readonly<QTableColumn> = {
+  ...makeHiddenColumn(Field.TIMESTAMP, 'hiddenTimestamp'),
 }
 
-/**
- * Favorite column used by parent records. Format converts boolean to Yes/No.
- */
-export const favoritedColumn: QTableColumn = {
-  name: DatabaseField.IS_FAVORITED,
-  label: 'Favorited',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.IS_FAVORITED],
-  format: (val: boolean) => (val ? 'Yes' : 'No'),
-}
-
-/**
- * Enabled column used by parent records. Format converts boolean to Yes/No.
- */
-export const enabledColumn: QTableColumn = {
-  name: DatabaseField.IS_ENABLED,
-  label: 'Enabled',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.IS_ENABLED],
-  format: (val: boolean) => (val ? 'Yes' : 'No'),
-}
-
-/**
- * Parent Id column used by child records. Format truncates id to provide more horizontal space on Data view.
- */
-export const parentIdColumn: QTableColumn = {
-  name: DatabaseField.PARENT_ID,
-  label: 'Parent Id*',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.PARENT_ID],
+export const idColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.ID),
+  label: 'Id*',
   format: (val: string) => truncateString(val, 8, '*'),
 }
 
-/**
- * Note column used by child records. Format truncates value in case it is to large.
- */
-export const noteColumn: QTableColumn = {
-  name: DatabaseField.NOTE,
-  label: 'Note',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.NOTE],
+export const timestampColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.TIMESTAMP),
+  label: 'Created Date',
+  format: (val: number) => getDisplayDate(val),
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     PARENT                                                                //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+export const nameColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.NAME),
+  label: 'Name',
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
-/**
- * Number column used by child records.
- */
-export const numberColumn: QTableColumn = {
-  name: DatabaseField.NUMBER,
-  label: 'Number',
-  align: 'left',
-  sortable: true,
-  required: false,
-  field: (row: any) => row[DatabaseField.NUMBER],
-  format: (val: number) => `${val}`,
+export const descColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.DESC),
+  label: 'Description',
+  format: (val: string) => truncateString(val, 30, '...'),
+}
+
+export const enabledColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.ENABLED),
+  label: 'Enabled',
+  format: (val: boolean) => (val ? 'Yes' : 'No'),
+}
+
+export const favoritedColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.FAVORITED),
+  label: 'Favorited',
+  format: (val: boolean) => (val ? 'Yes' : 'No'),
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     CHILD                                                                 //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+export const noteColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.NOTE),
+  label: 'Note',
+  format: (val: string) => truncateString(val, 30, '...'),
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     RECORD SPECIFIC                                                       //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+export const testIdsColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.TEST_IDS),
+  label: 'Test Ids',
+  format: (val: string[]) => truncateString(JSON.stringify(val), 30, '...'),
+}
+
+export const percentColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.PERCENT),
+  label: 'Percent',
+  format: (val: number) => `${val}%`,
 }

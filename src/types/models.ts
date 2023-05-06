@@ -1,90 +1,112 @@
-import type {
-  Severity,
-  Desc,
-  Details,
-  Enabled,
-  Favorited,
-  Field,
-  Label,
-  Message,
-  Name,
-  Note,
-  Percentage,
-  Stack,
-  TestNumber,
-  Id,
-  Type,
-  Timestamp,
-  Relation,
-  SettingField,
-  LogField,
-  Key,
-  Value,
-} from '@/types/database'
+import { Field, Key, LogField, SettingField, Severity } from '@/types/database'
+import {
+  descValidator,
+  enabledValidator,
+  favoritedValidator,
+  idValidator,
+  nameValidator,
+  noteValidator,
+  percentValidator,
+  relationValidator,
+  timestampValidator,
+  typeValidator,
+} from '@/services/Validators'
+import { mixed, array, string, number, object, type InferType } from 'yup'
 
-/**
- * Database Log table interface. Contains all potential fields for a database Log.
- */
-export interface Log {
-  [LogField.AUTO_ID]?: number // Handled by Dexie
-  [LogField.TIMESTAMP]: number
-  [LogField.SEVERITY]: Severity
-  [LogField.LABEL]: Label
-  [LogField.DETAILS]?: Details
-  [LogField.MESSAGE]?: Message
-  [LogField.STACK]?: Stack
-}
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     LOGS                                                                  //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
 
-/**
- * Database Setting table interface. Contains all potential fields for a database Setting.
- */
-export interface Setting {
-  [SettingField.KEY]: Key
-  [SettingField.VALUE]: Value
-}
+const logSchema = object({
+  [LogField.AUTO_ID]: number().integer(),
+  [LogField.TIMESTAMP]: number().required().integer(),
+  [LogField.SEVERITY]: string().required().oneOf(Object.values(Severity)),
+  [LogField.LABEL]: string().required().trim(),
+  [LogField.DETAILS]: mixed(),
+  [LogField.MESSAGE]: string(),
+  [LogField.STACK]: string(),
+})
 
-/**
- * Database Record table interface. Contains all potential fields for a database Record.
- * - Cast the result to a more specific type if known after fetching from the database
- * - Cast back to a generic Record when saving or updating the database record if necessary
- */
-export interface Record {
-  // RECORDS
-  [Field.ID]: Id
-  [Field.TIMESTAMP]: Timestamp
-  [Field.TYPE]: Type
-  [Field.RELATION]: Relation
-  // PARENTS
-  [Field.NAME]?: Name
-  [Field.DESC]?: Desc
-  [Field.ENABLED]?: Enabled
-  [Field.FAVORITED]?: Favorited
-  // CHILDREN
-  [Field.NOTE]?: Note
-  // EXAMPLE PARENT
-  // ...
-  // TEST CHILD
-  // ...
-  // EXAMPLE CHILD
-  [Field.PERCENTAGE]?: Percentage
-  // TEST CHILD
-  [Field.TEST_NUMBER]?: TestNumber
-}
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     SETTINGS                                                              //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
 
-type MandatoryFields = Required<
-  Pick<Record, Field.ID | Field.TIMESTAMP | Field.TYPE | Field.RELATION>
->
-type RequiredParentFields = Required<
-  Pick<Record, Field.NAME | Field.DESC | Field.ENABLED | Field.FAVORITED>
->
-type RequiredChildFields = Required<Pick<Record, Field.NOTE>>
+const settingSchema = object({
+  [SettingField.KEY]: string().required().oneOf(Object.values(Key)),
+  [SettingField.VALUE]: mixed().required(),
+})
 
-export type ExampleParent = MandatoryFields & RequiredParentFields // ...
-export type ExampleChild = MandatoryFields &
-  RequiredChildFields &
-  Partial<Pick<Record, Field.PERCENTAGE>>
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     CORE                                                                  //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
 
-export type TestParent = MandatoryFields & RequiredParentFields // ...
-export type TestChild = MandatoryFields &
-  RequiredChildFields &
-  Partial<Pick<Record, Field.TEST_NUMBER>>
+const coreSchema = object({
+  [Field.ID]: idValidator,
+  [Field.TIMESTAMP]: timestampValidator,
+  [Field.TYPE]: typeValidator,
+  [Field.RELATION]: relationValidator,
+})
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     PARENT                                                                //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+const parentSchema = object({
+  [Field.NAME]: nameValidator,
+  [Field.DESC]: descValidator,
+  [Field.ENABLED]: enabledValidator,
+  [Field.FAVORITED]: favoritedValidator,
+})
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     CHILD                                                                 //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+const childSchema = object({
+  [Field.NOTE]: noteValidator,
+})
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     RECORD SPECIFIC                                                       //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+const exampleParentSchema = object({
+  [Field.TEST_IDS]: array().of(idValidator).defined(),
+})
+
+const testChildSchema = object({
+  [Field.PERCENT]: percentValidator,
+})
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     MODELS                                                                //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+const exampleParent = mixed().concat(coreSchema).concat(parentSchema).concat(exampleParentSchema)
+const testChild = mixed().concat(coreSchema).concat(childSchema).concat(testChildSchema)
+const record = mixed()
+  .concat(coreSchema)
+  .concat(parentSchema)
+  .concat(childSchema)
+  .concat(exampleParentSchema)
+  .concat(testChildSchema)
+
+export type ExampleParent = InferType<typeof exampleParent>
+export type TestChild = InferType<typeof testChild>
+export type Record = InferType<typeof record>
+export type Log = InferType<typeof logSchema>
+export type Setting = InferType<typeof settingSchema>

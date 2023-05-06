@@ -3,12 +3,6 @@ import type { Log, Record, Setting } from '@/types/models'
 import { Milliseconds, AppName } from '@/types/misc'
 import { Dark } from 'quasar'
 import {
-  type Id,
-  type Label,
-  type Details,
-  type Value,
-  type AutoId,
-  type Timestamp,
   Severity,
   Type,
   Field,
@@ -53,7 +47,7 @@ export class LocalDatabase extends Dexie {
    */
   async initSettings() {
     const defaultSettings: Readonly<{
-      [key in Key]: Value
+      [key in Key]: any
     }> = {
       [Key.SHOW_INTRODUCTION]: true,
       [Key.SHOW_DASHBOARD_DESCRIPTIONS]: true,
@@ -196,7 +190,7 @@ export class LocalDatabase extends Dexie {
    * @param label
    * @param details
    */
-  async addLog(severity: Severity, label: Label, details?: Details) {
+  async addLog(severity: Severity, label: string, details?: any) {
     // AutoId is handled by Dexie
     const log: Log = {
       timestamp: Date.now(),
@@ -229,7 +223,7 @@ export class LocalDatabase extends Dexie {
    * Get exact Log by its autoId.
    * @param autoId
    */
-  async getLog(autoId: AutoId) {
+  async getLog(autoId: number) {
     return await this.Logs.get(autoId)
   }
 
@@ -253,7 +247,7 @@ export class LocalDatabase extends Dexie {
    * @param id
    * @param timestamp
    */
-  async getRecord(id: Id, timestamp: Timestamp) {
+  async getRecord(id: string, timestamp: number) {
     return await this.Records.get([id, timestamp])
   }
 
@@ -261,7 +255,7 @@ export class LocalDatabase extends Dexie {
    * Get the parent record by id only.
    * @param id
    */
-  async getParent(id: Id) {
+  async getParent(id: string) {
     return (await this.Records.where({ id }).toArray()).find((r) => r.relation === Relation.PARENT)
   }
 
@@ -269,7 +263,7 @@ export class LocalDatabase extends Dexie {
    * Get all Child Records for an id.
    * @param id
    */
-  async getChildren(id: Id) {
+  async getChildren(id: string) {
     return (await this.Records.where({ id }).toArray()).filter((r) => r.relation === Relation.CHILD)
   }
 
@@ -277,7 +271,7 @@ export class LocalDatabase extends Dexie {
    * Get previous child Record by Type.
    * @param id
    */
-  async getPreviousChild(id: Id) {
+  async getPreviousChild(id: string) {
     return (await this.Records.where({ id }).toArray())
       .filter((r) => r.relation === Relation.CHILD)
       .reverse()[0]
@@ -295,7 +289,7 @@ export class LocalDatabase extends Dexie {
    * @param timestamp
    * @param changes
    */
-  async update(id: Id, timestamp: Timestamp, changes: Partial<Record>) {
+  async update(id: string, timestamp: number, changes: Partial<Record>) {
     return await this.Records.update([id, timestamp], changes)
   }
 
@@ -304,7 +298,7 @@ export class LocalDatabase extends Dexie {
    * @param key
    * @param value
    */
-  async setSetting(key: Key, value: Value) {
+  async setSetting(key: Key, value: any) {
     // Set Quasar dark mode if the key is for dark mode
     if (key === Key.DARK_MODE) {
       Dark.set(!!value) // Cast to boolean just in case
@@ -357,7 +351,7 @@ export class LocalDatabase extends Dexie {
         const logAgeMilliseconds = Date.now() - logTimestamp
         return logAgeMilliseconds > lookupMilliseconds[logRetentionTime]
       })
-      .map((log: Log) => [log.autoId, log.timestamp] as [AutoId, Timestamp]) // Map remaining Log keys for removal
+      .map((log: Log) => [log.autoId, log.timestamp] as [number, number]) // Map remaining Log keys for removal
 
     await this.Records.bulkDelete(removableLogs)
 
@@ -369,7 +363,7 @@ export class LocalDatabase extends Dexie {
    * @param id
    * @param timestamp
    */
-  async deleteRecord(id: Id, timestamp: Timestamp) {
+  async deleteRecord(id: string, timestamp: number) {
     return await this.Records.delete([id, timestamp])
   }
 

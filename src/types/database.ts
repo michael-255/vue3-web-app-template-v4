@@ -1,3 +1,9 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     FIELDS                                                                //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * Database LogField enum defines all fields a Log model can have.
  */
@@ -97,19 +103,9 @@ export const RelationIndex = Field.RELATION as const
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     LOGS                                                                  //
+//     MISCELLANEOUS                                                         //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Database Log AutoId type is an auto incrementing number used as the Primary Key for log records.
- */
-export type AutoId = number
-
-/**
- * Database Record Timestamp type is a required number for log and normal records.
- */
-export type Timestamp = number
 
 /**
  * Database Log Severity enum.
@@ -120,33 +116,6 @@ export enum Severity {
   WARN = 'WARN',
   ERROR = 'ERROR',
 }
-
-/**
- * Database Log Label type.
- */
-export type Label = string
-
-/**
- * Database Log Details type.
- * - Use care when accessing details since it is an 'any' type
- */
-export type Details = any
-
-/**
- * Database Log Message type should contain the message string from an error.
- */
-export type Message = string
-
-/**
- * Database Log Message type should contain the stack trace string from an error.
- */
-export type Stack = string
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     SETTINGS                                                              //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Database Setting Key enum defines all valid settings that the app supports.
@@ -160,26 +129,6 @@ export enum Key {
   SHOW_INFO_MESSAGES = 'show-info-messages',
   LOG_RETENTION_TIME = 'log-retention-time',
 }
-
-/**
- * Database Setting Value type. Settings can store many potential types.
- * - Update the supported types as you add new setting values
- */
-export type Value = null | undefined | string | number | boolean | LogRetention
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     RECORDS                                                               //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Database Record Id type should normally be a random uid.
- * - Must be a URL friendly slug
- */
-export type Id = string
-
-// Reusing Timestamp from Logs
 
 /**
  * Database Record Type enum defines all types of data stored in the database.
@@ -202,76 +151,6 @@ export enum Relation {
   PARENT = 'parent',
   CHILD = 'child',
 }
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     PARENTS                                                               //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Database Parent Name type is a required string.
- * - Must enforce a minimum length of 1
- */
-export type Name = string
-
-/**
- * Database Parent Description type.
- * - Must be at least an empty string
- */
-export type Desc = string
-
-/**
- * Database Parent Enabled type for parent records determines if the record displays on the dashboard.
- */
-export type Enabled = boolean
-
-/**
- * Database Parent Favorited type for parent records determines if the record is prioritized on the dashboard.
- */
-export type Favorited = boolean
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     CHILDREN                                                              //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Database Child Note type allows users to add readable notes to their records.
- * - Must be at least an empty string
- */
-export type Note = string
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     EXAMPLE CHILD                                                         //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Database Example Child Percentage type.
- * - Must be between 0 and 100 with steps of 0.01
- */
-export type Percentage = number
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     TEST CHILD                                                            //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Database Test Child TestNumber type.
- * - Must be between Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER with steps of 0.01
- */
-export type TestNumber = number
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     MISCELLANEOUS                                                         //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Database Test Input enum defines the inputs that are selectable for the Test Parent.

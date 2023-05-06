@@ -3,12 +3,6 @@
 This Vue 3 Typescript project can be used as a web application template to help you get started
 developing. Read through this README to have a better understanding of how this project is setup.
 
-## Todo
-
-- [ ] `Refactor` NEW database design (keys and queries)
-- [ ] Reduce oversized type naming (Ex. DatabaseField -> Field)
-- [ ] Fail if trying with a `Parent` `SK` value and record already exists
-
 ## Post Cloning Steps
 
 - [ ] Update `package.json`
@@ -138,6 +132,7 @@ Details on the steps I took to create this project.
 
    - `npm i slugify` - For making URL slug from text
    - `npm i dexie` - IndexedDB wrapper
+   - `npm i yup` - Data validation
    - `npm i -D gh-pages` - GitHub Pages deployment
    - `npm i @vueuse/core` - Vue component utilities
    - `npm i chart.js vue-chartjs` - Chart.js with a Vue wrapper

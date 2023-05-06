@@ -2,7 +2,7 @@
 import { RouterView, useRoute } from 'vue-router'
 import { Icon } from '@/types/icons'
 import { RouteName } from '@/router/route-names'
-import { getParentCategoryTypes, getLabel, getIcon, getSlug } from '@/services/Blueprints'
+// import { getParentCategoryTypes, getLabel, getIcon, getSlug } from '@/services/Blueprints'
 import { AppHeaderColor, AppName } from '@/types/misc'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
@@ -52,7 +52,7 @@ const route = useRoute()
         <QSeparator spaced="md" inset />
 
         <!-- Parent Data Links (uses DataBlueprint) -->
-        <QItem
+        <!-- <QItem
           v-for="(parentType, i) in getParentCategoryTypes()"
           :key="i"
           clickable
@@ -68,7 +68,7 @@ const route = useRoute()
           <QItemSection>{{ getLabel(parentType, 'plural') }}</QItemSection>
         </QItem>
 
-        <QSeparator spaced="md" inset />
+        <QSeparator spaced="md" inset /> -->
 
         <!-- Common App Links -->
         <QItem clickable v-ripple :to="{ name: RouteName.SETTINGS }">

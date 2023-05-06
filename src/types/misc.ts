@@ -1,14 +1,5 @@
-import type {
-  DatabaseField,
-  DatabaseAction,
-  DatabaseCategory,
-  DatabaseChildType,
-  DatabaseParentType,
-  DatabaseType,
-  RecordIssue,
-} from '@/types/database'
 import type { Icon } from '@/types/icons'
-import type { DatabaseRecord, Log, Record, Setting } from '@/types/models'
+import type { Log, Record, Setting } from '@/types/models'
 import type { QTableColumn } from 'quasar'
 
 /**
@@ -95,46 +86,46 @@ export type ExportData = {
 /**
  * Used to display data from parent types on the dashboard.
  */
-export type DashboardParent = {
-  [DatabaseField.TYPE]: DatabaseParentType
-  [DatabaseField.ID]: string
-  [DatabaseField.NAME]: string
-  [DatabaseField.DESCRIPTION]: Optional<string>
-  [DatabaseField.IS_FAVORITED]: boolean
-  previousNote?: string
-  previousCreatedTimestamp?: number
-  previousNumber?: number
-}
+// export type DashboardParent = {
+//   [DatabaseField.TYPE]: DatabaseParentType
+//   [DatabaseField.ID]: string
+//   [DatabaseField.NAME]: string
+//   [DatabaseField.DESCRIPTION]: Optional<string>
+//   [DatabaseField.IS_FAVORITED]: boolean
+//   previousNote?: string
+//   previousCreatedTimestamp?: number
+//   previousNumber?: number
+// }
 
 /**
  * A core blueprint defines the properties of a database type and how the app can use them.
  */
-export type CoreBlueprint = {
-  readonly type: DatabaseType
-  readonly typeSlug: string
-  readonly category: DatabaseCategory
-  readonly singularLabel: string
-  readonly pluralLabel: string
-  readonly icon: Icon
-  readonly parentType: Optional<DatabaseParentType>
-  readonly childType: Optional<DatabaseChildType>
-  readonly supportedActions: DatabaseAction[]
-  readonly chartBluprints: ChartBlueprint[]
-  readonly fieldBlueprints: FieldBlueprint[]
-  readonly visibleColumns: DatabaseField[]
-  readonly tableColumns: QTableColumn[]
-}
+// export type CoreBlueprint = {
+//   readonly type: DatabaseType
+//   readonly typeSlug: string
+//   readonly category: DatabaseCategory
+//   readonly singularLabel: string
+//   readonly pluralLabel: string
+//   readonly icon: Icon
+//   readonly parentType: Optional<DatabaseParentType>
+//   readonly childType: Optional<DatabaseChildType>
+//   readonly supportedActions: DatabaseAction[]
+//   readonly chartBluprints: ChartBlueprint[]
+//   readonly fieldBlueprints: FieldBlueprint[]
+//   readonly visibleColumns: DatabaseField[]
+//   readonly tableColumns: QTableColumn[]
+// }
 
 /**
  * Field properties commonly used together by app components.
  * Any field with no component doesn't support rendering for operations like create and update.
  */
-export type FieldBlueprint = {
-  readonly field: DatabaseField
-  readonly label: string
-  readonly inspectFormat: (val: any) => string
-  readonly component?: any // Vue component used when rendering (if any)
-}
+// export type FieldBlueprint = {
+//   readonly field: DatabaseField
+//   readonly label: string
+//   readonly inspectFormat: (val: any) => string
+//   readonly component?: any // Vue component used when rendering (if any)
+// }
 
 /**
  * Chart properties required for chart components.
@@ -143,13 +134,4 @@ export type ChartBlueprint = {
   readonly label: string
   readonly chartOptions: AppObject
   readonly component: any // Vue component used when rendering
-}
-
-/**
- * Record Curing page data item.
- */
-export type CurableRecord = {
-  [DatabaseField.TYPE]: DatabaseType
-  [DatabaseField.ID]: string
-  recordIssue: RecordIssue
 }
