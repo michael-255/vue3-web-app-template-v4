@@ -2,6 +2,7 @@ import type { Icon } from '@/types/icons'
 import type { Log, Record, Setting } from '@/types/models'
 import type { QTableColumn } from 'quasar'
 import type { Action, Field, Relation, Type } from '@/types/database'
+import type { Ref } from 'vue'
 
 /**
  * App display name.
@@ -157,6 +158,7 @@ export type AppSchema = {
  * Card properties for Dashboard items.
  */
 export type DashboardCard = {
+  labelPlural: string // Use as key on Dashboard page
   id: string
   timestamp: number
   type: Type

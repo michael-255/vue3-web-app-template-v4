@@ -93,6 +93,8 @@ export default function useDefaults() {
           }
 
           createRecords(3, Type.EXAMPLE)
+          createRecords(3, Type.EXAMPLE)
+          createRecords(3, Type.EXAMPLE)
           createRecords(3, Type.TEST)
 
           await DB.bulkAdd(records as Record[])

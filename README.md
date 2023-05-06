@@ -262,7 +262,7 @@ Details on the steps I took to create this project.
    {
      "compilerOptions": {
        "target": "es2022",
-       "lib": ["es2022"],
+       "lib": ["es2022", "dom"],
        "ignoreDeprecations": "5.0"
      }
    }
