@@ -2,10 +2,11 @@
 import { exportFile } from 'quasar'
 import { Icon } from '@/types/icons'
 import { type ExportData, AppName, Limit } from '@/types/misc'
-import { Type, Key, LogRetention } from '@/types/database'
+import { Type, Key, LogRetention, Relation } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
 import type { Setting, Record } from '@/types/models'
 import { useMeta } from 'quasar'
+import { appSchema } from '@/services/AppSchema'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
 import useDialogs from '@/composables/useDialogs'
@@ -26,13 +27,23 @@ const settings: Ref<Setting[]> = ref([])
 const logRetentionIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
 const exportModel: Ref<Type[]> = ref([])
-const exportOptions = Object.values(Type).map((type) => ({
-  value: type,
-  label: type,
+const exportOptions = appSchema.map((i) => ({
+  label: i.labelPlural,
+  value: { type: i.type, relation: i.relation },
 }))
-const accessOptions = ref(Object.values(Type))
+const accessOptions = ref(
+  appSchema.map((i) => ({
+    label: i.labelPlural,
+    value: { type: i.type, relation: i.relation },
+  }))
+)
 const accessModel = ref(accessOptions.value[0])
-const deleteOptions = ref(Object.values(Type))
+const deleteOptions = ref(
+  appSchema.map((i) => ({
+    label: i.labelPlural,
+    value: { type: i.type, relation: i.relation },
+  }))
+)
 const deleteModel = ref(deleteOptions.value[0])
 
 // Subscriptions
@@ -43,7 +54,7 @@ const subscription = DB.liveSettings().subscribe({
     logRetentionIndex.value = Object.values(LogRetention).findIndex((i) => i === logRetentionTime)
   },
   error: (error) => {
-    log.error('Error fetching live settings', error)
+    log.error('Error fetching live Settings', error)
   },
 })
 
@@ -81,7 +92,7 @@ function onImportFile() {
     'info',
     async () => {
       try {
-        // TODO - Importing Settings
+        // TODO - Importing Settings (ignore Logs!)
         const parsedFileData = JSON.parse(await importFile.value.text())
 
         log.silentDebug('parsedFileData:', parsedFileData)
@@ -93,11 +104,10 @@ function onImportFile() {
           throw new Error(`Cannot import data from this app: ${appName} `)
         }
 
+        // TODO - Will need to use `yup` validators to validate imported data
         const types = Object.values(Type)
 
         const importedData = records?.filter((record: Record) => types.includes(record.type))
-
-        log.silentDebug('importedData:', importedData)
 
         await DB.bulkAdd(importedData)
 
@@ -176,19 +186,19 @@ async function onChangeLogRetention(logRetentionIndex: number) {
  * On confirmation, deletes all records of a specified type.
  * @param type
  */
-async function onDeleteDataType(type: Type) {
+async function onDeleteBy(label: string, type: Type, relation?: Relation) {
   confirmDialog(
-    `Delete ${type} Data`,
-    `Permanetly delete all ${type} data from the database?`,
+    `Delete ${label}`,
+    `Permanetly delete all ${label} from the database?`,
     Icon.CLEAR,
     'negative',
     async () => {
       try {
-        await DB.clearByType(type)
+        await DB.clearBy(type, relation)
         await DB.initSettings()
-        log.info(`${type} data successfully deleted`)
+        log.info(`${type} successfully deleted`)
       } catch (error) {
-        log.error(`Error deleting ${type} data`, error)
+        log.error(`Error deleting ${type}`, error)
       }
     }
   )
@@ -197,9 +207,9 @@ async function onDeleteDataType(type: Type) {
 /**
  * On confirmation, deletes all records of any type from the database. Re-initializes the settings.
  */
-async function onDeleteAllData() {
+async function onDeleteAll() {
   confirmDialog(
-    'Delete All Data',
+    'Delete All',
     'Permanetly delete all data from the database?',
     Icon.CLEAR,
     'negative',
@@ -446,7 +456,13 @@ async function onDeleteDatabase() {
                 :disable="!deleteModel"
                 label="Delete Data"
                 color="negative"
-                @click="onDeleteDataType(deleteModel)"
+                @click="
+                  onDeleteBy(
+                    deleteModel.label,
+                    deleteModel.value?.type,
+                    deleteModel.value?.relation
+                  )
+                "
               />
             </template>
           </QSelect>
@@ -454,7 +470,7 @@ async function onDeleteDatabase() {
 
         <div class="q-mb-md">
           <p>Permanently delete all data records from the database.</p>
-          <QBtn label="Delete All Data" color="negative" @click="onDeleteAllData()" />
+          <QBtn label="Delete All Data" color="negative" @click="onDeleteAll()" />
         </div>
 
         <div class="q-mb-md">

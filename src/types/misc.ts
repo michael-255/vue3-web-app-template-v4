@@ -1,6 +1,7 @@
 import type { Icon } from '@/types/icons'
 import type { Log, Record, Setting } from '@/types/models'
 import type { QTableColumn } from 'quasar'
+import type { Action, Field, Relation, Type } from '@/types/database'
 
 /**
  * App display name.
@@ -134,4 +135,20 @@ export type ChartBlueprint = {
   readonly label: string
   readonly chartOptions: AppObject
   readonly component: any // Vue component used when rendering
+}
+
+/**
+ * TODO
+ */
+export type AppSchema = {
+  type: Type
+  relation?: Relation // Logs and Settings don't use Relation
+  labelSingular: string
+  labelPlural: string
+  icon: Icon
+  supportedActions: Action[]
+  visibleColumns: Field[]
+  tableColumns: QTableColumn[]
+  fieldCards: any[]
+  chartCards: any[]
 }

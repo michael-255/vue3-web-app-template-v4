@@ -1,4 +1,4 @@
-import Dexie, { liveQuery, type PromiseExtended, type Table } from 'dexie'
+import Dexie, { liveQuery, type Table } from 'dexie'
 import type { Log, Record, Setting } from '@/types/models'
 import { Milliseconds, AppName } from '@/types/misc'
 import { Dark } from 'quasar'
@@ -115,10 +115,10 @@ export class LocalDatabase extends Dexie {
 
   /**
    * Observable for Data View with any table with Type and Relation to control results.
-   * @param relation
    * @param type
+   * @param relation
    */
-  liveData(relation: Relation, type: Type) {
+  liveData(type: Type, relation?: Relation) {
     if (type === Type.LOG) {
       return this.liveLogs()
     } else if (type === Type.SETTING) {
@@ -352,27 +352,28 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Delete all data of a specific Type.
+   * Delete all data of a specific type and relation.
    * @param type
+   * @param relation
    */
-  async clearByType(type: Type) {
-    const clearCommand: Readonly<{
-      [key in Type]: () => PromiseExtended<void | number>
-    }> = {
-      [Type.LOG]: () => this.Logs.clear(),
-      [Type.SETTING]: () => this.Settings.clear(),
-      [Type.EXAMPLE]: () =>
-        this.Records.toCollection()
-          .filter((r) => r.type === Type.EXAMPLE)
-          .delete(),
-      [Type.TEST]: () =>
-        this.Records.toCollection()
-          .filter((r) => r.type === Type.TEST)
-          .delete(),
+  async clearBy(type: Type, relation?: Relation) {
+    if (type === Type.LOG) {
+      return await this.Logs.clear()
+    } else if (type === Type.SETTING) {
+      return await this.Settings.clear()
     }
 
-    // Run the clear command for the given type
-    return await clearCommand[type]()
+    if (relation) {
+      // Delete records of matching type and relation
+      return await this.Records.toCollection()
+        .filter((r) => r.type === type && r.relation === relation)
+        .delete()
+    } else {
+      // Delete all Records of that type (parent and child)
+      return await this.Records.toCollection()
+        .filter((r) => r.type === type)
+        .delete()
+    }
   }
 
   /**
