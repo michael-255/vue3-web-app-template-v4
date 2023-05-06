@@ -4,10 +4,11 @@ import { AppName } from '@/types/misc'
 import { useMeta } from 'quasar'
 import { Key } from '@/types/database'
 import { ref, type Ref, onUnmounted } from 'vue'
+import type { Record } from '@/types/models'
 import ResponsivePage from '@/components/ResponsivePage.vue'
+import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/LocalDatabase'
-import type { Record } from '@/types/models'
 
 useMeta({ title: `${AppName} - Dashboard` })
 
@@ -15,18 +16,12 @@ useMeta({ title: `${AppName} - Dashboard` })
 const { log } = useLogger()
 
 // Data
-// const dashboardListOptions = getParentCategoryTypes().map((type, i) => ({
-//   label: type,
-//   value: i,
-// }))
-const showWelcome: Ref<any> = ref(null)
 const showDescriptions: Ref<any> = ref(null)
 const records: Ref<Record[]> = ref([])
 
 // Subscriptions
 const settingsSubscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
-    showWelcome.value = liveSettings.find((s) => s.key === Key.SHOW_WELCOME)?.value
     showDescriptions.value = liveSettings.find((s) => s.key === Key.SHOW_DESCRIPTIONS)?.value
   },
   error: (error) => {
@@ -51,6 +46,8 @@ onUnmounted(() => {
 
 <template>
   <ResponsivePage :bannerIcon="Icon.DASHBOARD" bannerTitle="Dashboard">
+    <WelcomeOverlay />
+
     <div>Dashboard</div>
   </ResponsivePage>
 </template>
