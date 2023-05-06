@@ -1,3 +1,4 @@
+import type { Relation, Type } from '@/types/database'
 import { RouteName } from '@/router/route-names'
 import { useRouter } from 'vue-router'
 import useLogger from '@/composables/useLogger'
@@ -11,15 +12,14 @@ export default function useRoutables() {
 
   /**
    * Go to data table route.
+   * @param type
+   * @param relation
    */
-  async function goToData() {
+  async function goToData(type: Type, relation?: Relation) {
     try {
       router.push({
         name: RouteName.DATA,
-        params: {
-          type: '1',
-          relation: 2,
-        },
+        params: { type, relation },
       })
     } catch (error) {
       log.error('Error accessing data route', error)
@@ -27,33 +27,16 @@ export default function useRoutables() {
   }
 
   /**
-   * Go to record inspection route.
-   */
-  function goToInspect() {
-    try {
-      router.push({
-        name: RouteName.INSPECT,
-        params: {
-          id: '1',
-          timestamp: 2,
-        },
-      })
-    } catch (error) {
-      log.error('Error accessing inspect route', error)
-    }
-  }
-
-  /**
    * Go to record creation route.
+   * @param type
+   * @param relation
+   * @param id
    */
-  function goToCreate() {
+  function goToCreate(type: Type, relation: Relation, id?: string) {
     try {
       router.push({
         name: RouteName.CREATE,
-        params: {
-          id: '1',
-          timestamp: 2,
-        },
+        params: { type, relation, id },
       })
     } catch (error) {
       log.error('Error accessing create route', error)
@@ -61,16 +44,31 @@ export default function useRoutables() {
   }
 
   /**
-   * Go to record edit route.
+   * Go to record inspection route.
+   * @param id
+   * @param timestamp
    */
-  function goToEdit() {
+  function goToInspect(id: string, timestamp: number) {
+    try {
+      router.push({
+        name: RouteName.INSPECT,
+        params: { id, timestamp },
+      })
+    } catch (error) {
+      log.error('Error accessing inspect route', error)
+    }
+  }
+
+  /**
+   * Go to record edit route.
+   * @param id
+   * @param timestamp
+   */
+  function goToEdit(id: string, timestamp: number) {
     try {
       router.push({
         name: RouteName.EDIT,
-        params: {
-          id: '1',
-          timestamp: 2,
-        },
+        params: { id, timestamp },
       })
     } catch (error) {
       log.error('Error accessing edit route', error)
@@ -79,15 +77,14 @@ export default function useRoutables() {
 
   /**
    * Go to charts route.
+   * @param id
+   * @param timestamp
    */
-  function goToCharts() {
+  function goToCharts(id: string, timestamp: number) {
     try {
       router.push({
         name: RouteName.CHARTS,
-        params: {
-          id: '1',
-          timestamp: 2,
-        },
+        params: { id, timestamp },
       })
     } catch (error) {
       log.error('Error accessing charts route', error)

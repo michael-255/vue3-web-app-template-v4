@@ -138,21 +138,21 @@ async function onDelete(id: string, timestamp: number, name: string) {
             transition-hide="flip-left"
           >
             <QList>
-              <QItem clickable @click="goToInspect()">
+              <QItem clickable @click="goToInspect(dashboardCard.id, dashboardCard.timestamp)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.INSPECT" />
                 </QItemSection>
                 <QItemSection>Inspect</QItemSection>
               </QItem>
 
-              <QItem clickable @click="goToEdit()">
+              <QItem clickable @click="goToEdit(dashboardCard.id, dashboardCard.timestamp)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.EDIT" />
                 </QItemSection>
                 <QItemSection>Edit</QItemSection>
               </QItem>
 
-              <QItem clickable @click="goToCharts()">
+              <QItem clickable @click="goToCharts(dashboardCard.id, dashboardCard.timestamp)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.CHARTS" />
                 </QItemSection>

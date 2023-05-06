@@ -11,22 +11,31 @@ const router = createRouter({
       component: () => import('../views/DashboardView.vue'),
     },
     {
-      path: '/data/:type/:relation',
+      /**
+       * - Type required for table selection
+       * - Relation needed for table selection when NOT Logs or Settings
+       */
+      path: '/data/:type/:relation?',
       name: RouteName.DATA,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DataView.vue'),
+    },
+    {
+      /**
+       * - Type required for creation
+       * - Relation required for creation
+       * - Id needed if creating child of parent
+       */
+      path: '/create/:type/:relation/:id?',
+      name: RouteName.CREATE,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/CreateView.vue'),
     },
     {
       path: '/inspect/:id/:timestamp',
       name: RouteName.INSPECT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/InspectView.vue'),
-    },
-    {
-      path: '/create/:id/:timestamp',
-      name: RouteName.CREATE,
-      meta: { layout: 'MenuLayout' },
-      component: () => import('../views/CreateView.vue'),
     },
     {
       path: '/edit/:id/:timestamp',
