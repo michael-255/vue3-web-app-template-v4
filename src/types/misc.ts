@@ -139,7 +139,7 @@ export type ChartBlueprint = {
 }
 
 /**
- * TODO
+ * How data in the app is set up for display and use.
  */
 export type AppSchema = {
   type: Type
@@ -158,7 +158,7 @@ export type AppSchema = {
  * Card properties for Dashboard items.
  */
 export type DashboardCard = {
-  labelPlural: string // Use as key on Dashboard page
+  labelPlural?: string // Use as key on Dashboard page
   id: string
   timestamp: number
   type: Type
@@ -166,5 +166,5 @@ export type DashboardCard = {
   desc: string
   favorited: boolean
   previousNote?: string
-  previousChildTimestamp?: number
+  previousTimestamp?: number
 }

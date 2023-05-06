@@ -11,6 +11,36 @@ const router = createRouter({
       component: () => import('../views/DashboardView.vue'),
     },
     {
+      path: '/data/:type/:relation',
+      name: RouteName.DATA,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/DataView.vue'),
+    },
+    {
+      path: '/inspect/:id/:timestamp',
+      name: RouteName.INSPECT,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/InspectView.vue'),
+    },
+    {
+      path: '/create/:id/:timestamp',
+      name: RouteName.CREATE,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/CreateView.vue'),
+    },
+    {
+      path: '/edit/:id/:timestamp',
+      name: RouteName.EDIT,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/EditView.vue'),
+    },
+    {
+      path: '/charts/:id/:timestamp',
+      name: RouteName.CHARTS,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/ChartsView.vue'),
+    },
+    {
       path: '/settings',
       name: RouteName.SETTINGS,
       meta: { layout: 'MenuLayout' },

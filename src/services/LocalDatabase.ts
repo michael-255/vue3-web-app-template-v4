@@ -1,6 +1,6 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
 import type { Log, Record, Setting } from '@/types/models'
-import { Milliseconds, AppName } from '@/types/misc'
+import { Milliseconds, AppName, type DashboardCard } from '@/types/misc'
 import { Dark } from 'quasar'
 import {
   Severity,
@@ -16,6 +16,7 @@ import {
   Key,
   SettingField,
 } from '@/types/database'
+import { appSchema } from './AppSchema'
 
 /**
  * A Dexie wrapper class that acts as a local database.
@@ -102,14 +103,46 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Observable of Records table with enabled Parent Types sorted by name for the Dasboard.
+   * Observable of dashboard cards for the Dashboard page.
    */
   liveDashboard() {
-    return liveQuery(() =>
-      this.Records.where({ relation: Relation.PARENT })
+    return liveQuery(async () => {
+      // Initial Records query for parent and enabled records sorted by name
+      const records = await this.Records.where({ relation: Relation.PARENT })
         .filter((r) => r.enabled === true)
         .sortBy(Field.NAME)
-    )
+
+      const favorites: DashboardCard[] = []
+      const nonFavorites: DashboardCard[] = []
+
+      // Build Dashboard Cards from Records and the previous child record
+      for await (const r of records) {
+        const previous = await this.getPreviousChild(r.id)
+
+        const dashboardCard: DashboardCard = {
+          labelPlural: appSchema.find((i) => i.type === r.type && i.relation === Relation.PARENT)
+            ?.labelPlural,
+          id: r.id,
+          timestamp: r.timestamp,
+          type: r.type,
+          name: r.name,
+          desc: r.desc,
+          favorited: r.favorited,
+          previousNote: previous.note,
+          previousTimestamp: previous.timestamp,
+        }
+
+        // Add to favorites or non-favorites
+        if (r.favorited === true) {
+          favorites.push(dashboardCard)
+        } else {
+          nonFavorites.push(dashboardCard)
+        }
+      }
+
+      // Return with favorites prioritized
+      return [...favorites, ...nonFavorites]
+    })
   }
 
   /**

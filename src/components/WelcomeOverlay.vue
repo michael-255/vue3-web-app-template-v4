@@ -104,7 +104,7 @@ async function onCloseWelcomeOverlay() {
           <p>Click the button below when you are ready to get started.</p>
           <QBtn
             no-caps
-            :label="`Use ${AppName}`"
+            label="Start Using App"
             class="full-width"
             size="lg"
             color="positive"

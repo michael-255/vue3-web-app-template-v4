@@ -9,6 +9,7 @@ import { getRecordsCountDisplay } from '@/utils/common'
 import { appSchema } from '@/services/AppSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
+import DashboardParentCard from '@/components/DashboardParentCard.vue'
 import useUIStore from '@/stores/ui'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/LocalDatabase'
@@ -20,7 +21,7 @@ const uiStore = useUIStore()
 const { log } = useLogger()
 
 // Data
-const showDescriptions: Ref<boolean> = ref(false)
+const showDescription: Ref<boolean> = ref(false)
 const dashboardCards: Ref<DashboardCard[]> = ref([])
 const dashboardOptions = appSchema
   .filter((i) => i.relation === Relation.PARENT)
@@ -32,7 +33,7 @@ const dashboardOptions = appSchema
 // Subscriptions
 const settingsSubscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
-    showDescriptions.value = liveSettings.find((s) => s.key === Key.SHOW_DESCRIPTIONS)?.value
+    showDescription.value = liveSettings.find((s) => s.key === Key.SHOW_DESCRIPTIONS)?.value
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)
@@ -41,32 +42,7 @@ const settingsSubscription = DB.liveSettings().subscribe({
 
 const dashboardSubscription = DB.liveDashboard().subscribe({
   next: (liveDashboard) => {
-    const favorites: DashboardCard[] = []
-    const nonFavorites: DashboardCard[] = []
-
-    liveDashboard.forEach((p) => {
-      const dashboardCard = {
-        labelPlural: appSchema.find((i) => i.type === p.type && i.relation === Relation.PARENT)
-          ?.labelPlural,
-        id: p.id,
-        timestamp: p.timestamp,
-        type: p.type,
-        relation: p.relation,
-        name: p.name,
-        desc: p.desc,
-        favorited: p.favorited,
-        previousNote: '', // TODO
-        previousChildTimestamp: 0, // TODO
-      } as DashboardCard
-
-      if (p.favorited === true) {
-        favorites.push(dashboardCard)
-      } else {
-        nonFavorites.push(dashboardCard)
-      }
-    })
-
-    dashboardCards.value = [...favorites, ...nonFavorites]
+    dashboardCards.value = liveDashboard
   },
   error: (error) => {
     log.error('Error fetching live Dashboard', error)
@@ -77,6 +53,13 @@ onUnmounted(() => {
   settingsSubscription.unsubscribe()
   dashboardSubscription.unsubscribe()
 })
+
+/**
+ * Returns dashboard cards for current dashboard selection.
+ */
+function currentDashboardCards() {
+  return dashboardCards.value.filter((dc) => dc.labelPlural === uiStore.dashboardSelection)
+}
 
 /**
  * Returns display string with record count for bottom of dashboard page.
@@ -90,7 +73,7 @@ function getCountDisplay() {
 /**
  * Returns label text for create button on bottom of dashboard page.
  */
-function getRecordCreateLabel() {
+function getCreateLabel() {
   const labelSingular = appSchema.find(
     (i) => i.labelPlural === uiStore.dashboardSelection
   )?.labelSingular
@@ -118,18 +101,14 @@ function getRecordCreateLabel() {
     </QCard>
 
     <!-- Dashboard Cards -->
-    <div
-      v-for="(dashboardCard, i) in dashboardCards.filter(
-        (dc) => dc.labelPlural === uiStore.dashboardSelection
-      )"
-      :key="i"
-    >
-      <QCard class="q-mb-md">
-        <QCardSection>
-          {{ dashboardCard }}
-          <QBtn round color="positive" :icon="Icon.ADD_NOTE" />
-        </QCardSection>
-      </QCard>
+    <div v-for="(dashboardCard, i) in currentDashboardCards()" :key="i">
+      <DashboardParentCard
+        class="q-mb-md"
+        :showDescription="showDescription"
+        :dashboardCard="dashboardCard"
+      >
+        <QBtn round color="positive" :icon="Icon.ADD_NOTE" />
+      </DashboardParentCard>
     </div>
 
     <!-- Record Count & Create -->
@@ -142,7 +121,7 @@ function getRecordCreateLabel() {
         {{ getCountDisplay() }}
       </div>
 
-      <QBtn color="positive" :icon="Icon.CREATE" :label="`${getRecordCreateLabel()}`" />
+      <QBtn color="positive" :icon="Icon.CREATE" :label="`${getCreateLabel()}`" />
     </div>
   </ResponsivePage>
 </template>
