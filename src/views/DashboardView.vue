@@ -5,12 +5,13 @@ import { useMeta } from 'quasar'
 import { Key, Relation } from '@/types/database'
 import { ref, type Ref, onUnmounted } from 'vue'
 import type { DashboardCard } from '@/types/misc'
+import { getRecordsCountDisplay } from '@/utils/common'
 import { appSchema } from '@/services/AppSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
+import useUIStore from '@/stores/ui'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/LocalDatabase'
-import useUIStore from '@/stores/ui'
 
 useMeta({ title: `${AppName} - Dashboard` })
 
@@ -76,6 +77,26 @@ onUnmounted(() => {
   settingsSubscription.unsubscribe()
   dashboardSubscription.unsubscribe()
 })
+
+/**
+ * Returns display string with record count for bottom of dashboard page.
+ */
+function getCountDisplay() {
+  return getRecordsCountDisplay(
+    dashboardCards.value.filter((dc) => dc.labelPlural === uiStore.dashboardSelection)
+  )
+}
+
+/**
+ * Returns label text for create button on bottom of dashboard page.
+ */
+function getRecordCreateLabel() {
+  const labelSingular = appSchema.find(
+    (i) => i.labelPlural === uiStore.dashboardSelection
+  )?.labelSingular
+
+  return `Create ${labelSingular}`
+}
 </script>
 
 <template>
@@ -96,6 +117,7 @@ onUnmounted(() => {
       </QCardSection>
     </QCard>
 
+    <!-- Dashboard Cards -->
     <div
       v-for="(dashboardCard, i) in dashboardCards.filter(
         (dc) => dc.labelPlural === uiStore.dashboardSelection
@@ -108,6 +130,19 @@ onUnmounted(() => {
           <QBtn round color="positive" :icon="Icon.ADD_NOTE" />
         </QCardSection>
       </QCard>
+    </div>
+
+    <!-- Record Count & Create -->
+    <div class="row justify-center q-my-md">
+      <div class="col-12 text-center">
+        <QIcon name="menu_open" size="80px" color="grey" />
+      </div>
+
+      <div class="col-12 text-grey text-center q-mb-md">
+        {{ getCountDisplay() }}
+      </div>
+
+      <QBtn color="positive" :icon="Icon.CREATE" :label="`${getRecordCreateLabel()}`" />
     </div>
   </ResponsivePage>
 </template>
