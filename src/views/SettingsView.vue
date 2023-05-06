@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { exportFile } from 'quasar'
 import { Icon } from '@/types/icons'
-import { LogRetention, type ExportData, AppName, Limit } from '@/types/misc'
-import { DatabaseType, SettingId } from '@/types/database'
+import { type ExportData, AppName, Limit } from '@/types/misc'
+import { Type, Key, LogRetention } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
-import type { DatabaseRecord } from '@/types/models'
+import type { Setting, Record } from '@/types/models'
 import { useMeta } from 'quasar'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
 import useDialogs from '@/composables/useDialogs'
 import useDefaults from '@/composables/useDefaults'
-import useRoutables from '@/composables/useRoutables'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import DB from '@/services/LocalDatabase'
 
@@ -20,33 +19,31 @@ useMeta({ title: `${AppName} - Settings` })
 const { log } = useLogger()
 const { notify } = useNotifications()
 const { confirmDialog } = useDialogs()
-const { goToData, goToRecordCuring } = useRoutables()
 const { onDefaults } = useDefaults()
 
 // Data
-const settings: Ref<any[]> = ref([])
+const settings: Ref<Setting[]> = ref([])
 const logRetentionIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
-const exportModel: Ref<DatabaseType[]> = ref([])
-const exportOptions = Object.values(DatabaseType).map((type) => ({
+const exportModel: Ref<Type[]> = ref([])
+const exportOptions = Object.values(Type).map((type) => ({
   value: type,
   label: type,
 }))
-const accessOptions = ref(Object.values(DatabaseType))
+const accessOptions = ref(Object.values(Type))
 const accessModel = ref(accessOptions.value[0])
-const deleteOptions = ref(Object.values(DatabaseType))
+const deleteOptions = ref(Object.values(Type))
 const deleteModel = ref(deleteOptions.value[0])
 
+// Subscriptions
 const subscription = DB.liveSettings().subscribe({
-  next: (records) => {
-    settings.value = records
-
-    const logRetentionTime = records.find((s) => s.id === SettingId.LOG_RETENTION_TIME)?.value
-
+  next: (liveSettings) => {
+    settings.value = liveSettings
+    const logRetentionTime = liveSettings.find((s) => s.key === Key.LOG_RETENTION_TIME)?.value
     logRetentionIndex.value = Object.values(LogRetention).findIndex((i) => i === logRetentionTime)
   },
   error: (error) => {
-    log.error('Error loading live settings', error)
+    log.error('Error fetching live settings', error)
   },
 })
 
@@ -78,15 +75,16 @@ function onRejectedFile(entries: any) {
  */
 function onImportFile() {
   confirmDialog(
-    'Import Data',
-    `Import file ${importFile?.value?.name} and attempt to load data from it?`,
+    'Import',
+    `Import data from ${importFile?.value?.name} and attempt to load records into the database from it?`,
     Icon.INFO,
     'info',
     async () => {
       try {
+        // TODO - Importing Settings
         const parsedFileData = JSON.parse(await importFile.value.text())
 
-        log.silentDebug('parsedFileData =', parsedFileData)
+        log.silentDebug('parsedFileData:', parsedFileData)
 
         const { appName, records } = parsedFileData
 
@@ -95,15 +93,13 @@ function onImportFile() {
           throw new Error(`Cannot import data from this app: ${appName} `)
         }
 
-        const types = Object.values(DatabaseType)
+        const types = Object.values(Type)
 
-        const importedData = records?.filter((record: DatabaseRecord) =>
-          types.includes(record.type)
-        )
+        const importedData = records?.filter((record: Record) => types.includes(record.type))
 
-        log.silentDebug('importedData =', importedData)
+        log.silentDebug('importedData:', importedData)
 
-        await DB.bulkAddRecords(importedData)
+        await DB.bulkAdd(importedData)
 
         importFile.value = null // Clear input
 
@@ -118,34 +114,31 @@ function onImportFile() {
 /**
  * On confirmation, exports your records as a JSON file.
  */
-function onExportRecords(types: DatabaseType[]) {
+function onExportRecords(types: Type[]) {
   // Build export file name
   const appNameSlug = AppName.toLowerCase().split(' ').join('-')
   const date = new Date().toISOString().split('T')[0]
   const filename = `export-${appNameSlug}-${date}.json`
 
   confirmDialog(
-    'Export Data',
-    `Export all selected data types as the file ${filename}?`,
+    'Export',
+    `Export all selected record types into the file ${filename}?`,
     Icon.INFO,
     'info',
     async () => {
       try {
-        // Get all data records from the database
         const records = await DB.getAllRecords()
-
-        // Include record in export if it is one of the selected types
-        const exportRecords = records.filter((record) => types.includes(record.type))
 
         // Build export file meta data
         const exportData = {
           appName: AppName,
-          exportedTimestamp: new Date().getTime(),
-          recordsCount: exportRecords.length,
-          records: exportRecords,
+          exportedTimestamp: Date.now(),
+          logs: types.includes(Type.LOG) ? await DB.getAllLogs() : [],
+          settings: types.includes(Type.SETTING) ? await DB.getAllSettings() : [],
+          records: records.filter((r) => types.includes(r.type)),
         } as ExportData
 
-        log.silentDebug('exportData =', exportData)
+        log.silentDebug('exportData:', exportData)
 
         // Attempt to download the export records as a JSON file
         const fileStatus = exportFile(filename, JSON.stringify(exportData), {
@@ -172,7 +165,7 @@ function onExportRecords(types: DatabaseType[]) {
 async function onChangeLogRetention(logRetentionIndex: number) {
   try {
     const logRetentionTime = Object.values(LogRetention)[logRetentionIndex]
-    await DB.setSetting(SettingId.LOG_RETENTION_TIME, logRetentionTime)
+    await DB.setSetting(Key.LOG_RETENTION_TIME, logRetentionTime)
     log.info('Updated log retention time', { time: logRetentionTime, index: logRetentionIndex })
   } catch (error) {
     log.error('Log retention update failed', error)
@@ -183,7 +176,7 @@ async function onChangeLogRetention(logRetentionIndex: number) {
  * On confirmation, deletes all records of a specified type.
  * @param type
  */
-async function onDeleteDataType(type: DatabaseType) {
+async function onDeleteDataType(type: Type) {
   confirmDialog(
     `Delete ${type} Data`,
     `Permanetly delete all ${type} data from the database?`,
@@ -191,7 +184,7 @@ async function onDeleteDataType(type: DatabaseType) {
     'negative',
     async () => {
       try {
-        await DB.clearRecordsByType(type)
+        await DB.clearByType(type)
         await DB.initSettings()
         log.info(`${type} data successfully deleted`)
       } catch (error) {
@@ -212,9 +205,7 @@ async function onDeleteAllData() {
     'negative',
     async () => {
       try {
-        await Promise.all(
-          Object.values(DatabaseType).map(async (type) => await DB.clearRecordsByType(type))
-        )
+        await DB.clearAllData()
         await DB.initSettings()
         log.info('All data successfully deleted')
       } catch (error) {
@@ -250,255 +241,226 @@ async function onDeleteDatabase() {
     <!-- Options -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <div class="text-h6 q-mb-md">Options</div>
-
-        <!-- Toggles -->
-        <div class="q-mb-md">
-          Introduction provides helpful instructions on basic app usage on the Dashboard page.
-        </div>
-
-        <QToggle
-          class="q-mb-md"
-          label="Show Introduction"
-          :model-value="settings.find((s) => s.id === SettingId.SHOW_INTRODUCTION)?.value"
-          @update:model-value="DB.setSetting(SettingId.SHOW_INTRODUCTION, $event)"
-        />
-
-        <div class="q-mb-md">Show descriptions for records displayed on the Dashboard page.</div>
-
-        <QToggle
-          class="q-mb-md"
-          label="Show Dashboard Descriptions"
-          :model-value="settings.find((s) => s.id === SettingId.SHOW_DASHBOARD_DESCRIPTIONS)?.value"
-          @update:model-value="DB.setSetting(SettingId.SHOW_DASHBOARD_DESCRIPTIONS, $event)"
-        />
+        <p class="text-h6 q-mb-md">Options</p>
 
         <div class="q-mb-md">
-          Dark Mode allows you to switch between a light or dark theme for the app.
+          <p>
+            Welcome overlay provides helpful instructions on basic app usage on the Dashboard page.
+          </p>
+          <QToggle
+            label="Show Welcome Overlay"
+            :model-value="settings.find((s) => s.key === Key.SHOW_WELCOME)?.value"
+            @update:model-value="DB.setSetting(Key.SHOW_WELCOME, $event)"
+          />
         </div>
-
-        <QToggle
-          class="q-mb-md"
-          label="Dark Mode"
-          :model-value="settings.find((s) => s.id === SettingId.DARK_MODE)?.value"
-          @update:model-value="DB.setSetting(SettingId.DARK_MODE, $event)"
-        />
 
         <div class="q-mb-md">
-          Show all columns while viewing on the data page or only show the default columns. You can
-          change the individual columns while on the page.
+          <p>Show descriptions for records displayed on the Dashboard page.</p>
+          <QToggle
+            label="Show Dashboard Descriptions"
+            :model-value="settings.find((s) => s.key === Key.SHOW_DESCRIPTIONS)?.value"
+            @update:model-value="DB.setSetting(Key.SHOW_DESCRIPTIONS, $event)"
+          />
         </div>
 
-        <QToggle
-          label="Show All Data Columns"
-          :model-value="settings.find((s) => s.id === SettingId.SHOW_ALL_DATA_COLUMNS)?.value"
-          @update:model-value="DB.setSetting(SettingId.SHOW_ALL_DATA_COLUMNS, $event)"
-        />
+        <div class="q-mb-md">
+          <p>
+            Show all columns while viewing on the data page or only show the default columns. You
+            can change the individual columns while on the page.
+          </p>
+          <QToggle
+            label="Show All Data Columns"
+            :model-value="settings.find((s) => s.key === Key.SHOW_ALL_COLUMNS)?.value"
+            @update:model-value="DB.setSetting(Key.SHOW_ALL_COLUMNS, $event)"
+          />
+        </div>
+
+        <div>
+          <p>Dark mode allows you to switch between a light or dark theme for the app.</p>
+          <QToggle
+            label="Dark Mode"
+            :model-value="settings.find((s) => s.key === Key.DARK_MODE)?.value"
+            @update:model-value="DB.setSetting(Key.DARK_MODE, $event)"
+          />
+        </div>
       </QCardSection>
     </QCard>
 
     <!-- Defaults -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <div class="text-h6 q-mb-md">Defaults</div>
+        <p class="text-h6 q-mb-md">Defaults</p>
 
-        <!-- Examples -->
-        <div class="q-mb-md">
-          Load default demostration records into the database. This action can be repeated.
+        <div>
+          <p>Load default demostration records into the database. This action can be repeated.</p>
+          <QBtn label="Load Examples" color="primary" @click="onDefaults()" />
         </div>
-
-        <QBtn label="Load Examples" color="primary" @click="onDefaults()" />
       </QCardSection>
     </QCard>
 
     <!-- Data Management -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <div class="text-h6 q-mb-md">Data Management</div>
+        <p class="text-h6 q-mb-md">Data Management</p>
 
-        <!-- Import -->
         <div class="q-mb-md">
-          Import data into the database from a JSON file. The app expects the data in the file to be
-          structured the same as the exported version.
+          <p>
+            Import data into the database from a JSON file. The app expects the data in the file to
+            be structured the same as the exported version.
+          </p>
+          <QFile
+            v-model="importFile"
+            dense
+            outlined
+            counter
+            bottom-slots
+            label="File Select"
+            :max-file-size="Limit.MAX_FILE_SIZE"
+            accept="application/json"
+            @rejected="onRejectedFile"
+          >
+            <template v-slot:before>
+              <QBtn :disable="!importFile" label="Import" color="primary" @click="onImportFile()" />
+            </template>
+            <template v-slot:append>
+              <QIcon
+                v-if="importFile"
+                :name="Icon.CLOSE"
+                class="cursor-pointer"
+                @click.stop="importFile = null"
+              />
+            </template>
+          </QFile>
         </div>
 
-        <QFile
-          v-model="importFile"
-          dense
-          outlined
-          counter
-          bottom-slots
-          label="File Select"
-          :max-file-size="Limit.MAX_FILE_SIZE"
-          accept="application/json"
-          @rejected="onRejectedFile"
-        >
-          <template v-slot:before>
-            <QBtn :disable="!importFile" label="Import" color="primary" @click="onImportFile()" />
-          </template>
-
-          <template v-slot:append>
-            <QIcon
-              v-if="importFile"
-              :name="Icon.CLOSE"
-              class="cursor-pointer"
-              @click.stop="importFile = null"
-            />
-          </template>
-        </QFile>
-
-        <!-- Export -->
         <div class="q-mb-md">
-          Export the selected data types as a JSON file. Do this on a regularly basis so you have a
-          backup of your data.
+          <p>
+            Export the selected data types as a JSON file. Do this on a regularly basis so you have
+            a backup of your data.
+          </p>
+          <QOptionGroup
+            class="q-mb-md"
+            v-model="exportModel"
+            :options="exportOptions"
+            type="checkbox"
+            inline
+          />
+          <QBtn
+            :disable="exportModel.length === 0"
+            label="Export"
+            color="primary"
+            @click="onExportRecords(exportModel)"
+          />
         </div>
 
-        <QOptionGroup
-          class="q-mb-md"
-          v-model="exportModel"
-          :options="exportOptions"
-          type="checkbox"
-        />
-
-        <QBtn
-          class="q-mb-md"
-          :disable="exportModel.length === 0"
-          label="Export"
-          color="primary"
-          @click="onExportRecords(exportModel)"
-        />
-
-        <!-- Access Internal Tables -->
         <div class="q-mb-md">
-          Access any app data types to view the records or troubleshoot issues.
+          <p>Access any app data types to view the records or troubleshoot issues.</p>
+          <QSelect
+            v-model="accessModel"
+            outlined
+            dense
+            label="Record Type"
+            :options="accessOptions"
+          >
+            <template v-slot:before>
+              <QBtn :disable="!accessModel" label="Access Data" color="primary" />
+            </template>
+          </QSelect>
         </div>
-
-        <QSelect
-          v-model="accessModel"
-          outlined
-          dense
-          label="Database Type"
-          :options="accessOptions"
-          class="q-mb-md"
-        >
-          <template v-slot:before>
-            <QBtn
-              :disable="!accessModel"
-              label="Access Data"
-              color="primary"
-              @click="goToData(accessModel)"
-            />
-          </template>
-        </QSelect>
-
-        <!-- Record Curing -->
-        <div class="q-mb-md">
-          Examine and fix any issues with your data on the Record Curing page. Records on this page
-          are either unused, orphaned, or missing data properties.
-        </div>
-
-        <QBtn label="Record Curing" color="primary" @click="goToRecordCuring()" />
       </QCardSection>
     </QCard>
 
-    <!-- Logs -->
+    <!-- Logging -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <div class="text-h6 q-mb-md">Logs</div>
+        <p class="text-h6 q-mb-md">Logging</p>
 
-        <!-- Toggles -->
         <div class="q-mb-md">
-          Show Console Logs will display all log messages in the browser console.
+          <p>Show Console Logs will display all log messages in the browser console.</p>
+          <QToggle
+            label="Show Console Logs"
+            :model-value="settings.find((s) => s.key === Key.SHOW_CONSOLE_LOGS)?.value"
+            @update:model-value="DB.setSetting(Key.SHOW_CONSOLE_LOGS, $event)"
+          />
         </div>
 
-        <QToggle
-          class="q-mb-md"
-          label="Show Console Logs"
-          :model-value="settings.find((s) => s.id === SettingId.SHOW_CONSOLE_LOGS)?.value"
-          @update:model-value="DB.setSetting(SettingId.SHOW_CONSOLE_LOGS, $event)"
-        />
-
-        <div class="q-mb-md">Show Info Messages will display info level notifications.</div>
-
-        <QToggle
-          class="q-mb-md"
-          label="Show Info Messages"
-          :model-value="settings.find((s) => s.id === SettingId.SHOW_INFO_MESSAGES)?.value"
-          @update:model-value="DB.setSetting(SettingId.SHOW_INFO_MESSAGES, $event)"
-        />
-
-        <!-- Test Logger -->
         <div class="q-mb-md">
-          Validate that your logging settings above are working as expected by using the test action
-          below.
+          <p>Show Info Messages will display info level notifications.</p>
+          <QToggle
+            label="Show Info Messages"
+            :model-value="settings.find((s) => s.key === Key.SHOW_INFO_MESSAGES)?.value"
+            @update:model-value="DB.setSetting(Key.SHOW_INFO_MESSAGES, $event)"
+          />
         </div>
 
-        <QBtn class="q-mb-md" label="Test Logger" color="primary" @click="onTestLogger()" />
-
-        <!-- Log Retention Time -->
         <div class="q-mb-md">
-          Change log retention time below. Logs older than the selected time will be deleted. This
-          functions retroactivley, so if you change the time to 3 months, all logs older than 3
-          months will be deleted. Expired log processing occurs every time the app is loaded.
+          <p>
+            Validate that your logging settings above are working as expected by using the test
+            action below.
+          </p>
+          <QBtn label="Test Logger" color="primary" @click="onTestLogger()" />
         </div>
 
-        <QSlider
-          v-model="logRetentionIndex"
-          :label-value="Object.values(LogRetention)[logRetentionIndex]"
-          class="q-mb-lg"
-          color="primary"
-          markers
-          label-always
-          switch-label-side
-          :min="0"
-          :max="5"
-          :step="1"
-          @change="(index) => onChangeLogRetention(index)"
-        />
+        <div class="q-mb-md">
+          <p>
+            Change log retention time below. Logs older than the selected time will be deleted. This
+            functions retroactivley, so if you change the time to 3 months, all logs older than 3
+            months will be deleted. Expired log processing occurs every time the app is loaded.
+          </p>
+          <QSlider
+            v-model="logRetentionIndex"
+            :label-value="Object.values(LogRetention)[logRetentionIndex]"
+            color="primary"
+            markers
+            label-always
+            switch-label-side
+            :min="0"
+            :max="Object.values(LogRetention).length - 1"
+            :step="1"
+            @change="(index) => onChangeLogRetention(index)"
+          />
+        </div>
       </QCardSection>
     </QCard>
 
     <!-- DANGER ZONE -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <div class="text-h6 text-negative q-mb-md">DANGER ZONE</div>
+        <p class="text-h6 text-negative q-mb-md">DANGER ZONE</p>
 
-        <div class="q-mb-md">
+        <p class="q-mb-md">
           The following operations cannot be undone. Consider exporting your data before proceeding.
-        </div>
+        </p>
 
-        <!-- Delete Table Data -->
-        <div class="q-mb-md">Select a data type and permanently delete all of its records.</div>
-
-        <QSelect
-          v-model="deleteModel"
-          outlined
-          dense
-          label="Database Type"
-          class="q-mb-md"
-          :options="deleteOptions"
-        >
-          <template v-slot:before>
-            <QBtn
-              :disable="!deleteModel"
-              label="Delete Data"
-              color="negative"
-              @click="onDeleteDataType(deleteModel)"
-            />
-          </template>
-        </QSelect>
-
-        <!-- Delete All Data -->
-        <div class="q-mb-md">Permanently delete all data records from the database.</div>
-
-        <QBtn class="q-mb-md" label="Delete All Data" color="negative" @click="onDeleteAllData()" />
-
-        <!-- Delete Database -->
         <div class="q-mb-md">
-          Delete the underlining database and all of its data (requires website reload).
+          <p>Select a data type and permanently delete all of its records.</p>
+          <QSelect
+            v-model="deleteModel"
+            outlined
+            dense
+            label="Record Type"
+            :options="deleteOptions"
+          >
+            <template v-slot:before>
+              <QBtn
+                :disable="!deleteModel"
+                label="Delete Data"
+                color="negative"
+                @click="onDeleteDataType(deleteModel)"
+              />
+            </template>
+          </QSelect>
         </div>
 
-        <QBtn label="Delete Database" color="negative" @click="onDeleteDatabase()" />
+        <div class="q-mb-md">
+          <p>Permanently delete all data records from the database.</p>
+          <QBtn label="Delete All Data" color="negative" @click="onDeleteAllData()" />
+        </div>
+
+        <div class="q-mb-md">
+          <p>Delete the underlining database and all of its data (requires website reload).</p>
+          <QBtn label="Delete Database" color="negative" @click="onDeleteDatabase()" />
+        </div>
       </QCardSection>
     </QCard>
   </ResponsivePage>

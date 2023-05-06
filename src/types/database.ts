@@ -121,10 +121,10 @@ export enum Severity {
  * Database Setting Key enum defines all valid settings that the app supports.
  */
 export enum Key {
-  SHOW_INTRODUCTION = 'show-introduction',
-  SHOW_DASHBOARD_DESCRIPTIONS = 'show-dashboard-descriptions',
+  SHOW_WELCOME = 'show-welcome-overlay',
+  SHOW_DESCRIPTIONS = 'show-dashboard-descriptions',
   DARK_MODE = 'dark-mode',
-  SHOW_ALL_DATA_COLUMNS = 'show-all-data-columns',
+  SHOW_ALL_COLUMNS = 'show-all-data-columns',
   SHOW_CONSOLE_LOGS = 'show-console-logs',
   SHOW_INFO_MESSAGES = 'show-info-messages',
   LOG_RETENTION_TIME = 'log-retention-time',

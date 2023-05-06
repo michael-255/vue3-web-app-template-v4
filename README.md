@@ -256,14 +256,13 @@ Details on the steps I took to create this project.
    }
    ```
 
-1. Define the `ECMAScript` version you want TypeScript to use in `tsconfig.json`:
+1. Define the `ECMAScript` version you want TypeScript to use in the `tsconfig` files:
 
    ```json
    {
      "compilerOptions": {
        "target": "es2022",
-       "module": "es2022",
-       "lib": ["es2022", "dom"],
+       "lib": ["es2022"],
        "ignoreDeprecations": "5.0"
      }
    }

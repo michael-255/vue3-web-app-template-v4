@@ -1,10 +1,10 @@
-import { DatabaseField, DatabaseType } from '@/types/database'
 import { Icon } from '@/types/icons'
-import type { DatabaseRecord, Example, ExampleResult, Test } from '@/types/models'
 import { uid } from 'quasar'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/LocalDatabase'
+import type { ExampleChild, ExampleParent, Record } from '@/types/models'
+import { Relation, Type } from '@/types/database'
 
 /**
  * Composable with functions for generating default data for the app.
@@ -24,7 +24,7 @@ export default function useDefaults() {
       'info',
       async () => {
         try {
-          const randomGreekLetter = () => {
+          const randomGreekAlpha = () => {
             const greekLetters = [
               'Alpha',
               'Beta',
@@ -62,7 +62,7 @@ export default function useDefaults() {
             return Math.floor(Math.random() * (max - min + 1) + min)
           }
 
-          let initialTimestamp = new Date().getTime() - 1000 * 60 * 60 * 24 * 365 * 2 // minus two year
+          let initialTimestamp = Date.now() - 1000 * 60 * 60 * 24 * 365 * 2 // minus two year
 
           const addDay = (timestamp: number) => {
             const date = new Date(timestamp)
@@ -70,33 +70,37 @@ export default function useDefaults() {
             return date.getTime()
           }
 
-          const records: DatabaseRecord[] = []
+          const records: Partial<Record>[] = []
+
+          const groupId = uid()
 
           const createExamples = (count: number) => {
             for (let i = 0; i < count; i++) {
               records.push({
-                [DatabaseField.TYPE]: DatabaseType.EXAMPLE,
-                [DatabaseField.ID]: uid(),
-                [DatabaseField.NAME]: `Example ${randomGreekLetter()}`,
-                [DatabaseField.DESCRIPTION]: `Example description ${i}`,
-                [DatabaseField.IS_FAVORITED]: randomBoolean(),
-                [DatabaseField.IS_ENABLED]: true,
-              } as Example)
+                id: groupId,
+                timestamp: initialTimestamp,
+                type: Type.EXAMPLE,
+                relation: Relation.PARENT,
+                name: randomGreekAlpha(),
+                desc: `Example description ${i}`,
+                enabled: true,
+                favorited: randomBoolean(),
+                testIds: [],
+              } as ExampleParent)
 
               initialTimestamp = addDay(initialTimestamp)
             }
           }
 
-          const createExampleResults = (count: number, parent?: Example) => {
+          const createExampleResults = (count: number) => {
             for (let i = 0; i < count; i++) {
               records.push({
-                [DatabaseField.TYPE]: DatabaseType.EXAMPLE_RESULT,
-                [DatabaseField.ID]: uid(),
-                [DatabaseField.CREATED_TIMESTAMP]: initialTimestamp,
-                [DatabaseField.PARENT_ID]: parent?.id || `orphaned-record-id-${i}`,
-                [DatabaseField.NOTE]: randomBoolean() ? `Previous note ${parent?.id}` : '',
-                [DatabaseField.NUMBER]: randomInt(1, 100) + i / 2,
-              } as ExampleResult)
+                id: groupId,
+                timestamp: initialTimestamp,
+                type: Type.EXAMPLE,
+                relation: Relation.CHILD,
+                note: '',
+              } as ExampleChild)
 
               initialTimestamp = addDay(initialTimestamp)
             }
@@ -104,21 +108,12 @@ export default function useDefaults() {
 
           // Creating demo data
           createExamples(1)
-          records.map((example) => createExampleResults(725, example)) // about 2 years of records
+          records.map(() => createExampleResults(725)) // about 2 years of records
           // Unused parents and orphaned results
           createExamples(2)
           createExampleResults(2)
 
-          records.push({
-            [DatabaseField.TYPE]: DatabaseType.TEST,
-            [DatabaseField.ID]: uid(),
-            [DatabaseField.NAME]: `Lonely Test ${randomGreekLetter()}`,
-            [DatabaseField.DESCRIPTION]: 'Test description X',
-            [DatabaseField.IS_FAVORITED]: false,
-            [DatabaseField.IS_ENABLED]: true,
-          } as Test)
-
-          await DB.bulkAddRecords(records)
+          await DB.blukAdd(records as Record[])
 
           log.info('Defaults loaded', { count: records.length })
         } catch (error) {

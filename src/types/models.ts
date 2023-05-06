@@ -37,7 +37,7 @@ const logSchema = object({
 
 const settingSchema = object({
   [SettingField.KEY]: string().required().oneOf(Object.values(Key)),
-  [SettingField.VALUE]: mixed().required(),
+  [SettingField.VALUE]: mixed(),
 })
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -97,6 +97,7 @@ const testChildSchema = object({
 ///////////////////////////////////////////////////////////////////////////////
 
 const exampleParent = mixed().concat(coreSchema).concat(parentSchema).concat(exampleParentSchema)
+const exampleChild = mixed().concat(coreSchema).concat(childSchema)
 const testChild = mixed().concat(coreSchema).concat(childSchema).concat(testChildSchema)
 const record = mixed()
   .concat(coreSchema)
@@ -106,6 +107,7 @@ const record = mixed()
   .concat(testChildSchema)
 
 export type ExampleParent = InferType<typeof exampleParent>
+export type ExampleChild = InferType<typeof exampleChild>
 export type TestChild = InferType<typeof testChild>
 export type Record = InferType<typeof record>
 export type Log = InferType<typeof logSchema>

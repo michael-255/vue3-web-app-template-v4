@@ -49,10 +49,10 @@ export class LocalDatabase extends Dexie {
     const defaultSettings: Readonly<{
       [key in Key]: any
     }> = {
-      [Key.SHOW_INTRODUCTION]: true,
-      [Key.SHOW_DASHBOARD_DESCRIPTIONS]: true,
+      [Key.SHOW_WELCOME]: true,
+      [Key.SHOW_DESCRIPTIONS]: true,
       [Key.DARK_MODE]: true,
-      [Key.SHOW_ALL_DATA_COLUMNS]: false,
+      [Key.SHOW_ALL_COLUMNS]: false,
       [Key.SHOW_CONSOLE_LOGS]: false,
       [Key.SHOW_INFO_MESSAGES]: true,
       [Key.LOG_RETENTION_TIME]: LogRetention.THREE_MONTHS,
@@ -147,40 +147,10 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * - Look at Record `type` to determine valid fields
-   * - Record must have required fields that pass minimum validity rules (Regex?)
-   * - Record must NOT already exist in the Database
-   * - Auto remediate small issues like undefined notes and descriptions
-   * @param record
-   */
-  // async addRecord(record: Record) {
-  //   const addCommand: Readonly<{
-  //     [key in Type]: () => any
-  //   }> = {
-  //     [Type.LOG]: () => {
-  //       throw new Error(`Invalid Record type: ${record.type}`)
-  //     },
-  //     [Type.SETTING]: () => {
-  //       throw new Error(`Invalid Record type: ${record.type}`)
-  //     },
-  //     [Type.EXAMPLE]: () =>
-  //       this.Records.toCollection()
-  //         .filter((r) => r.type === Type.EXAMPLE)
-  //         .delete(),
-  //     [Type.TEST]: () =>
-  //       this.Records.toCollection()
-  //         .filter((r) => r.type === Type.TEST)
-  //         .delete(),
-  //   }
-
-  //   return await this.Records.add(record)
-  // }
-
-  /**
    * Bulk add records to the database. The new record ids will be returned in an array.
    * @param records
    */
-  async blukAdd(records: Record[]) {
+  async bulkAdd(records: Record[]) {
     return await this.Records.bulkAdd(records, { allKeys: true }) // allKeys returns the new record ids
   }
 
@@ -236,7 +206,21 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Get all Records.
+   * Get all Logs from database without sorting.
+   */
+  async getAllLogs() {
+    return await this.Logs.toArray()
+  }
+
+  /**
+   * Get all Settings from database without sorting.
+   */
+  async getAllSettings() {
+    return await this.Settings.toArray()
+  }
+
+  /**
+   * Get all Records from database without sorting.
    */
   async getAllRecords() {
     return await this.Records.toArray()
