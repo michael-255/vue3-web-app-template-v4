@@ -253,7 +253,7 @@ function getSettingValue(key: Key) {
     <!-- Options -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <p class="text-h6 q-mb-md">Options</p>
+        <p class="text-h6">Options</p>
 
         <div class="q-mb-md">
           <p>
@@ -289,7 +289,7 @@ function getSettingValue(key: Key) {
     <!-- Defaults -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <p class="text-h6 q-mb-md">Defaults</p>
+        <p class="text-h6">Defaults</p>
 
         <div>
           <p>Load default demostration records into the database. This action can be repeated.</p>
@@ -301,7 +301,7 @@ function getSettingValue(key: Key) {
     <!-- Data Management -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <p class="text-h6 q-mb-md">Data Management</p>
+        <p class="text-h6">Data Management</p>
 
         <div class="q-mb-md">
           <p>
@@ -378,7 +378,7 @@ function getSettingValue(key: Key) {
     <!-- Logging -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <p class="text-h6 q-mb-md">Logging</p>
+        <p class="text-h6">Logging</p>
 
         <div class="q-mb-md">
           <p>Show Console Logs will display all log messages in the browser console.</p>
@@ -431,9 +431,9 @@ function getSettingValue(key: Key) {
     <!-- DANGER ZONE -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <p class="text-h6 text-negative q-mb-md">DANGER ZONE</p>
+        <p class="text-h6 text-negative">DANGER ZONE</p>
 
-        <p class="q-mb-md">
+        <p>
           The following operations cannot be undone. Consider exporting your data before proceeding.
         </p>
 

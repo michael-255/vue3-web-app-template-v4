@@ -98,7 +98,7 @@ function getSchemaType() {
     <!-- Dashboard Selection -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <div class="text-h6">What would you like to work on?</div>
+        <p class="text-h6">What would you like to work on?</p>
 
         <QOptionGroup
           color="primary"
@@ -116,7 +116,12 @@ function getSchemaType() {
         :showDescription="showDescription"
         :dashboardCard="dashboardCard"
       >
-        <QBtn round color="positive" :icon="Icon.ADD_NOTE" />
+        <QBtn
+          round
+          color="positive"
+          :icon="Icon.ADD_NOTE"
+          @click="goToCreate(getSchemaType(), Group.CHILD, dashboardCard.sk)"
+        />
       </DashboardParentCard>
     </div>
 
@@ -126,9 +131,7 @@ function getSchemaType() {
         <QIcon name="menu_open" size="80px" color="grey" />
       </div>
 
-      <div class="col-12 text-grey text-center q-mb-md">
-        {{ getCountDisplay() }}
-      </div>
+      <p class="col-12 text-grey text-center">{{ getCountDisplay() }}</p>
 
       <QBtn
         color="positive"

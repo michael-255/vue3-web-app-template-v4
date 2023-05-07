@@ -42,10 +42,10 @@ async function onCloseWelcomeOverlay() {
   <QDialog v-model="showWelcome" persistent>
     <QCard>
       <QCardSection>
-        <p class="text-h6 q-mb-md">Welcome to {{ AppName }}</p>
+        <p class="text-h6">Welcome to {{ AppName }}</p>
 
         <!-- Information -->
-        <p class="q-mb-md">This app provides a foundation to build your own web apps.</p>
+        <p>This app provides a foundation to build your own web apps.</p>
 
         <!-- Favorites -->
         <div class="q-mb-md">

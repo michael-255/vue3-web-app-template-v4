@@ -1,11 +1,10 @@
 import { Field, Key, LogField, SettingField, Severity } from '@/types/database'
 import {
-  descValidator,
   enabledValidator,
   favoritedValidator,
   uidValidator,
   nameValidator,
-  noteValidator,
+  textAreaValidator,
   percentValidator,
   groupValidator,
   timestampValidator,
@@ -15,44 +14,17 @@ import { mixed, array, string, number, object, type InferType } from 'yup'
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     LOGS                                                                  //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-const logSchema = object({
-  [LogField.AUTO_ID]: number().integer(),
-  [LogField.TIMESTAMP]: number().required().integer(),
-  [LogField.SEVERITY]: string().required().oneOf(Object.values(Severity)),
-  [LogField.LABEL]: string().required().trim(),
-  [LogField.DETAILS]: mixed(),
-  [LogField.MESSAGE]: string(),
-  [LogField.STACK]: string(),
-})
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     SETTINGS                                                              //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-const settingSchema = object({
-  [SettingField.KEY]: string().required().oneOf(Object.values(Key)),
-  [SettingField.VALUE]: mixed(),
-})
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
 //     CORE                                                                  //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-const coreSchema = object({
+const core = object({
   [Field.PK]: uidValidator,
   [Field.SK]: uidValidator,
   [Field.TYPE]: typeValidator,
   [Field.GROUP]: groupValidator,
   [Field.TIMESTAMP]: timestampValidator,
-})
+}).noUnknown()
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -60,12 +32,12 @@ const coreSchema = object({
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-const parentSchema = object({
+const parent = object({
   [Field.NAME]: nameValidator,
-  [Field.DESC]: descValidator,
+  [Field.DESC]: textAreaValidator,
   [Field.ENABLED]: enabledValidator,
   [Field.FAVORITED]: favoritedValidator,
-})
+}).noUnknown()
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -73,9 +45,9 @@ const parentSchema = object({
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-const childSchema = object({
-  [Field.NOTE]: noteValidator,
-})
+const child = object({
+  [Field.NOTE]: textAreaValidator,
+}).noUnknown()
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -83,13 +55,45 @@ const childSchema = object({
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-const exampleParentSchema = object({
+const exampleParent = object({
   [Field.TEST_PKS]: array().of(uidValidator).defined(),
-})
+}).noUnknown()
 
-const testChildSchema = object({
+const testChild = object({
   [Field.PERCENT]: percentValidator,
-})
+}).noUnknown()
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     SCHEMAS                                                               //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+export const logSchema = object({
+  [LogField.AUTO_ID]: number().integer(),
+  [LogField.TIMESTAMP]: number().required().integer(),
+  [LogField.SEVERITY]: string().required().oneOf(Object.values(Severity)),
+  [LogField.LABEL]: string().required().trim(),
+  [LogField.DETAILS]: mixed(),
+  [LogField.MESSAGE]: string(),
+  [LogField.STACK]: string(),
+}).noUnknown()
+
+export const settingSchema = object({
+  [SettingField.KEY]: string().required().oneOf(Object.values(Key)),
+  [SettingField.VALUE]: mixed(),
+}).noUnknown()
+
+export const exampleParentSchema = mixed().concat(core).concat(parent).concat(exampleParent)
+export const exampleChildSchema = mixed().concat(core).concat(child)
+export const testParentSchema = mixed().concat(core).concat(parent)
+export const testChildSchema = mixed().concat(core).concat(child).concat(testChild)
+export const recordSchema = mixed()
+  .concat(core)
+  .concat(parent)
+  .concat(child)
+  .concat(exampleParent)
+  .concat(testChild)
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -97,21 +101,10 @@ const testChildSchema = object({
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-const exampleParent = mixed().concat(coreSchema).concat(parentSchema).concat(exampleParentSchema)
-const exampleChild = mixed().concat(coreSchema).concat(childSchema)
-const testParent = mixed().concat(coreSchema).concat(parentSchema)
-const testChild = mixed().concat(coreSchema).concat(childSchema).concat(testChildSchema)
-const record = mixed()
-  .concat(coreSchema)
-  .concat(parentSchema)
-  .concat(childSchema)
-  .concat(exampleParentSchema)
-  .concat(testChildSchema)
-
-export type ExampleParent = InferType<typeof exampleParent>
-export type ExampleChild = InferType<typeof exampleChild>
-export type TestParent = InferType<typeof testParent>
-export type TestChild = InferType<typeof testChild>
-export type Record = InferType<typeof record>
+export type ExampleParent = InferType<typeof exampleParentSchema>
+export type ExampleChild = InferType<typeof exampleChildSchema>
+export type TestParent = InferType<typeof testParentSchema>
+export type TestChild = InferType<typeof testChildSchema>
+export type Record = InferType<typeof recordSchema>
 export type Log = InferType<typeof logSchema>
 export type Setting = InferType<typeof settingSchema>

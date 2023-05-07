@@ -13,11 +13,13 @@ export default function useRoutables() {
 
   // Possible route params
   const pk = route.params.pk
+  const sk = route.params.sk
   const timestamp = route.params.timestamp
   const type = route.params.type
   const group = route.params.group
   // Cleaned route params
   const routePk = Array.isArray(pk) ? String(pk[0]) : String(pk)
+  const routeSk = Array.isArray(sk) ? String(sk[0]) : String(sk)
   const routeTimestamp = Array.isArray(timestamp) ? Number(timestamp[0]) : Number(timestamp)
   const routeType = (Array.isArray(type) ? type[0] : type) as Type
   const routeGroup = (Array.isArray(group) ? group[0] : group) as Group
@@ -42,13 +44,13 @@ export default function useRoutables() {
    * Go to record creation route.
    * @param type
    * @param group
-   * @param pk
+   * @param sk
    */
-  function goToCreate(type: Type, group: Group, pk?: string) {
+  function goToCreate(type: Type, group: Group, sk?: string) {
     try {
       router.push({
         name: RouteName.CREATE,
-        params: { type, group, pk },
+        params: { type, group, sk },
       })
     } catch (error) {
       log.error('Error accessing create route', error)
@@ -117,6 +119,7 @@ export default function useRoutables() {
 
   return {
     routePk,
+    routeSk,
     routeTimestamp,
     routeType,
     routeGroup,

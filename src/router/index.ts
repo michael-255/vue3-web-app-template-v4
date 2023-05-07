@@ -24,9 +24,9 @@ const router = createRouter({
       /**
        * - Type required for creation
        * - Group required for creation
-       * - PK needed if creating child of parent
+       * - SK needed if creating child of parent
        */
-      path: '/create/:type/:group/:pk?',
+      path: '/create/:type/:group/:sk?',
       name: RouteName.CREATE,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/CreateView.vue'),

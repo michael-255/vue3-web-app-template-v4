@@ -28,12 +28,9 @@ export const AppHeaderColor = 'primary'
  */
 export enum Limit {
   MAX_FILE_SIZE = 1_000_000,
-  MAX_ID_LENGTH = 50,
-  MIN_ID_LENGTH = 1,
+  MAX_TEXT_AREA_LENGTH = 500,
   MAX_NAME_LENGTH = 50,
   MIN_NAME_LENGTH = 1,
-  MAX_DESCRIPTION_LENGTH = 500,
-  MAX_NOTE_LENGTH = 500,
 }
 
 /**
@@ -164,11 +161,12 @@ export type AppSchema = {
  * TODO
  */
 export type FieldProps = {
-  name: Field | SettingField | LogField
+  field: Field | SettingField | LogField
   label: string
-  default: () => any
-  booleanValidator: (val: any) => any
-  strictValidator: (val: any) => any
+  desc: string
+  getDefault: () => any
+  validator: (val: any) => Promise<boolean>
+  validationMessage: string
   inspectFormat: (val: any) => string
   component: any
 }

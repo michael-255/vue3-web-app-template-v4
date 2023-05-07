@@ -91,10 +91,10 @@ async function onDelete(pk: string, name: string) {
 <template>
   <QCard>
     <QCardSection>
-      <div class="text-h6 q-mb-md">{{ dashboardCard.name }}</div>
+      <p class="text-h6">{{ dashboardCard.name }}</p>
 
       <!-- Description (if show setting is true) -->
-      <div v-if="showDescription" class="q-mb-md">{{ dashboardCard.desc }}</div>
+      <p v-if="showDescription">{{ dashboardCard.desc }}</p>
 
       <!-- Top right corner buttons on card -->
       <div class="absolute-top-right q-ma-xs">

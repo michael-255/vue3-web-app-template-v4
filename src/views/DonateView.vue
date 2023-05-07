@@ -11,14 +11,14 @@ useMeta({ title: `${AppName} - Donate` })
   <ResponsivePage :bannerIcon="Icon.DONATE" bannerTitle="Donate">
     <QCard>
       <QCardSection>
-        <div class="q-mb-md">
+        <p>
           Hope you enjoyed using {{ AppName }}. I try to create and maintain projects that people
           find useful. Please consider donating to help me out. Thank you!
-        </div>
+        </p>
 
-        <div class="q-mb-md">
+        <p>
           Donations are done through Ko-fi. It's safe, easy to use, and doesn't require an account.
-        </div>
+        </p>
 
         <div class="row q-col-gutter-md justify-center">
           <div class="col-sm-6 col-xs-12">

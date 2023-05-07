@@ -258,6 +258,15 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
+   * Get all parent records by type.
+   */
+  async getAllParentTypes(type: Type) {
+    return (await this.Records.where(Field.GROUP).equals(Group.PARENT).toArray()).filter(
+      (r) => r.type === type
+    )
+  }
+
+  /**
    * Get the parent record by SK.
    * @param sk
    */
@@ -282,7 +291,7 @@ export class LocalDatabase extends Dexie {
    * @param sk
    */
   async getPreviousChild(sk: string) {
-    return await (await this.Records.where(Field.SK).equals(sk).toArray())
+    return (await this.Records.where(Field.SK).equals(sk).toArray())
       .filter((r) => r.group === Group.CHILD)
       .reverse()[0]
   }

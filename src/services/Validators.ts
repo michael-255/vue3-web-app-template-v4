@@ -41,7 +41,6 @@ export const groupValidator = string().required().oneOf(Object.values(Group)) //
 ///////////////////////////////////////////////////////////////////////////////
 
 export const nameValidator = string().required().min(1).max(50).trim() // BLANK, user MUST enter name to continue
-export const descValidator = string().required().max(500).trim() // BLANK
 export const enabledValidator = boolean().defined() // true
 export const favoritedValidator = boolean().defined() // false
 
@@ -51,7 +50,7 @@ export const favoritedValidator = boolean().defined() // false
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const noteValidator = string().required().max(500).trim() // BLANK
+export const textAreaValidator = string().defined().max(500).trim()
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -60,4 +59,4 @@ export const noteValidator = string().required().max(500).trim() // BLANK
 ///////////////////////////////////////////////////////////////////////////////
 
 export const testPksValidator = array().of(uidValidator).defined()
-export const percentValidator = number().required().min(0).max(100) // BLANK
+export const percentValidator = number().required().min(0).max(100)

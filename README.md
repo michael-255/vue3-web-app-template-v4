@@ -7,6 +7,7 @@ developing. Read through this README to have a better understanding of how this 
 
 - `Create` and it's fields
 - `Edit` and it's fields
+- Get `yup` validation to work with these...
 - How routing is handled for theses...
 
 ## Post Cloning Steps

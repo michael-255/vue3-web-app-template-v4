@@ -1,6 +1,5 @@
 import {
   autoIdValidator,
-  descValidator,
   detailsValidator,
   enabledValidator,
   favoritedValidator,
@@ -8,7 +7,7 @@ import {
   labelValidator,
   messageValidator,
   nameValidator,
-  noteValidator,
+  textAreaValidator,
   percentValidator,
   severityValidator,
   stackValidator,
@@ -17,9 +16,9 @@ import {
   valueValidator,
 } from '@/services/Validators'
 import { Field, Key, LogField, SettingField, Severity } from '@/types/database'
-import type { FieldProps } from '@/types/misc'
+import { Limit, type FieldProps } from '@/types/misc'
 import { getDisplayDate } from '@/utils/common'
-// import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent } from 'vue'
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -28,61 +27,67 @@ import { getDisplayDate } from '@/utils/common'
 ///////////////////////////////////////////////////////////////////////////////
 
 const autoIdField: Readonly<FieldProps> = {
-  name: LogField.AUTO_ID,
+  field: LogField.AUTO_ID,
   label: 'Auto Id',
-  default: () => autoIdValidator.default(() => undefined),
-  booleanValidator: (val: number) => autoIdValidator.isValid(val),
-  strictValidator: (val: number) => autoIdValidator.validate(val),
+  desc: 'Auto-generated integer id.',
+  getDefault: () => undefined,
+  validator: (val: number) => autoIdValidator.isValid(val),
+  validationMessage: '* Required',
   inspectFormat: (val: number) => `${val}`,
   component: null,
 }
 
 const severityField: Readonly<FieldProps> = {
-  name: LogField.SEVERITY,
+  field: LogField.SEVERITY,
   label: 'Severity',
-  default: () => severityValidator.default(() => undefined),
-  booleanValidator: (val: Severity) => severityValidator.isValid(val),
-  strictValidator: (val: Severity) => severityValidator.validate(val),
+  desc: 'Issue severity level.',
+  getDefault: () => undefined,
+  validator: (val: Severity) => severityValidator.isValid(val),
+  validationMessage: '* Required',
   inspectFormat: (val: Severity) => `${val}`,
   component: null,
 }
 
 const labelField: Readonly<FieldProps> = {
-  name: LogField.LABEL,
+  field: LogField.LABEL,
   label: 'Label',
-  default: () => labelValidator.default(() => undefined),
-  booleanValidator: (val: string) => labelValidator.isValid(val),
-  strictValidator: (val: string) => labelValidator.validate(val),
+  desc: 'Label or error code message.',
+  getDefault: () => undefined,
+  validator: (val: string) => labelValidator.isValid(val),
+  validationMessage: '* Required',
   inspectFormat: (val: string) => `${val}`,
   component: null,
 }
 
 const detailsField: Readonly<FieldProps> = {
-  name: LogField.DETAILS,
+  field: LogField.DETAILS,
   label: 'Details',
-  default: () => detailsValidator.default(() => undefined),
-  booleanValidator: (val: any) => detailsValidator.isValid(val),
-  strictValidator: (val: any) => detailsValidator.validate(val),
+  desc: 'Customizable additional details about the issue.',
+  getDefault: () => undefined,
+  validator: (val: any) => detailsValidator.isValid(val),
+  validationMessage: '',
   inspectFormat: (val: any) => JSON.stringify(val),
   component: null,
 }
 
 const messageField: Readonly<FieldProps> = {
-  name: LogField.MESSAGE,
+  field: LogField.MESSAGE,
   label: 'Message',
-  default: () => messageValidator.default(() => undefined),
-  booleanValidator: (val: string) => messageValidator.isValid(val),
-  strictValidator: (val: string) => messageValidator.validate(val),
+  desc: 'Error message.',
+  getDefault: () => undefined,
+  validator: (val: string) => messageValidator.isValid(val),
+  validationMessage: '',
   inspectFormat: (val: string) => `${val}`,
   component: null,
 }
 
 const stackField: Readonly<FieldProps> = {
-  name: LogField.STACK,
+  field: LogField.STACK,
   label: 'Stack',
-  default: () => stackValidator.default(() => undefined),
-  booleanValidator: (val: string) => stackValidator.isValid(val),
-  strictValidator: (val: string) => stackValidator.validate(val),
+  desc: 'Error stack trace.',
+  getDefault: () => undefined,
+  validator: (val: string) => stackValidator.isValid(val),
+  validationMessage: '',
   inspectFormat: (val: string) => `${val}`,
   component: null,
 }
@@ -94,21 +99,23 @@ const stackField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const keyField: Readonly<FieldProps> = {
-  name: SettingField.KEY,
+  field: SettingField.KEY,
   label: 'Key',
-  default: () => keyValidator.default(() => undefined),
-  booleanValidator: (val: Key) => keyValidator.isValid(val),
-  strictValidator: (val: Key) => keyValidator.validate(val),
+  desc: 'Key of the setting.',
+  getDefault: () => undefined,
+  validator: (val: Key) => keyValidator.isValid(val),
+  validationMessage: '* Required',
   inspectFormat: (val: Key) => `${val}`,
   component: null,
 }
 
 const valueField: Readonly<FieldProps> = {
-  name: SettingField.VALUE,
+  field: SettingField.VALUE,
   label: 'Value',
-  default: () => valueValidator.default(() => undefined),
-  booleanValidator: (val: any) => valueValidator.isValid(val),
-  strictValidator: (val: any) => valueValidator.validate(val),
+  desc: 'Value of the setting.',
+  getDefault: () => undefined,
+  validator: (val: any) => valueValidator.isValid(val),
+  validationMessage: '',
   inspectFormat: (val: any) => `${val}`,
   component: null,
 }
@@ -119,15 +126,13 @@ const valueField: Readonly<FieldProps> = {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * TODO: defineAsyncComponent(() => import('@/components/action-inputs/ActionInputId.vue')),
- */
 const timestampField: Readonly<FieldProps> = {
-  name: Field.TIMESTAMP,
+  field: Field.TIMESTAMP,
   label: 'Created Date',
-  default: () => timestampValidator.default(() => Date.now()),
-  booleanValidator: (val: number) => timestampValidator.isValid(val),
-  strictValidator: (val: number) => timestampValidator.validate(val),
+  desc: 'Date the record was created.',
+  getDefault: () => Date.now(),
+  validator: (val: number) => timestampValidator.isValid(val),
+  validationMessage: 'Must be valid numeric timestamp',
   inspectFormat: (val: number) => getDisplayDate(val),
   component: null,
 }
@@ -139,43 +144,47 @@ const timestampField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const nameField: Readonly<FieldProps> = {
-  name: Field.NAME,
+  field: Field.NAME,
   label: 'Name',
-  default: () => nameValidator.default(() => ''),
-  booleanValidator: (val: string) => nameValidator.isValid(val),
-  strictValidator: (val: string) => nameValidator.validate(val),
+  desc: 'Name of the record.',
+  getDefault: () => '',
+  validator: (val: string) => nameValidator.isValid(val),
+  validationMessage: `Name must be between ${Limit.MIN_NAME_LENGTH} and ${Limit.MAX_NAME_LENGTH} characters`,
   inspectFormat: (val: string) => `${val}`,
-  component: null,
+  component: defineAsyncComponent(() => import('@/components/inputs/NameInput.vue')),
 }
 
 const descField: Readonly<FieldProps> = {
-  name: Field.DESC,
+  field: Field.DESC,
   label: 'Description',
-  default: () => descValidator.default(() => ''),
-  booleanValidator: (val: string) => descValidator.isValid(val),
-  strictValidator: (val: string) => descValidator.validate(val),
+  desc: 'Description of the record.',
+  getDefault: () => '',
+  validator: (val: string) => textAreaValidator.isValid(val),
+  validationMessage: `Description cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   inspectFormat: (val: string) => `${val}`,
-  component: null,
+  component: defineAsyncComponent(() => import('@/components/inputs/TextAreaInput.vue')),
 }
 
 const enabledField: Readonly<FieldProps> = {
-  name: Field.ENABLED,
+  field: Field.ENABLED,
   label: 'Enabled',
-  default: () => enabledValidator.default(() => true),
-  booleanValidator: (val: string) => enabledValidator.isValid(val),
-  strictValidator: (val: string) => enabledValidator.validate(val),
+  desc: 'Whether the record is enabled and shows up on the Dashboard.',
+  getDefault: () => true,
+  validator: (val: string) => enabledValidator.isValid(val),
+  validationMessage: '* Required',
   inspectFormat: (val: boolean) => (val ? 'Yes' : 'No'),
-  component: null,
+  component: defineAsyncComponent(() => import('@/components/inputs/ToggleInput.vue')),
 }
 
 const favoritedField: Readonly<FieldProps> = {
-  name: Field.FAVORITED,
+  field: Field.FAVORITED,
   label: 'Favorited',
-  default: () => favoritedValidator.default(() => false),
-  booleanValidator: (val: string) => favoritedValidator.isValid(val),
-  strictValidator: (val: string) => favoritedValidator.validate(val),
+  desc: 'Whether the record is favorited and is prioritized on the Dashboard.',
+  getDefault: () => false,
+  validator: (val: string) => favoritedValidator.isValid(val),
+  validationMessage: '* Required',
   inspectFormat: (val: boolean) => (val ? 'Yes' : 'No'),
-  component: null,
+  component: defineAsyncComponent(() => import('@/components/inputs/ToggleInput.vue')),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -185,13 +194,14 @@ const favoritedField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const noteField: Readonly<FieldProps> = {
-  name: Field.NOTE,
+  field: Field.NOTE,
   label: 'Note',
-  default: () => noteValidator.default(() => ''),
-  booleanValidator: (val: string) => noteValidator.isValid(val),
-  strictValidator: (val: string) => noteValidator.validate(val),
+  desc: 'Customizable note about the record.',
+  getDefault: () => '',
+  validator: (val: string) => textAreaValidator.isValid(val),
+  validationMessage: `Note cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   inspectFormat: (val: string) => `${val}`,
-  component: null,
+  component: defineAsyncComponent(() => import('@/components/inputs/TextAreaInput.vue')),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -201,23 +211,25 @@ const noteField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const testPksField: Readonly<FieldProps> = {
-  name: Field.TEST_PKS,
+  field: Field.TEST_PKS,
   label: 'Tests',
-  default: () => testPksValidator.default(() => []),
-  booleanValidator: (val: string[]) => testPksValidator.isValid(val),
-  strictValidator: (val: string[]) => testPksValidator.validate(val),
+  desc: 'Tests that are associated with the record.',
+  getDefault: () => [],
+  validator: (val: string[]) => testPksValidator.isValid(val),
+  validationMessage: '* Required',
   inspectFormat: (val: string[]) => `${val}`,
-  component: null,
+  component: defineAsyncComponent(() => import('@/components/inputs/TestPksInput.vue')),
 }
 
 const percentField: Readonly<FieldProps> = {
-  name: Field.PERCENT,
+  field: Field.PERCENT,
   label: 'Percent',
-  default: () => percentValidator.default(() => 0),
-  booleanValidator: (val: number) => percentValidator.isValid(val),
-  strictValidator: (val: number) => percentValidator.validate(val),
+  desc: 'Percentage value.',
+  getDefault: () => 0,
+  validator: (val: number) => percentValidator.isValid(val),
+  validationMessage: 'Percent must be between 0 and 100',
   inspectFormat: (val: number) => `${val}%`,
-  component: null,
+  component: defineAsyncComponent(() => import('@/components/inputs/PercentInput.vue')),
 }
 
 ///////////////////////////////////////////////////////////////////////////////

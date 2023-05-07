@@ -9,7 +9,7 @@ const useActionStore = defineStore({
      * Used as the WIP record for creates and updates.
      */
     record: Object.values(Field).reduce((acc, field) => {
-      acc[field] = null as any
+      acc[field] = null
       return acc
     }, {} as { [key in Field]: any }),
   }),
