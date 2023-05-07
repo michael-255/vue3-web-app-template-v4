@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@/types/icons'
-import { Field } from '@/types/database'
+import { Field, Group } from '@/types/database'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { AppName } from '@/types/misc'
 import { extend, uid, useMeta } from 'quasar'
@@ -32,11 +32,18 @@ const schemaFieldProps = appSchema.find(
 
 const isFormValid = ref(true)
 
-onMounted(() => {
+onMounted(async () => {
   try {
-    // Pre-set required underlying fields on the action record store
+    if (routeSk && routeGroup && routeGroup === Group.CHILD) {
+      // Create with route SK means we are creating child record for parent
+      actionStore.record[Field.SK] = routeSk
+    } else {
+      // Creating new parent record
+      actionStore.record[Field.SK] = uid()
+    }
+
+    // Other required creation fields
     actionStore.record[Field.PK] = uid()
-    actionStore.record[Field.SK] = routeSk || uid() // Creating new parent requires new SK (could be empty string)
     actionStore.record[Field.TYPE] = routeType
     actionStore.record[Field.GROUP] = routeGroup
   } catch (error) {

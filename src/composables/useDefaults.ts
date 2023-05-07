@@ -62,6 +62,7 @@ export default function useDefaults() {
 
           const createRecords = (count: number, type: Type.EXAMPLE | Type.TEST) => {
             const groupId = uid()
+            const name = randomGreekAlpha()
 
             // Create Parent (1)
             records.push({
@@ -70,8 +71,8 @@ export default function useDefaults() {
               type,
               group: Group.PARENT,
               timestamp: Date.now(),
-              name: randomGreekAlpha(),
-              desc: `${type} description...`,
+              name,
+              desc: `${name} ${type} description goes here.`,
               enabled: true,
               favorited: randomBoolean(),
               testPks: [],

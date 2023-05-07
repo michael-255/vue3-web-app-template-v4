@@ -120,7 +120,7 @@ function getSchemaType() {
           round
           color="positive"
           :icon="Icon.ADD_NOTE"
-          @click="goToCreate(getSchemaType(), Group.CHILD, dashboardCard.sk)"
+          @click="goToCreate(dashboardCard.type, Group.CHILD, dashboardCard.sk)"
         />
       </DashboardParentCard>
     </div>

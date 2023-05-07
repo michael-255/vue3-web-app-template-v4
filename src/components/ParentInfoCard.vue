@@ -1,20 +1,27 @@
 <script setup lang="ts">
-import { onMounted, type Ref, ref } from 'vue'
+import { type Ref, ref, onMounted } from 'vue'
+import type { Record } from '@/types/models'
 import useRoutables from '@/composables/useRoutables'
 import DB from '@/services/LocalDatabase'
-import type { Record } from '@/types/models'
+import { Group } from '@/types/database'
 
 // Composables & Stores
-const { routeSk } = useRoutables()
+const { routeSk, routeGroup } = useRoutables()
 
 // Data
 const isVisible: Ref<boolean> = ref(false)
 const parent: Ref<Record> = ref({} as Record)
 
 onMounted(async () => {
-  if (routeSk) {
+  // Require SK and the child group to display parent info for child record
+  if (routeSk && routeGroup && routeGroup === Group.CHILD) {
     parent.value = (await DB.getParent(routeSk)) as Record
-    isVisible.value = true
+
+    if (parent.value) {
+      isVisible.value = true
+    } else {
+      new Error('Error loading parent record for child creation')
+    }
   }
 })
 </script>
