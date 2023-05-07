@@ -93,7 +93,8 @@ export class LocalDatabase extends Dexie {
   liveDashboard() {
     return liveQuery(async () => {
       // Initial Records query for parent and enabled records sorted by name
-      const records = await this.Records.where({ group: Group.PARENT })
+      const records = await this.Records.where(Field.GROUP)
+        .equals(Group.PARENT)
         .filter((r) => r.enabled === true)
         .sortBy(Field.NAME)
 
@@ -146,7 +147,8 @@ export class LocalDatabase extends Dexie {
         return await this.Settings.toCollection().sortBy(SettingField.KEY)
       } else {
         // Records sorted by timestamp
-        return await this.Records.where({ group })
+        return await this.Records.where(Field.GROUP)
+          .equals(group ?? Group.PARENT)
           .filter((r) => r.type === type)
           .sortBy(Field.TIMESTAMP)
       }

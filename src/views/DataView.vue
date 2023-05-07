@@ -88,7 +88,7 @@ async function onDelete(pk: string) {
         <!-- Do not show hidden columns -->
         <QTh
           v-for="col in props.cols"
-          v-show="col.name !== 'hiddenId' && col.name !== 'hiddenTimestamp'"
+          v-show="col.name !== 'hiddenPk'"
           :key="col.name"
           :props="props"
         >

@@ -2,7 +2,7 @@
 import { Icon } from '@/types/icons'
 import { AppName } from '@/types/misc'
 import { useMeta } from 'quasar'
-import { Key, Group } from '@/types/database'
+import { Key, Group, Type } from '@/types/database'
 import { ref, type Ref, onUnmounted } from 'vue'
 import type { DashboardCard } from '@/types/misc'
 import { getRecordsCountDisplay } from '@/utils/common'
@@ -10,6 +10,7 @@ import { appSchema } from '@/services/AppSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
 import DashboardParentCard from '@/components/DashboardParentCard.vue'
+import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/LocalDatabase'
@@ -19,6 +20,7 @@ useMeta({ title: `${AppName} - Dashboard` })
 // Composables & Stores
 const uiStore = useUIStore()
 const { log } = useLogger()
+const { goToCreate } = useRoutables()
 
 // Data
 const showDescription: Ref<boolean> = ref(false)
@@ -80,6 +82,13 @@ function getCreateLabel() {
 
   return `Create ${labelSingular}`
 }
+
+/**
+ * Returns schema type for creat based on dashboard selection.
+ */
+function getSchemaType() {
+  return appSchema.find((i) => i.labelPlural === uiStore.dashboardSelection)?.type as Type
+}
 </script>
 
 <template>
@@ -121,7 +130,12 @@ function getCreateLabel() {
         {{ getCountDisplay() }}
       </div>
 
-      <QBtn color="positive" :icon="Icon.CREATE" :label="`${getCreateLabel()}`" />
+      <QBtn
+        color="positive"
+        :icon="Icon.CREATE"
+        :label="`${getCreateLabel()}`"
+        @click="goToCreate(getSchemaType(), Group.PARENT)"
+      />
     </div>
   </ResponsivePage>
 </template>
