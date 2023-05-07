@@ -5,11 +5,16 @@ import { RouteName } from '@/router/route-names'
 import { AppHeaderColor, AppName } from '@/types/misc'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
+import { appSchema } from '@/services/AppSchema'
+import { Relation } from '@/types/database'
 
 // Composables & Stores
 const { goBack } = useRoutables()
 const uiStore = useUIStore()
 const route = useRoute()
+
+// Data
+const schemaParents = appSchema.filter((i) => i.relation === Relation.PARENT)
 </script>
 
 <template>
@@ -46,6 +51,25 @@ const route = useRoute()
             <QIcon color="primary" :name="Icon.DASHBOARD" />
           </QItemSection>
           <QItemSection>Dashboard</QItemSection>
+        </QItem>
+
+        <QSeparator spaced="md" inset />
+
+        <!-- Parent Data Table Links -->
+        <QItem
+          v-for="(parent, i) in schemaParents"
+          :key="i"
+          clickable
+          v-ripple
+          :to="{
+            name: RouteName.DATA,
+            params: { type: parent.type, relation: parent.relation },
+          }"
+        >
+          <QItemSection avatar>
+            <QIcon color="primary" :name="parent.icon" />
+          </QItemSection>
+          <QItemSection>{{ parent.labelPlural }}</QItemSection>
         </QItem>
 
         <QSeparator spaced="md" inset />

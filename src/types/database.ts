@@ -9,7 +9,7 @@
  */
 export enum LogField {
   AUTO_ID = 'autoId',
-  TIMESTAMP = 'timestamp', // match
+  TIMESTAMP = 'timestamp',
   SEVERITY = 'severity',
   LABEL = 'label',
   DETAILS = 'details',
@@ -31,7 +31,7 @@ export enum SettingField {
 export enum Field {
   // RECORDS
   ID = 'id',
-  TIMESTAMP = 'timestamp', // match
+  TIMESTAMP = 'timestamp',
   TYPE = 'type',
   RELATION = 'relation',
   // PARENTS
@@ -124,7 +124,6 @@ export enum Key {
   SHOW_WELCOME = 'show-welcome-overlay',
   SHOW_DESCRIPTIONS = 'show-dashboard-descriptions',
   DARK_MODE = 'dark-mode',
-  SHOW_ALL_COLUMNS = 'show-all-data-columns',
   SHOW_CONSOLE_LOGS = 'show-console-logs',
   SHOW_INFO_MESSAGES = 'show-info-messages',
   LOG_RETENTION_TIME = 'log-retention-time',

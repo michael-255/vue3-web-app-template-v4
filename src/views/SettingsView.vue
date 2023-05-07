@@ -11,6 +11,7 @@ import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
 import useDialogs from '@/composables/useDialogs'
 import useDefaults from '@/composables/useDefaults'
+import useRoutables from '@/composables/useRoutables'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import DB from '@/services/LocalDatabase'
 
@@ -21,29 +22,22 @@ const { log } = useLogger()
 const { notify } = useNotifications()
 const { confirmDialog } = useDialogs()
 const { onDefaults } = useDefaults()
+const { goToData } = useRoutables()
 
 // Data
+const schemaOptions = appSchema.map((i) => ({
+  label: i.labelPlural,
+  value: { type: i.type, relation: i.relation },
+}))
+
 const settings: Ref<Setting[]> = ref([])
 const logRetentionIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
 const exportModel: Ref<Type[]> = ref([])
-const exportOptions = appSchema.map((i) => ({
-  label: i.labelPlural,
-  value: { type: i.type, relation: i.relation },
-}))
-const accessOptions = ref(
-  appSchema.map((i) => ({
-    label: i.labelPlural,
-    value: { type: i.type, relation: i.relation },
-  }))
-)
+const exportOptions = [...schemaOptions]
+const accessOptions = ref([...schemaOptions])
 const accessModel = ref(accessOptions.value[0])
-const deleteOptions = ref(
-  appSchema.map((i) => ({
-    label: i.labelPlural,
-    value: { type: i.type, relation: i.relation },
-  }))
-)
+const deleteOptions = ref([...schemaOptions])
 const deleteModel = ref(deleteOptions.value[0])
 
 // Subscriptions
@@ -244,6 +238,14 @@ async function onDeleteDatabase() {
     }
   )
 }
+
+/**
+ * Returns value of setting from the live ref.
+ * @param key
+ */
+function getSettingValue(key: Key) {
+  return settings.value.find((s) => s.key === key)?.value
+}
 </script>
 
 <template>
@@ -259,7 +261,7 @@ async function onDeleteDatabase() {
           </p>
           <QToggle
             label="Show Welcome Overlay"
-            :model-value="settings.find((s) => s.key === Key.SHOW_WELCOME)?.value"
+            :model-value="getSettingValue(Key.SHOW_WELCOME)"
             @update:model-value="DB.setSetting(Key.SHOW_WELCOME, $event)"
           />
         </div>
@@ -268,20 +270,8 @@ async function onDeleteDatabase() {
           <p>Show descriptions for records displayed on the Dashboard page.</p>
           <QToggle
             label="Show Dashboard Descriptions"
-            :model-value="settings.find((s) => s.key === Key.SHOW_DESCRIPTIONS)?.value"
+            :model-value="getSettingValue(Key.SHOW_DESCRIPTIONS)"
             @update:model-value="DB.setSetting(Key.SHOW_DESCRIPTIONS, $event)"
-          />
-        </div>
-
-        <div class="q-mb-md">
-          <p>
-            Show all columns while viewing on the data page or only show the default columns. You
-            can change the individual columns while on the page.
-          </p>
-          <QToggle
-            label="Show All Data Columns"
-            :model-value="settings.find((s) => s.key === Key.SHOW_ALL_COLUMNS)?.value"
-            @update:model-value="DB.setSetting(Key.SHOW_ALL_COLUMNS, $event)"
           />
         </div>
 
@@ -289,7 +279,7 @@ async function onDeleteDatabase() {
           <p>Dark mode allows you to switch between a light or dark theme for the app.</p>
           <QToggle
             label="Dark Mode"
-            :model-value="settings.find((s) => s.key === Key.DARK_MODE)?.value"
+            :model-value="getSettingValue(Key.DARK_MODE)"
             @update:model-value="DB.setSetting(Key.DARK_MODE, $event)"
           />
         </div>
@@ -373,7 +363,12 @@ async function onDeleteDatabase() {
             :options="accessOptions"
           >
             <template v-slot:before>
-              <QBtn :disable="!accessModel" label="Access Data" color="primary" />
+              <QBtn
+                :disable="!accessModel"
+                label="Access Data"
+                color="primary"
+                @click="goToData(accessModel.value.type, accessModel.value.relation)"
+              />
             </template>
           </QSelect>
         </div>
@@ -389,7 +384,7 @@ async function onDeleteDatabase() {
           <p>Show Console Logs will display all log messages in the browser console.</p>
           <QToggle
             label="Show Console Logs"
-            :model-value="settings.find((s) => s.key === Key.SHOW_CONSOLE_LOGS)?.value"
+            :model-value="getSettingValue(Key.SHOW_CONSOLE_LOGS)"
             @update:model-value="DB.setSetting(Key.SHOW_CONSOLE_LOGS, $event)"
           />
         </div>
@@ -398,7 +393,7 @@ async function onDeleteDatabase() {
           <p>Show Info Messages will display info level notifications.</p>
           <QToggle
             label="Show Info Messages"
-            :model-value="settings.find((s) => s.key === Key.SHOW_INFO_MESSAGES)?.value"
+            :model-value="getSettingValue(Key.SHOW_INFO_MESSAGES)"
             @update:model-value="DB.setSetting(Key.SHOW_INFO_MESSAGES, $event)"
           />
         </div>

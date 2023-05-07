@@ -52,7 +52,6 @@ export class LocalDatabase extends Dexie {
       [Key.SHOW_WELCOME]: true,
       [Key.SHOW_DESCRIPTIONS]: true,
       [Key.DARK_MODE]: true,
-      [Key.SHOW_ALL_COLUMNS]: false,
       [Key.SHOW_CONSOLE_LOGS]: false,
       [Key.SHOW_INFO_MESSAGES]: true,
       [Key.LOG_RETENTION_TIME]: LogRetention.THREE_MONTHS,
@@ -82,24 +81,10 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Observable of Logs table with newest logs first.
-   */
-  liveLogs() {
-    return liveQuery(() => this.Logs.reverse().toArray())
-  }
-
-  /**
-   * Observable of Settings table sorted by KEY.
+   * Observable of Settings table.
    */
   liveSettings() {
-    return liveQuery(() => this.Settings.toCollection().sortBy(SettingField.KEY))
-  }
-
-  /**
-   * Observable of Records table with newest records first.
-   */
-  liveRecords() {
-    return liveQuery(() => this.Records.toCollection().sortBy(Field.TIMESTAMP))
+    return liveQuery(() => this.Settings.toArray())
   }
 
   /**
@@ -146,22 +131,25 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Observable for Data View with any table with Type and Relation to control results.
+   * Observable for Data Table View with any table with Type and Relation to control results.
    * @param type
    * @param relation
    */
-  liveData(type: Type, relation?: Relation) {
-    if (type === Type.LOG) {
-      return this.liveLogs()
-    } else if (type === Type.SETTING) {
-      return this.liveSettings()
-    } else {
-      return liveQuery(() =>
-        this.Records.where({ relation })
+  liveDataTable(type: Type, relation?: Relation) {
+    return liveQuery(async () => {
+      if (type === Type.LOG) {
+        // Sorted newest Log first
+        return await this.Logs.reverse().toArray()
+      } else if (type === Type.SETTING) {
+        // Sorted by Key name
+        return await this.Settings.toCollection().sortBy(SettingField.KEY)
+      } else {
+        // Records sorted by timestamp
+        return await this.Records.where({ relation })
           .filter((r) => r.type === type)
           .sortBy(Field.TIMESTAMP)
-      )
-    }
+      }
+    })
   }
 
   /////////////////////////////////////////////////////////////////////////////

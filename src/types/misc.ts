@@ -1,8 +1,7 @@
 import type { Icon } from '@/types/icons'
 import type { Log, Record, Setting } from '@/types/models'
 import type { QTableColumn } from 'quasar'
-import type { Action, Field, Relation, Type } from '@/types/database'
-import type { Ref } from 'vue'
+import type { Action, Field, LogField, Relation, SettingField, Type } from '@/types/database'
 
 /**
  * App display name.
@@ -148,7 +147,7 @@ export type AppSchema = {
   labelPlural: string
   icon: Icon
   supportedActions: Action[]
-  visibleColumns: Field[]
+  visibleColumns: (Field | SettingField | LogField)[]
   tableColumns: QTableColumn[]
   fieldCards: any[]
   chartCards: any[]
