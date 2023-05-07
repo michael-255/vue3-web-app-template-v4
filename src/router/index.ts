@@ -13,9 +13,9 @@ const router = createRouter({
     {
       /**
        * - Type required for table selection
-       * - Relation needed for table selection when NOT Logs or Settings
+       * - Group needed for table selection when NOT Logs or Settings
        */
-      path: '/data/:type/:relation?',
+      path: '/data/:type/:group?',
       name: RouteName.DATA,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DataView.vue'),
@@ -23,28 +23,28 @@ const router = createRouter({
     {
       /**
        * - Type required for creation
-       * - Relation required for creation
-       * - Id needed if creating child of parent
+       * - Group required for creation
+       * - PK needed if creating child of parent
        */
-      path: '/create/:type/:relation/:id?',
+      path: '/create/:type/:group/:pk?',
       name: RouteName.CREATE,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/CreateView.vue'),
     },
     {
-      path: '/inspect/:id/:timestamp',
+      path: '/inspect/:pk',
       name: RouteName.INSPECT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/InspectView.vue'),
     },
     {
-      path: '/edit/:id/:timestamp',
+      path: '/edit/:pk',
       name: RouteName.EDIT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/EditView.vue'),
     },
     {
-      path: '/charts/:id/:timestamp',
+      path: '/charts/:pk',
       name: RouteName.CHARTS,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/ChartsView.vue'),

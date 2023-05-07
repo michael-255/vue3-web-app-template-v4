@@ -2,7 +2,7 @@
 import { exportFile } from 'quasar'
 import { Icon } from '@/types/icons'
 import { type ExportData, AppName, Limit } from '@/types/misc'
-import { Type, Key, LogRetention, Relation } from '@/types/database'
+import { Type, Key, LogRetention, Group } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
 import type { Setting, Record } from '@/types/models'
 import { useMeta } from 'quasar'
@@ -27,7 +27,7 @@ const { goToData } = useRoutables()
 // Data
 const schemaOptions = appSchema.map((i) => ({
   label: i.labelPlural,
-  value: { type: i.type, relation: i.relation },
+  value: { type: i.type, group: i.group },
 }))
 
 const settings: Ref<Setting[]> = ref([])
@@ -180,7 +180,7 @@ async function onChangeLogRetention(logRetentionIndex: number) {
  * On confirmation, deletes all records of a specified type.
  * @param type
  */
-async function onDeleteBy(label: string, type: Type, relation?: Relation) {
+async function onDeleteBy(label: string, type: Type, group?: Group) {
   confirmDialog(
     `Delete ${label}`,
     `Permanetly delete all ${label} from the database?`,
@@ -188,7 +188,7 @@ async function onDeleteBy(label: string, type: Type, relation?: Relation) {
     'negative',
     async () => {
       try {
-        await DB.clearBy(type, relation)
+        await DB.clearBy(type, group)
         await DB.initSettings()
         log.info(`${type} successfully deleted`)
       } catch (error) {
@@ -367,7 +367,7 @@ function getSettingValue(key: Key) {
                 :disable="!accessModel"
                 label="Access Data"
                 color="primary"
-                @click="goToData(accessModel.value.type, accessModel.value.relation)"
+                @click="goToData(accessModel.value.type, accessModel.value.group)"
               />
             </template>
           </QSelect>
@@ -452,11 +452,7 @@ function getSettingValue(key: Key) {
                 label="Delete Data"
                 color="negative"
                 @click="
-                  onDeleteBy(
-                    deleteModel.label,
-                    deleteModel.value?.type,
-                    deleteModel.value?.relation
-                  )
+                  onDeleteBy(deleteModel.label, deleteModel.value?.type, deleteModel.value?.group)
                 "
               />
             </template>

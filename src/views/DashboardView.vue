@@ -2,7 +2,7 @@
 import { Icon } from '@/types/icons'
 import { AppName } from '@/types/misc'
 import { useMeta } from 'quasar'
-import { Key, Relation } from '@/types/database'
+import { Key, Group } from '@/types/database'
 import { ref, type Ref, onUnmounted } from 'vue'
 import type { DashboardCard } from '@/types/misc'
 import { getRecordsCountDisplay } from '@/utils/common'
@@ -24,7 +24,7 @@ const { log } = useLogger()
 const showDescription: Ref<boolean> = ref(false)
 const dashboardCards: Ref<DashboardCard[]> = ref([])
 const dashboardOptions = appSchema
-  .filter((i) => i.relation === Relation.PARENT)
+  .filter((i) => i.group === Group.PARENT)
   .map((p) => ({
     label: p.labelPlural,
     value: p.labelPlural,

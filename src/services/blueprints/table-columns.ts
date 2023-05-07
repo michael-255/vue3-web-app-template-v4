@@ -103,26 +103,23 @@ const valueColumn: Readonly<QTableColumn> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Hidden id column (required). Saves horizontal space on the Data view by hiding from user.
+ * Hidden PK column (required). Saves horizontal space on the Data view by hiding from user.
  * - Required for row operations (inspect, edit, delete, etc.)
  * - Must be index 0 for Data Table props.cols[0]
  */
-const hiddenIdColumn: Readonly<QTableColumn> = {
-  ...makeHiddenColumn(Field.ID, 'hiddenId'),
+const hiddenPkColumn: Readonly<QTableColumn> = {
+  ...makeHiddenColumn(Field.PK, 'hiddenPk'),
 }
 
-/**
- * Hidden timestamp column (required). Saves horizontal space on the Data view by hiding from user.
- * - Required for row operations (inspect, edit, delete, etc.)
- * - Must be index 1 for Data Table props.cols[1]
- */
-const hiddenTimestampColumn: Readonly<QTableColumn> = {
-  ...makeHiddenColumn(Field.TIMESTAMP, 'hiddenTimestamp'),
+const pkColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.PK),
+  label: 'Primary Id',
+  format: (val: string) => truncateString(val, 8, '*'),
 }
 
-const idColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.ID),
-  label: 'Id*',
+const skColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.SK),
+  label: 'Secondary Id',
   format: (val: string) => truncateString(val, 8, '*'),
 }
 
@@ -180,9 +177,9 @@ const noteColumn: Readonly<QTableColumn> = {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-const testIdsColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.TEST_IDS),
-  label: 'Test Ids',
+const testPksColumn: Readonly<QTableColumn> = {
+  ...makeStandardColumn(Field.TEST_PKS),
+  label: 'Tests',
   format: (val: string[]) => truncateString(JSON.stringify(val), 30, '...'),
 }
 
@@ -211,29 +208,29 @@ export const logColumns: QTableColumn[] = [
 export const settingColumns: QTableColumn[] = [keyColumn, valueColumn]
 
 export const exampleParentColumns: QTableColumn[] = [
-  hiddenIdColumn,
-  hiddenTimestampColumn,
-  idColumn,
+  hiddenPkColumn,
+  pkColumn,
+  skColumn,
   timestampColumn,
   nameColumn,
   descColumn,
   enabledColumn,
   favoritedColumn,
-  testIdsColumn,
+  testPksColumn,
 ]
 
 export const exampleChildColumns: QTableColumn[] = [
-  hiddenIdColumn,
-  hiddenTimestampColumn,
-  idColumn,
+  hiddenPkColumn,
+  pkColumn,
+  skColumn,
   timestampColumn,
   noteColumn,
 ]
 
 export const testParentColumns: QTableColumn[] = [
-  hiddenIdColumn,
-  hiddenTimestampColumn,
-  idColumn,
+  hiddenPkColumn,
+  pkColumn,
+  skColumn,
   timestampColumn,
   nameColumn,
   descColumn,
@@ -242,9 +239,9 @@ export const testParentColumns: QTableColumn[] = [
 ]
 
 export const testChildColumns: QTableColumn[] = [
-  hiddenIdColumn,
-  hiddenTimestampColumn,
-  idColumn,
+  hiddenPkColumn,
+  pkColumn,
+  skColumn,
   timestampColumn,
   noteColumn,
   percentColumn,

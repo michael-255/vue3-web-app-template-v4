@@ -4,7 +4,7 @@ import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/LocalDatabase'
 import type { ExampleChild, ExampleParent, Record } from '@/types/models'
-import { Relation, Type } from '@/types/database'
+import { Group, Type } from '@/types/database'
 
 /**
  * Composable with functions for generating default data for the app.
@@ -58,35 +58,33 @@ export default function useDefaults() {
             return Math.random() >= 0.5
           }
 
-          const timestampOffset = (i: number) => 1 + i
-
           const records: Partial<Record>[] = []
 
-          const createRecords = (
-            count: number,
-            type: Type.EXAMPLE | Type.TEST,
-            id: string = uid()
-          ) => {
+          const createRecords = (count: number, type: Type.EXAMPLE | Type.TEST) => {
+            const groupId = uid()
+
             // Create Parent (1)
             records.push({
-              id,
-              timestamp: Date.now(),
+              pk: uid(),
+              sk: groupId,
               type,
-              relation: Relation.PARENT,
+              group: Group.PARENT,
+              timestamp: Date.now(),
               name: randomGreekAlpha(),
               desc: `${type} description...`,
               enabled: true,
               favorited: randomBoolean(),
-              testIds: [],
+              testPks: [],
             } as ExampleParent)
 
             // Create Children (count)
             for (let i = 0; i < count; i++) {
               records.push({
-                id,
-                timestamp: Date.now() + timestampOffset(i), // TODO - This okay?
+                pk: uid(),
+                sk: groupId,
                 type,
-                relation: Relation.CHILD,
+                group: Group.CHILD,
+                timestamp: Date.now(),
                 note: `Note ${i}`,
               } as ExampleChild)
             }
@@ -95,6 +93,8 @@ export default function useDefaults() {
           createRecords(3, Type.EXAMPLE)
           createRecords(3, Type.EXAMPLE)
           createRecords(3, Type.EXAMPLE)
+          createRecords(3, Type.EXAMPLE)
+          createRecords(3, Type.TEST)
           createRecords(3, Type.TEST)
 
           await DB.bulkAdd(records as Record[])

@@ -3,11 +3,11 @@ import {
   descValidator,
   enabledValidator,
   favoritedValidator,
-  idValidator,
+  uidValidator,
   nameValidator,
   noteValidator,
   percentValidator,
-  relationValidator,
+  groupValidator,
   timestampValidator,
   typeValidator,
 } from '@/services/Validators'
@@ -47,10 +47,11 @@ const settingSchema = object({
 ///////////////////////////////////////////////////////////////////////////////
 
 const coreSchema = object({
-  [Field.ID]: idValidator,
-  [Field.TIMESTAMP]: timestampValidator,
+  [Field.PK]: uidValidator,
+  [Field.SK]: uidValidator,
   [Field.TYPE]: typeValidator,
-  [Field.RELATION]: relationValidator,
+  [Field.GROUP]: groupValidator,
+  [Field.TIMESTAMP]: timestampValidator,
 })
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -83,7 +84,7 @@ const childSchema = object({
 ///////////////////////////////////////////////////////////////////////////////
 
 const exampleParentSchema = object({
-  [Field.TEST_IDS]: array().of(idValidator).defined(),
+  [Field.TEST_PKS]: array().of(uidValidator).defined(),
 })
 
 const testChildSchema = object({
@@ -98,6 +99,7 @@ const testChildSchema = object({
 
 const exampleParent = mixed().concat(coreSchema).concat(parentSchema).concat(exampleParentSchema)
 const exampleChild = mixed().concat(coreSchema).concat(childSchema)
+const testParent = mixed().concat(coreSchema).concat(parentSchema)
 const testChild = mixed().concat(coreSchema).concat(childSchema).concat(testChildSchema)
 const record = mixed()
   .concat(coreSchema)
@@ -108,6 +110,7 @@ const record = mixed()
 
 export type ExampleParent = InferType<typeof exampleParent>
 export type ExampleChild = InferType<typeof exampleChild>
+export type TestParent = InferType<typeof testParent>
 export type TestChild = InferType<typeof testChild>
 export type Record = InferType<typeof record>
 export type Log = InferType<typeof logSchema>

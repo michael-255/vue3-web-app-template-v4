@@ -1,4 +1,4 @@
-import { Key, Relation, Severity, Type } from '@/types/database'
+import { Key, Group, Severity, Type } from '@/types/database'
 import { mixed, array, string, number, boolean } from 'yup'
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,10 +29,10 @@ export const valueValidator = mixed().required()
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const idValidator = string().required().uuid() // Auto generated for user, so no changing (NO button to regenerate)
+export const uidValidator = string().required().uuid() // Auto generated for user, so no changing (NO button to regenerate)
 export const timestampValidator = number().required().integer() // Controled via buttons by user + auto generated (Date, Time, Now)
 export const typeValidator = string().required().oneOf(Object.values(Type)) // Pre-selected, not changable by user
-export const relationValidator = string().required().oneOf(Object.values(Relation)) // Pre-selected, not changable by user
+export const groupValidator = string().required().oneOf(Object.values(Group)) // Pre-selected, not changable by user
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -59,5 +59,5 @@ export const noteValidator = string().required().max(500).trim() // BLANK
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const testIdsValidator = array().of(idValidator).defined()
+export const testPksValidator = array().of(uidValidator).defined()
 export const percentValidator = number().required().min(0).max(100) // BLANK

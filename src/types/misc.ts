@@ -1,7 +1,7 @@
 import type { Icon } from '@/types/icons'
 import type { Log, Record, Setting } from '@/types/models'
 import type { QTableColumn } from 'quasar'
-import type { Action, Field, LogField, Relation, SettingField, Type } from '@/types/database'
+import type { Action, Field, Group, LogField, SettingField, Type } from '@/types/database'
 
 /**
  * App display name.
@@ -142,7 +142,7 @@ export type ChartBlueprint = {
  */
 export type AppSchema = {
   type: Type
-  relation?: Relation // Logs and Settings don't use Relation
+  [Field.GROUP]?: Group // Logs and Settings don't use Group
   labelSingular: string
   labelPlural: string
   icon: Icon
@@ -158,12 +158,13 @@ export type AppSchema = {
  */
 export type DashboardCard = {
   labelPlural?: string // Use as key on Dashboard page
-  id: string
-  timestamp: number
-  type: Type
-  name: string
-  desc: string
-  favorited: boolean
+  [Field.PK]: string
+  [Field.SK]: string
+  [Field.TYPE]: Type
+  [Field.TIMESTAMP]: number
+  [Field.NAME]: string
+  [Field.DESC]: string
+  [Field.FAVORITED]: boolean
   previousNote?: string
   previousTimestamp?: number
 }

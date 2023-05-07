@@ -30,10 +30,11 @@ export enum SettingField {
  */
 export enum Field {
   // RECORDS
-  ID = 'id',
-  TIMESTAMP = 'timestamp',
+  PK = 'pk',
+  SK = 'sk',
   TYPE = 'type',
-  RELATION = 'relation',
+  GROUP = 'group',
+  TIMESTAMP = 'timestamp',
   // PARENTS
   NAME = 'name',
   DESC = 'desc',
@@ -42,14 +43,13 @@ export enum Field {
   // CHILDREN
   NOTE = 'note',
   // EXAMPLE PARENT
-  TEST_IDS = 'testIds',
+  TEST_PKS = 'testPks',
   // EXAMPLE CHILD
   // ...
   // TEST PARENT
-  TEST_INPUTS = 'testInputs',
+  // ...
   // TEST CHILD
   PERCENT = 'percent',
-  TEST_NUMBER = 'testNumber',
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,35 +71,32 @@ export const LogIndex = `++${LogField.AUTO_ID}` as const
 export const SettingIndex = SettingField.KEY as const
 
 /**
- * Database PrimaryCompoundIndex uses uniqueness enforced (&) compound id and timestamp.
+ * Database PrimaryKeyIndex uses uniqueness enforced uid.
  * - Records Table
  * - Used for exact record matches
- * - Should NEVER alter the id after creation
- * - Validate and provide warnings when altering the timestamp
+ * - NEVER alter uid after creation
  * @example
- * `id      timestamp   type     relation`
- * `ex-123  1234567890  example  parent`
- * `ex-123  1234567891  example  child`
- * `ex-123  1234567892  example  child`
- * `ex-123  1234567893  example  child`
+ * `pk      sk     type     group`
+ * `abc-123 ex-123 example  parent`
+ * `efg-456 ex-123 example  child`
+ * `hij-789 ex-123 example  child`
+ * `klm-012 ex-123 example  child`
  */
-export const PrimaryCompoundIndex = `&[${Field.ID}+${Field.TIMESTAMP}]` as const
+export const PrimaryKeyIndex = `&${Field.PK}` as const
 
 /**
- * Database IdIndex uses id.
+ * Database SecondaryKeyIndex uses a repeatable uid.
  * - Records Table
- * - Used for Parent with Children queries
- * - Filter on relation to get Parent
- * - Filter on relation with reverse sorting to grab previous Child Record
+ * - NEVER alter uid after creation
  */
-export const IdIndex = Field.ID as const
+export const SecondaryKeyIndex = Field.SK as const
 
 /**
- * Database RelationIndex uses relation.
+ * Database GroupIndex uses group 'parent' or 'child' to separate records.
  * - Records Table
- * - Used for Dashboard and Data view queries to get all records by relation
+ * - Used for Dashboard and Data view queries to get all records by a group
  */
-export const RelationIndex = Field.RELATION as const
+export const GroupIndex = Field.GROUP as const
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -141,22 +138,12 @@ export enum Type {
 }
 
 /**
- * Database Record Relation enum defines the record relationship with its peer records.
+ * Database Record Group enum defines the record relationship with its peer records.
  * - Must be a URL friendly slug
- * - Parent and Metadata records are the top level records (with a 0 timestamp to prevent duplication)
- * - Child records are the second level records which use a timestamp to ensure uniqueness
  */
-export enum Relation {
+export enum Group {
   PARENT = 'parent',
   CHILD = 'child',
-}
-
-/**
- * Database Test Input enum defines the inputs that are selectable for the Test Parent.
- */
-export enum TestInput {
-  PERCENT = 'Percentage',
-  TEST_NUMBER = 'Test Number',
 }
 
 /**

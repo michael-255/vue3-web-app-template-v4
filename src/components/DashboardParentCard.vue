@@ -29,11 +29,10 @@ async function viewPreviousNote(note: string) {
 
 /**
  * On confirmation, favorite the matching record in the database.
- * @param id
- * @param timestamp
+ * @param pk
  * @param name
  */
-async function onFavorite(id: string, timestamp: number, name: string) {
+async function onFavorite(pk: string, name: string) {
   confirmDialog(
     'Favorite',
     `Do you want to favorite ${name}?`,
@@ -41,8 +40,8 @@ async function onFavorite(id: string, timestamp: number, name: string) {
     'info',
     async () => {
       try {
-        await DB.update(id, timestamp, { favorited: true })
-        log.info(`${name} favorited`, { id, timestamp, name })
+        await DB.update(pk, { favorited: true })
+        log.info(`${name} favorited`, { pk, name })
       } catch (error) {
         log.error('Favorite update failed', error)
       }
@@ -52,11 +51,10 @@ async function onFavorite(id: string, timestamp: number, name: string) {
 
 /**
  * On confirmation, unfavorite the matching record in the database.
- * @param id
- * @param timestamp
+ * @param pk
  * @param name
  */
-async function onUnfavorite(id: string, timestamp: number, name: string) {
+async function onUnfavorite(pk: string, name: string) {
   confirmDialog(
     'Unfavorite',
     `Do you want to unfavorite ${name}?`,
@@ -64,8 +62,8 @@ async function onUnfavorite(id: string, timestamp: number, name: string) {
     'info',
     async () => {
       try {
-        await DB.update(id, timestamp, { favorited: false })
-        log.info(`${name} unfavorited`, { id, timestamp, name })
+        await DB.update(pk, { favorited: false })
+        log.info(`${name} unfavorited`, { pk, name })
       } catch (error) {
         log.error('Unfavorite update failed', error)
       }
@@ -75,15 +73,14 @@ async function onUnfavorite(id: string, timestamp: number, name: string) {
 
 /**
  * On confirmation, delete the matching record from the database.
- * @param id
- * @param timestamp
+ * @param pk
  * @param name
  */
-async function onDelete(id: string, timestamp: number, name: string) {
+async function onDelete(pk: string, name: string) {
   confirmDialog('Delete', `Permanently delete ${name}?`, Icon.DELETE, 'negative', async () => {
     try {
-      await DB.deleteRecord(id, timestamp)
-      log.info(`${name} deleted`, { id, timestamp, name })
+      await DB.deleteRecord(pk)
+      log.info(`${name} deleted`, { pk, name })
     } catch (error) {
       log.error('Delete failed', error)
     }
@@ -118,7 +115,7 @@ async function onDelete(id: string, timestamp: number, name: string) {
           color="warning"
           size="md"
           class="cursor-pointer"
-          @click="onUnfavorite(dashboardCard.id, dashboardCard.timestamp, dashboardCard.name)"
+          @click="onUnfavorite(dashboardCard.pk, dashboardCard.name)"
         />
         <QIcon
           v-show="!dashboardCard.favorited"
@@ -126,7 +123,7 @@ async function onDelete(id: string, timestamp: number, name: string) {
           color="grey"
           size="md"
           class="cursor-pointer"
-          @click="onFavorite(dashboardCard.id, dashboardCard.timestamp, dashboardCard.name)"
+          @click="onFavorite(dashboardCard.pk, dashboardCard.name)"
         />
 
         <!-- Vertical Actions Menu -->
@@ -138,21 +135,21 @@ async function onDelete(id: string, timestamp: number, name: string) {
             transition-hide="flip-left"
           >
             <QList>
-              <QItem clickable @click="goToInspect(dashboardCard.id, dashboardCard.timestamp)">
+              <QItem clickable @click="goToInspect(dashboardCard.pk)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.INSPECT" />
                 </QItemSection>
                 <QItemSection>Inspect</QItemSection>
               </QItem>
 
-              <QItem clickable @click="goToEdit(dashboardCard.id, dashboardCard.timestamp)">
+              <QItem clickable @click="goToEdit(dashboardCard.pk)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.EDIT" />
                 </QItemSection>
                 <QItemSection>Edit</QItemSection>
               </QItem>
 
-              <QItem clickable @click="goToCharts(dashboardCard.id, dashboardCard.timestamp)">
+              <QItem clickable @click="goToCharts(dashboardCard.pk)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.CHARTS" />
                 </QItemSection>
@@ -161,10 +158,7 @@ async function onDelete(id: string, timestamp: number, name: string) {
 
               <QSeparator />
 
-              <QItem
-                clickable
-                @click="onDelete(dashboardCard.id, dashboardCard.timestamp, dashboardCard.name)"
-              >
+              <QItem clickable @click="onDelete(dashboardCard.pk, dashboardCard.name)">
                 <QItemSection avatar>
                   <QIcon color="negative" :name="Icon.DELETE" />
                 </QItemSection>

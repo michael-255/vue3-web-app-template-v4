@@ -6,7 +6,7 @@ import { AppHeaderColor, AppName } from '@/types/misc'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
 import { appSchema } from '@/services/AppSchema'
-import { Relation } from '@/types/database'
+import { Group } from '@/types/database'
 
 // Composables & Stores
 const { goBack } = useRoutables()
@@ -14,7 +14,7 @@ const uiStore = useUIStore()
 const route = useRoute()
 
 // Data
-const schemaParents = appSchema.filter((i) => i.relation === Relation.PARENT)
+const schemaParents = appSchema.filter((i) => i.group === Group.PARENT)
 </script>
 
 <template>
@@ -63,7 +63,7 @@ const schemaParents = appSchema.filter((i) => i.relation === Relation.PARENT)
           v-ripple
           :to="{
             name: RouteName.DATA,
-            params: { type: parent.type, relation: parent.relation },
+            params: { type: parent.type, group: parent.group },
           }"
         >
           <QItemSection avatar>

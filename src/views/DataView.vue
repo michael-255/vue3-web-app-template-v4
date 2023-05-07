@@ -16,22 +16,22 @@ useMeta({ title: `${AppName} - Data` })
 
 // Composables & Stores
 const { log } = useLogger()
-const { routeType, routeRelation, goToCharts, goToInspect, goToEdit, goToCreate, goBack } =
+const { routeType, routeGroup, goToCharts, goToInspect, goToEdit, goToCreate, goBack } =
   useRoutables()
 const { confirmDialog } = useDialogs()
 
 // Data
 const schemaTableTitle = appSchema.find(
-  (i) => i.type === routeType && (!i.relation || i.relation === routeRelation)
+  (i) => i.type === routeType && (!i.group || i.group === routeGroup)
 )?.labelPlural
 const schemaTableColumns =
-  appSchema.find((i) => i.type === routeType && (!i.relation || i.relation === routeRelation))
+  appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
     ?.tableColumns ?? []
 const schemaVisibleColumns =
-  appSchema.find((i) => i.type === routeType && (!i.relation || i.relation === routeRelation))
+  appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
     ?.visibleColumns ?? []
 const schemaSupportedActions =
-  appSchema.find((i) => i.type === routeType && (!i.relation || i.relation === routeRelation))
+  appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
     ?.supportedActions ?? []
 
 const columns: Ref<QTableColumn[]> = ref(schemaTableColumns)
@@ -42,7 +42,7 @@ const visibleColumns: Ref<(Field | SettingField | LogField)[]> = ref(schemaVisib
 const rows: Ref<any[]> = ref([])
 const searchFilter: Ref<string> = ref('')
 
-const subscription = DB.liveDataTable(routeType, routeRelation).subscribe({
+const subscription = DB.liveDataTable(routeType, routeGroup).subscribe({
   next: (records) => {
     rows.value = records
   },
@@ -57,14 +57,13 @@ onUnmounted(() => {
 
 /**
  * On confirmation, delete the matching record from the database.
- * @param id
- * @param timestamp
+ * @param pk
  */
-async function onDelete(id: string, timestamp: number) {
+async function onDelete(pk: string) {
   confirmDialog('Delete', `Permanently delete this record?`, Icon.DELETE, 'negative', async () => {
     try {
-      await DB.deleteRecord(id, timestamp)
-      log.info('Successfully deleted record', { id, timestamp })
+      await DB.deleteRecord(pk)
+      log.info('Successfully deleted record', { pk })
     } catch (error) {
       log.error('Delete failed', error)
     }
@@ -115,7 +114,7 @@ async function onDelete(id: string, timestamp: number) {
             class="q-ml-xs"
             color="accent"
             :icon="Icon.CHARTS"
-            @click="goToCharts(String(props.cols[0].value), Number(props.cols[1].value))"
+            @click="goToCharts(props.cols[0].value)"
           />
           <!-- INSPECT -->
           <QBtn
@@ -126,7 +125,7 @@ async function onDelete(id: string, timestamp: number) {
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="goToInspect(String(props.cols[0].value), Number(props.cols[1].value))"
+            @click="goToInspect(props.cols[0].value)"
           />
           <!-- EDIT -->
           <QBtn
@@ -137,7 +136,7 @@ async function onDelete(id: string, timestamp: number) {
             class="q-ml-xs"
             color="orange-9"
             :icon="Icon.EDIT"
-            @click="goToEdit(String(props.cols[0].value), Number(props.cols[1].value))"
+            @click="goToEdit(props.cols[0].value)"
           />
           <!-- DELETE -->
           <QBtn
@@ -147,7 +146,7 @@ async function onDelete(id: string, timestamp: number) {
             dense
             class="q-ml-xs"
             color="negative"
-            @click="onDelete(String(props.cols[0].value), Number(props.cols[1].value))"
+            @click="onDelete(props.cols[0].value)"
             :icon="Icon.DELETE"
           />
         </QTd>
@@ -187,7 +186,7 @@ async function onDelete(id: string, timestamp: number) {
                 color="positive"
                 class="q-px-sm q-mr-xs"
                 :icon="Icon.ADD"
-                @click="goToCreate(routeType, routeRelation)"
+                @click="goToCreate(routeType, routeGroup)"
               />
               <!-- OPTIONS (Visible Columns) -->
               <QSelect

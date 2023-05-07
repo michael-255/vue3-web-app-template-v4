@@ -7,14 +7,14 @@ import {
   Type,
   Field,
   LogRetention,
-  LogIndex,
-  SettingIndex,
-  PrimaryCompoundIndex,
-  IdIndex,
-  RelationIndex,
-  Relation,
+  Group,
   Key,
   SettingField,
+  LogIndex,
+  SettingIndex,
+  PrimaryKeyIndex,
+  SecondaryKeyIndex,
+  GroupIndex,
 } from '@/types/database'
 import { appSchema } from './AppSchema'
 
@@ -32,7 +32,7 @@ export class LocalDatabase extends Dexie {
     this.version(1).stores({
       Logs: LogIndex,
       Settings: SettingIndex,
-      Records: `${PrimaryCompoundIndex}, ${IdIndex}, ${RelationIndex}`,
+      Records: `${PrimaryKeyIndex}, ${SecondaryKeyIndex}, ${GroupIndex}`,
     })
   }
 
@@ -93,7 +93,7 @@ export class LocalDatabase extends Dexie {
   liveDashboard() {
     return liveQuery(async () => {
       // Initial Records query for parent and enabled records sorted by name
-      const records = await this.Records.where({ relation: Relation.PARENT })
+      const records = await this.Records.where({ group: Group.PARENT })
         .filter((r) => r.enabled === true)
         .sortBy(Field.NAME)
 
@@ -102,14 +102,15 @@ export class LocalDatabase extends Dexie {
 
       // Build Dashboard Cards from Records and the previous child record
       for await (const r of records) {
-        const previous = await this.getPreviousChild(r.id)
+        const previous = await this.getPreviousChild(r.sk)
 
         const dashboardCard: DashboardCard = {
-          labelPlural: appSchema.find((i) => i.type === r.type && i.relation === Relation.PARENT)
+          labelPlural: appSchema.find((i) => i.type === r.type && i.group === Group.PARENT)
             ?.labelPlural,
-          id: r.id,
-          timestamp: r.timestamp,
+          pk: r.pk,
+          sk: r.sk,
           type: r.type,
+          timestamp: r.timestamp,
           name: r.name,
           desc: r.desc,
           favorited: r.favorited,
@@ -131,11 +132,11 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Observable for Data Table View with any table with Type and Relation to control results.
+   * Observable for Data Table View with any table with Type and Group to control results.
    * @param type
-   * @param relation
+   * @param group
    */
-  liveDataTable(type: Type, relation?: Relation) {
+  liveDataTable(type: Type, group?: Group) {
     return liveQuery(async () => {
       if (type === Type.LOG) {
         // Sorted newest Log first
@@ -145,7 +146,7 @@ export class LocalDatabase extends Dexie {
         return await this.Settings.toCollection().sortBy(SettingField.KEY)
       } else {
         // Records sorted by timestamp
-        return await this.Records.where({ relation })
+        return await this.Records.where({ group })
           .filter((r) => r.type === type)
           .sortBy(Field.TIMESTAMP)
       }
@@ -226,58 +227,61 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Get all Logs from database without sorting.
+   * Get all logs from database without sorting.
    */
   async getAllLogs() {
     return await this.Logs.toArray()
   }
 
   /**
-   * Get all Settings from database without sorting.
+   * Get all settings from database without sorting.
    */
   async getAllSettings() {
     return await this.Settings.toArray()
   }
 
   /**
-   * Get all Records from database without sorting.
+   * Get all records from database without sorting.
    */
   async getAllRecords() {
     return await this.Records.toArray()
   }
 
   /**
-   * Get exact Record by id and timestamp.
-   * @param id
-   * @param timestamp
+   * Get exact record by PK.
+   * @param pk
    */
-  async getRecord(id: string, timestamp: number) {
-    return await this.Records.get([id, timestamp])
+  async getRecord(pk: string) {
+    return await this.Records.get(pk)
   }
 
   /**
-   * Get the parent record by id only.
-   * @param id
+   * Get the parent record by SK.
+   * @param sk
    */
-  async getParent(id: string) {
-    return (await this.Records.where({ id }).toArray()).find((r) => r.relation === Relation.PARENT)
+  async getParent(sk: string) {
+    return (await this.Records.where(Field.SK).equals(sk).toArray()).find(
+      (r) => r.group === Group.PARENT
+    )
   }
 
   /**
-   * Get all Child Records for an id.
-   * @param id
+   * Get all child records by SK.
+   * @param sk
    */
-  async getChildren(id: string) {
-    return (await this.Records.where({ id }).toArray()).filter((r) => r.relation === Relation.CHILD)
+  async getChildren(sk: string) {
+    return (await this.Records.where(Field.SK).equals(sk).toArray()).filter(
+      (r) => r.group === Group.CHILD
+    )
   }
 
   /**
-   * Get previous child Record by Type.
-   * @param id
+   * Get previous child record by SK.
+   * @param sk
    */
-  async getPreviousChild(id: string) {
-    return (await this.Records.where({ id }).toArray())
-      .filter((r) => r.relation === Relation.CHILD)
+  async getPreviousChild(sk: string) {
+    return await (await this.Records.where(Field.SK).equals(sk).toArray())
+      .filter((r) => r.group === Group.CHILD)
       .reverse()[0]
   }
 
@@ -288,13 +292,12 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Update exact Record by id and timestamp with the properties you want to change.
-   * @param id
-   * @param timestamp
+   * Update exact Record by PK with the properties you want to change.
+   * @param pk
    * @param changes
    */
-  async update(id: string, timestamp: number, changes: Partial<Record>) {
-    return await this.Records.update([id, timestamp], changes)
+  async update(pk: string, changes: Partial<Record>) {
+    return await this.Records.update(pk, changes)
   }
 
   /**
@@ -363,30 +366,29 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Delete exact Record by id and timestamp.
-   * @param id
-   * @param timestamp
+   * Delete exact Record by PK.
+   * @param pk
    */
-  async deleteRecord(id: string, timestamp: number) {
-    return await this.Records.delete([id, timestamp])
+  async deleteRecord(pk: string) {
+    return await this.Records.delete(pk)
   }
 
   /**
-   * Delete all data of a specific type and relation.
+   * Delete all data of a specific type and group.
    * @param type
-   * @param relation
+   * @param group
    */
-  async clearBy(type: Type, relation?: Relation) {
+  async clearBy(type: Type, group?: Group) {
     if (type === Type.LOG) {
       return await this.Logs.clear()
     } else if (type === Type.SETTING) {
       return await this.Settings.clear()
     }
 
-    if (relation) {
-      // Delete records of matching type and relation
+    if (group) {
+      // Delete records of matching type and group
       return await this.Records.toCollection()
-        .filter((r) => r.type === type && r.relation === relation)
+        .filter((r) => r.type === type && r.group === group)
         .delete()
     } else {
       // Delete all Records of that type (parent and child)
