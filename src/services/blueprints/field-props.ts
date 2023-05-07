@@ -34,7 +34,6 @@ const autoIdField: Readonly<FieldProps> = {
   validator: (val: number) => autoIdValidator.isValid(val),
   validationMessage: '* Required',
   inspectFormat: (val: number) => `${val}`,
-  component: null,
 }
 
 const severityField: Readonly<FieldProps> = {
@@ -45,7 +44,6 @@ const severityField: Readonly<FieldProps> = {
   validator: (val: Severity) => severityValidator.isValid(val),
   validationMessage: '* Required',
   inspectFormat: (val: Severity) => `${val}`,
-  component: null,
 }
 
 const labelField: Readonly<FieldProps> = {
@@ -56,7 +54,6 @@ const labelField: Readonly<FieldProps> = {
   validator: (val: string) => labelValidator.isValid(val),
   validationMessage: '* Required',
   inspectFormat: (val: string) => `${val}`,
-  component: null,
 }
 
 const detailsField: Readonly<FieldProps> = {
@@ -67,7 +64,6 @@ const detailsField: Readonly<FieldProps> = {
   validator: (val: any) => detailsValidator.isValid(val),
   validationMessage: '',
   inspectFormat: (val: any) => JSON.stringify(val),
-  component: null,
 }
 
 const messageField: Readonly<FieldProps> = {
@@ -78,7 +74,6 @@ const messageField: Readonly<FieldProps> = {
   validator: (val: string) => messageValidator.isValid(val),
   validationMessage: '',
   inspectFormat: (val: string) => `${val}`,
-  component: null,
 }
 
 const stackField: Readonly<FieldProps> = {
@@ -89,7 +84,6 @@ const stackField: Readonly<FieldProps> = {
   validator: (val: string) => stackValidator.isValid(val),
   validationMessage: '',
   inspectFormat: (val: string) => `${val}`,
-  component: null,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -106,7 +100,6 @@ const keyField: Readonly<FieldProps> = {
   validator: (val: Key) => keyValidator.isValid(val),
   validationMessage: '* Required',
   inspectFormat: (val: Key) => `${val}`,
-  component: null,
 }
 
 const valueField: Readonly<FieldProps> = {
@@ -117,7 +110,6 @@ const valueField: Readonly<FieldProps> = {
   validator: (val: any) => valueValidator.isValid(val),
   validationMessage: '',
   inspectFormat: (val: any) => `${val}`,
-  component: null,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -134,7 +126,7 @@ const timestampField: Readonly<FieldProps> = {
   validator: (val: number) => timestampValidator.isValid(val),
   validationMessage: 'Must be valid numeric timestamp',
   inspectFormat: (val: number) => getDisplayDate(val),
-  component: null,
+  component: defineAsyncComponent(() => import('@/components/inputs/TimestampInput.vue')),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -251,9 +243,9 @@ export const logFields: FieldProps[] = [
 export const settingFields: FieldProps[] = [keyField, valueField]
 
 export const exampleParentFields: FieldProps[] = [
-  timestampField,
   nameField,
   descField,
+  timestampField,
   enabledField,
   favoritedField,
   testPksField,
@@ -262,9 +254,9 @@ export const exampleParentFields: FieldProps[] = [
 export const exampleChildFields: FieldProps[] = [timestampField, noteField]
 
 export const testParentFields: FieldProps[] = [
-  timestampField,
   nameField,
   descField,
+  timestampField,
   enabledField,
   favoritedField,
 ]

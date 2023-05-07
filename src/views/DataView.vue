@@ -34,6 +34,7 @@ const schemaSupportedActions =
   appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
     ?.supportedActions ?? []
 
+const hiddenColumns = ['hiddenType', 'hiddenGroup', 'hiddenPk']
 const columns: Ref<QTableColumn[]> = ref(schemaTableColumns)
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
@@ -88,7 +89,7 @@ async function onDelete(pk: string) {
         <!-- Do not show hidden columns -->
         <QTh
           v-for="col in props.cols"
-          v-show="col.name !== 'hiddenPk'"
+          v-show="!hiddenColumns.includes(col.name)"
           :key="col.name"
           :props="props"
         >
@@ -114,7 +115,7 @@ async function onDelete(pk: string) {
             class="q-ml-xs"
             color="accent"
             :icon="Icon.CHARTS"
-            @click="goToCharts(props.cols[0].value)"
+            @click="goToCharts(props.cols[0].value, props.cols[1].value, props.cols[2].value)"
           />
           <!-- INSPECT -->
           <QBtn
@@ -125,7 +126,7 @@ async function onDelete(pk: string) {
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="goToInspect(props.cols[0].value)"
+            @click="goToInspect(props.cols[0].value, props.cols[1].value, props.cols[2].value)"
           />
           <!-- EDIT -->
           <QBtn
@@ -136,7 +137,7 @@ async function onDelete(pk: string) {
             class="q-ml-xs"
             color="orange-9"
             :icon="Icon.EDIT"
-            @click="goToEdit(props.cols[0].value)"
+            @click="goToEdit(props.cols[0].value, props.cols[1].value, props.cols[2].value)"
           />
           <!-- DELETE -->
           <QBtn
@@ -146,7 +147,7 @@ async function onDelete(pk: string) {
             dense
             class="q-ml-xs"
             color="negative"
-            @click="onDelete(props.cols[0].value)"
+            @click="onDelete(props.cols[2].value)"
             :icon="Icon.DELETE"
           />
         </QTd>

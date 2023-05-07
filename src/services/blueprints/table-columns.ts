@@ -103,9 +103,27 @@ const valueColumn: Readonly<QTableColumn> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Hidden Type column (required). Saves horizontal space on the Data view by hiding from user.
+ * - Required for some row operations
+ * - Must be index 0 (props.cols[index])
+ */
+const hiddenTypeColumn: Readonly<QTableColumn> = {
+  ...makeHiddenColumn(Field.TYPE, 'hiddenType'),
+}
+
+/**
+ * Hidden Type column (required). Saves horizontal space on the Data view by hiding from user.
+ * - Required for some row operations
+ * - Must be index 1 (props.cols[index])
+ */
+const hiddenGroupColumn: Readonly<QTableColumn> = {
+  ...makeHiddenColumn(Field.GROUP, 'hiddenGroup'),
+}
+
+/**
  * Hidden PK column (required). Saves horizontal space on the Data view by hiding from user.
- * - Required for row operations (inspect, edit, delete, etc.)
- * - Must be index 0 for Data Table props.cols[0]
+ * - Required for some row operations
+ * - Must be index 2 (props.cols[index])
  */
 const hiddenPkColumn: Readonly<QTableColumn> = {
   ...makeHiddenColumn(Field.PK, 'hiddenPk'),
@@ -208,6 +226,8 @@ export const logColumns: QTableColumn[] = [
 export const settingColumns: QTableColumn[] = [keyColumn, valueColumn]
 
 export const exampleParentColumns: QTableColumn[] = [
+  hiddenTypeColumn,
+  hiddenGroupColumn,
   hiddenPkColumn,
   pkColumn,
   skColumn,
@@ -220,6 +240,8 @@ export const exampleParentColumns: QTableColumn[] = [
 ]
 
 export const exampleChildColumns: QTableColumn[] = [
+  hiddenTypeColumn,
+  hiddenGroupColumn,
   hiddenPkColumn,
   pkColumn,
   skColumn,
@@ -228,6 +250,8 @@ export const exampleChildColumns: QTableColumn[] = [
 ]
 
 export const testParentColumns: QTableColumn[] = [
+  hiddenTypeColumn,
+  hiddenGroupColumn,
   hiddenPkColumn,
   pkColumn,
   skColumn,
@@ -239,6 +263,8 @@ export const testParentColumns: QTableColumn[] = [
 ]
 
 export const testChildColumns: QTableColumn[] = [
+  hiddenTypeColumn,
+  hiddenGroupColumn,
   hiddenPkColumn,
   pkColumn,
   skColumn,

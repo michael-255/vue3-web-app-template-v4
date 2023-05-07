@@ -111,12 +111,13 @@ export class LocalDatabase extends Dexie {
           pk: r.pk,
           sk: r.sk,
           type: r.type,
+          group: r.group,
           timestamp: r.timestamp,
           name: r.name,
           desc: r.desc,
           favorited: r.favorited,
-          previousNote: previous.note,
-          previousTimestamp: previous.timestamp,
+          previousNote: previous ? previous.note : undefined,
+          previousTimestamp: previous ? previous.timestamp : undefined,
         }
 
         // Add to favorites or non-favorites
@@ -382,6 +383,20 @@ export class LocalDatabase extends Dexie {
    */
   async deleteRecord(pk: string) {
     return await this.Records.delete(pk)
+  }
+
+  /**
+   * Delete the parent and all child records under it.
+   * @param pk
+   */
+  async deleteParent(pk: string) {
+    const parent = await this.Records.get(pk)
+
+    if (parent) {
+      return await this.Records.where(Field.SK).equals(parent.sk).delete()
+    } else {
+      new Error(`Parent with PK ${pk} does not exist`)
+    }
   }
 
   /**

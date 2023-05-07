@@ -133,6 +133,7 @@ export type DashboardCard = {
   [Field.PK]: string
   [Field.SK]: string
   [Field.TYPE]: Type
+  [Field.GROUP]: Group
   [Field.TIMESTAMP]: number
   [Field.NAME]: string
   [Field.DESC]: string
@@ -168,7 +169,7 @@ export type FieldProps = {
   validator: (val: any) => Promise<boolean>
   validationMessage: string
   inspectFormat: (val: any) => string
-  component: any
+  component?: any // Vue component used when rendering, can be omitted
 }
 
 /**

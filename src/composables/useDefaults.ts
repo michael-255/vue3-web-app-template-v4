@@ -60,7 +60,7 @@ export default function useDefaults() {
 
           const records: Partial<Record>[] = []
 
-          const createRecords = (count: number, type: Type.EXAMPLE | Type.TEST) => {
+          const createRecords = (childCount: number, type: Type.EXAMPLE | Type.TEST) => {
             const groupId = uid()
             const name = randomGreekAlpha()
 
@@ -72,31 +72,33 @@ export default function useDefaults() {
               group: Group.PARENT,
               timestamp: Date.now(),
               name,
-              desc: `${name} ${type} description goes here.`,
+              desc: `${name} ${type} description.`,
               enabled: true,
               favorited: randomBoolean(),
               testPks: [],
             } as ExampleParent)
 
-            // Create Children (count)
-            for (let i = 0; i < count; i++) {
-              records.push({
-                pk: uid(),
-                sk: groupId,
-                type,
-                group: Group.CHILD,
-                timestamp: Date.now(),
-                note: `Note ${i}`,
-              } as ExampleChild)
+            if (childCount > 0) {
+              // Create Children (childCount)
+              for (let i = 0; i < childCount; i++) {
+                records.push({
+                  pk: uid(),
+                  sk: groupId,
+                  type,
+                  group: Group.CHILD,
+                  timestamp: Date.now(),
+                  note: `Note ${i}`,
+                } as ExampleChild)
+              }
             }
           }
 
           createRecords(3, Type.EXAMPLE)
           createRecords(3, Type.EXAMPLE)
-          createRecords(3, Type.EXAMPLE)
-          createRecords(3, Type.EXAMPLE)
+          createRecords(0, Type.EXAMPLE)
+          createRecords(0, Type.EXAMPLE)
           createRecords(3, Type.TEST)
-          createRecords(3, Type.TEST)
+          createRecords(0, Type.TEST)
 
           await DB.bulkAdd(records as Record[])
 

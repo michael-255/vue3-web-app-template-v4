@@ -57,13 +57,15 @@ export default function useRoutables() {
 
   /**
    * Go to record inspection route.
+   * @param type
+   * @param group
    * @param pk
    */
-  function goToInspect(pk: string) {
+  function goToInspect(type: Type, group: Group, pk: string) {
     try {
       router.push({
         name: RouteName.INSPECT,
-        params: { pk },
+        params: { type, group, pk },
       })
     } catch (error) {
       log.error('Error accessing inspect route', error)
@@ -72,13 +74,15 @@ export default function useRoutables() {
 
   /**
    * Go to record edit route.
+   * @param type
+   * @param group
    * @param pk
    */
-  function goToEdit(pk: string) {
+  function goToEdit(type: Type, group: Group, pk: string) {
     try {
       router.push({
         name: RouteName.EDIT,
-        params: { pk },
+        params: { type, group, pk },
       })
     } catch (error) {
       log.error('Error accessing edit route', error)
@@ -87,13 +91,15 @@ export default function useRoutables() {
 
   /**
    * Go to charts route.
+   * @param type
+   * @param group
    * @param pk
    */
-  function goToCharts(pk: string) {
+  function goToCharts(type: Type, group: Group, pk: string) {
     try {
       router.push({
         name: RouteName.CHARTS,
-        params: { pk },
+        params: { type, group, pk },
       })
     } catch (error) {
       log.error('Error accessing charts route', error)

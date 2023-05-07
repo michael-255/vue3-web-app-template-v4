@@ -72,19 +72,25 @@ async function onUnfavorite(pk: string, name: string) {
 }
 
 /**
- * On confirmation, delete the matching record from the database.
+ * On confirmation, delete the parent and children records from the database.
  * @param pk
  * @param name
  */
-async function onDelete(pk: string, name: string) {
-  confirmDialog('Delete', `Permanently delete ${name}?`, Icon.DELETE, 'negative', async () => {
-    try {
-      await DB.deleteRecord(pk)
-      log.info(`${name} deleted`, { pk, name })
-    } catch (error) {
-      log.error('Delete failed', error)
+async function onParentDelete(pk: string, name: string) {
+  confirmDialog(
+    'Delete',
+    `Permanently delete ${name} and all child records under it?`,
+    Icon.DELETE,
+    'negative',
+    async () => {
+      try {
+        await DB.deleteParent(pk)
+        log.info(`${name} and child records deleted`, { pk, name })
+      } catch (error) {
+        log.error('Delete failed', error)
+      }
     }
-  })
+  )
 }
 </script>
 
@@ -135,21 +141,30 @@ async function onDelete(pk: string, name: string) {
             transition-hide="flip-left"
           >
             <QList>
-              <QItem clickable @click="goToInspect(dashboardCard.pk)">
+              <QItem
+                clickable
+                @click="goToInspect(dashboardCard.type, dashboardCard.group, dashboardCard.pk)"
+              >
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.INSPECT" />
                 </QItemSection>
                 <QItemSection>Inspect</QItemSection>
               </QItem>
 
-              <QItem clickable @click="goToEdit(dashboardCard.pk)">
+              <QItem
+                clickable
+                @click="goToEdit(dashboardCard.type, dashboardCard.group, dashboardCard.pk)"
+              >
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.EDIT" />
                 </QItemSection>
                 <QItemSection>Edit</QItemSection>
               </QItem>
 
-              <QItem clickable @click="goToCharts(dashboardCard.pk)">
+              <QItem
+                clickable
+                @click="goToCharts(dashboardCard.type, dashboardCard.group, dashboardCard.pk)"
+              >
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.CHARTS" />
                 </QItemSection>
@@ -158,7 +173,7 @@ async function onDelete(pk: string, name: string) {
 
               <QSeparator />
 
-              <QItem clickable @click="onDelete(dashboardCard.pk, dashboardCard.name)">
+              <QItem clickable @click="onParentDelete(dashboardCard.pk, dashboardCard.name)">
                 <QItemSection avatar>
                   <QIcon color="negative" :name="Icon.DELETE" />
                 </QItemSection>

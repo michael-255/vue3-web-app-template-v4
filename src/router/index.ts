@@ -32,19 +32,19 @@ const router = createRouter({
       component: () => import('../views/CreateView.vue'),
     },
     {
-      path: '/inspect/:pk',
+      path: '/inspect/:type/:group/:pk',
       name: RouteName.INSPECT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/InspectView.vue'),
     },
     {
-      path: '/edit/:pk',
+      path: '/edit/:type/:group/:pk',
       name: RouteName.EDIT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/EditView.vue'),
     },
     {
-      path: '/charts/:pk',
+      path: '/charts/:type/:group/:pk',
       name: RouteName.CHARTS,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/ChartsView.vue'),

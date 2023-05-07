@@ -3,7 +3,7 @@ import { Icon } from '@/types/icons'
 import { Field } from '@/types/database'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { AppName } from '@/types/misc'
-import { extend, uid, useMeta } from 'quasar'
+import { extend, useMeta } from 'quasar'
 import { appSchema } from '@/services/AppSchema'
 import type { Record } from '@/types/models'
 import ResponsivePage from '@/components/ResponsivePage.vue'
@@ -14,10 +14,10 @@ import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/LocalDatabase'
 
-useMeta({ title: `${AppName} - Create Record` })
+useMeta({ title: `${AppName} - Edit Record` })
 
 // Composables & Stores
-const { routeSk, routeType, routeGroup, goBack } = useRoutables()
+const { routePk, routeType, routeGroup, goBack } = useRoutables()
 const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
@@ -32,15 +32,24 @@ const schemaFieldProps = appSchema.find(
 
 const isFormValid = ref(true)
 
-onMounted(() => {
+onMounted(async () => {
   try {
-    // Pre-set required underlying fields on the action record store
-    actionStore.record[Field.PK] = uid()
-    actionStore.record[Field.SK] = routeSk || uid() // Creating new parent requires new SK (could be empty string)
-    actionStore.record[Field.TYPE] = routeType
-    actionStore.record[Field.GROUP] = routeGroup
+    if (routePk) {
+      const editRecord = await DB.getRecord(routePk)
+
+      if (editRecord) {
+        // Assign values from record to the action store
+        Object.keys(editRecord).forEach((key) => {
+          actionStore.record[key as Field] = editRecord[key as Field]
+        })
+      } else {
+        new Error('Record not found')
+      }
+    } else {
+      new Error('No PK provided')
+    }
   } catch (error) {
-    log.error('Error loading create view', error)
+    log.error('Error loading edit view', error)
   }
 })
 
@@ -53,14 +62,13 @@ onUnmounted(() => {
  */
 async function onSubmit() {
   confirmDialog(
-    'Create',
-    `Create ${schemaLabelSingular} record?`,
+    'Update',
+    `Update ${schemaLabelSingular} record?`,
     Icon.CREATE,
     'positive',
     async () => {
       try {
         const deepRecordCopy = extend(true, {}, actionStore.record) as Record
-        await DB.add(deepRecordCopy)
         await DB.update(deepRecordCopy.pk, deepRecordCopy)
         log.info('Successfully updated record', {
           pk: deepRecordCopy[Field.PK],
@@ -70,43 +78,10 @@ async function onSubmit() {
         })
         goBack() // Return to previous page
       } catch (error) {
-        log.error('Create failed', error)
-      }
-    }
-  )
-
-  /*
-  const fields = getFields(routeDatabaseType)
-
-  // Build record from store using only fields used by its type (ignoring others in store)
-  const record = fields.reduce((acc, field) => {
-    acc[field] = actionStore.record[field] as DatabaseRecord[typeof field]
-    return acc
-  }, {} as any) as DatabaseRecord
-
-  confirmDialog(
-    'Update Record',
-    `Update record ${record[DatabaseField.ID]} for ${record[DatabaseField.TYPE]}?`,
-    Icon.EDIT,
-    'positive',
-    async () => {
-      try {
-        const deepRecordCopy = extend(true, {}, record) as DatabaseRecord
-        await DB.updateRecord(routeDatabaseType, routeId, deepRecordCopy)
-
-        log.info('Successfully updated record', {
-          updatedRecordType: routeDatabaseType,
-          updatedRecordId: routeId,
-        })
-
-        actionStore.$reset()
-        goBack() // Return to previous page
-      } catch (error) {
         log.error('Update failed', error)
       }
     }
   )
-  */
 }
 </script>
 
@@ -147,7 +122,7 @@ async function onSubmit() {
         <div class="row justify-start">
           <!-- Submit -->
           <div class="col">
-            <QBtn label="Create" type="submit" color="positive" :icon="Icon.SAVE" />
+            <QBtn label="Update" type="submit" color="positive" :icon="Icon.SAVE" />
           </div>
           <!-- Invalid entries message -->
           <div class="col">
