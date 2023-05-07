@@ -9,6 +9,14 @@ import {
   testChildColumns,
   testParentColumns,
 } from '@/services/blueprints/table-columns'
+import {
+  exampleChildFields,
+  exampleParentFields,
+  logFields,
+  settingFields,
+  testChildFields,
+  testParentFields,
+} from './blueprints/field-props'
 
 export const appSchema: AppSchema[] = [
   {
@@ -19,8 +27,8 @@ export const appSchema: AppSchema[] = [
     supportedActions: [Action.INSPECT],
     visibleColumns: [LogField.TIMESTAMP, LogField.SEVERITY, LogField.LABEL],
     tableColumns: logColumns,
-    fieldCards: [],
-    chartCards: [],
+    fieldProps: logFields,
+    chartProps: [],
   },
   {
     type: Type.SETTING,
@@ -30,8 +38,8 @@ export const appSchema: AppSchema[] = [
     supportedActions: [],
     visibleColumns: [SettingField.KEY, SettingField.VALUE],
     tableColumns: settingColumns,
-    fieldCards: [],
-    chartCards: [],
+    fieldProps: settingFields,
+    chartProps: [],
   },
   {
     type: Type.EXAMPLE,
@@ -42,8 +50,8 @@ export const appSchema: AppSchema[] = [
     supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE, Action.CHARTS],
     visibleColumns: [Field.PK, Field.TIMESTAMP, Field.NAME],
     tableColumns: exampleParentColumns,
-    fieldCards: [],
-    chartCards: [],
+    fieldProps: exampleParentFields,
+    chartProps: [],
   },
   {
     type: Type.EXAMPLE,
@@ -54,8 +62,8 @@ export const appSchema: AppSchema[] = [
     supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE],
     visibleColumns: [Field.PK, Field.TIMESTAMP],
     tableColumns: exampleChildColumns,
-    fieldCards: [],
-    chartCards: [],
+    fieldProps: exampleChildFields,
+    chartProps: [],
   },
   {
     type: Type.TEST,
@@ -66,8 +74,8 @@ export const appSchema: AppSchema[] = [
     supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE, Action.CHARTS],
     visibleColumns: [Field.PK, Field.TIMESTAMP, Field.NAME],
     tableColumns: testParentColumns,
-    fieldCards: [],
-    chartCards: [],
+    fieldProps: testParentFields,
+    chartProps: [],
   },
   {
     type: Type.TEST,
@@ -78,7 +86,7 @@ export const appSchema: AppSchema[] = [
     supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE],
     visibleColumns: [Field.PK, Field.TIMESTAMP],
     tableColumns: testChildColumns,
-    fieldCards: [],
-    chartCards: [],
+    fieldProps: testChildFields,
+    chartProps: [],
   },
 ]

@@ -98,7 +98,7 @@ function getSchemaType() {
     <!-- Dashboard Selection -->
     <QCard class="q-mb-md">
       <QCardSection>
-        <div class="text-h6 q-mb-xs">What would you like to work on?</div>
+        <div class="text-h6">What would you like to work on?</div>
 
         <QOptionGroup
           color="primary"

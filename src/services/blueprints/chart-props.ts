@@ -1,4 +1,4 @@
-import type { ChartBlueprint } from '@/types/misc'
+import type { ChartProps } from '@/types/misc'
 import { date } from 'quasar'
 import { defineAsyncComponent } from 'vue'
 
@@ -10,7 +10,7 @@ Do NOT mutate these objects as they are used by multiple components.
 /**
  * Numbers chart for child records.
  */
-export const numberChart: ChartBlueprint = {
+export const numberChart: ChartProps = {
   label: 'Numbers',
   chartOptions: {
     reactive: true,
@@ -41,5 +41,6 @@ export const numberChart: ChartBlueprint = {
       },
     },
   },
-  component: defineAsyncComponent(() => import('@/components/charts/ChartNumbers.vue')),
+  component: null,
+  // component: defineAsyncComponent(() => import('@/components/charts/ChartNumbers.vue')),
 }

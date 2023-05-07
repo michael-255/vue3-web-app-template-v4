@@ -129,12 +129,19 @@ export type ExportData = {
 // }
 
 /**
- * Chart properties required for chart components.
+ * Card properties for Dashboard items.
  */
-export type ChartBlueprint = {
-  readonly label: string
-  readonly chartOptions: AppObject
-  readonly component: any // Vue component used when rendering
+export type DashboardCard = {
+  labelPlural?: string // Use as key on Dashboard page
+  [Field.PK]: string
+  [Field.SK]: string
+  [Field.TYPE]: Type
+  [Field.TIMESTAMP]: number
+  [Field.NAME]: string
+  [Field.DESC]: string
+  [Field.FAVORITED]: boolean
+  previousNote?: string
+  previousTimestamp?: number
 }
 
 /**
@@ -149,22 +156,28 @@ export type AppSchema = {
   supportedActions: Action[]
   visibleColumns: (Field | SettingField | LogField)[]
   tableColumns: QTableColumn[]
-  fieldCards: any[]
-  chartCards: any[]
+  fieldProps: FieldProps[]
+  chartProps: ChartProps[]
 }
 
 /**
- * Card properties for Dashboard items.
+ * TODO
  */
-export type DashboardCard = {
-  labelPlural?: string // Use as key on Dashboard page
-  [Field.PK]: string
-  [Field.SK]: string
-  [Field.TYPE]: Type
-  [Field.TIMESTAMP]: number
-  [Field.NAME]: string
-  [Field.DESC]: string
-  [Field.FAVORITED]: boolean
-  previousNote?: string
-  previousTimestamp?: number
+export type FieldProps = {
+  name: Field | SettingField | LogField
+  label: string
+  default: () => any
+  booleanValidator: (val: any) => any
+  strictValidator: (val: any) => any
+  inspectFormat: (val: any) => string
+  component: any
+}
+
+/**
+ * TODO
+ */
+export type ChartProps = {
+  label: string
+  chartOptions: AppObject // TODO
+  component: any // Vue component used when rendering
 }
