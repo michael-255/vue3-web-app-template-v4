@@ -110,7 +110,7 @@ function parseProps(props: any) {
       <QTr :props="props">
         <!-- Do not show hidden columns -->
         <QTh
-          v-for="col in props.cols"
+          v-for="col in (props.cols as any[])"
           v-show="!hiddenColumns.includes(col.name)"
           :key="col.name"
           :props="props"
@@ -124,7 +124,7 @@ function parseProps(props: any) {
     <!-- Rows -->
     <template v-slot:body="props">
       <QTr :props="props">
-        <QTd v-for="col in props.cols" :key="col.name" :props="props">
+        <QTd v-for="col in (props.cols as any[])" :key="col.name" :props="props">
           {{ col.value }}
         </QTd>
         <QTd auto-width>
