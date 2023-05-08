@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { exportFile } from 'quasar'
 import { Icon } from '@/types/icons'
-import { type ExportData, AppName, Limit } from '@/types/misc'
+import { type BackupData, AppName, Limit } from '@/types/misc'
 import { Type, Key, LogRetention, Group } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
 import type { Setting, Record } from '@/types/models'
@@ -33,7 +33,7 @@ const schemaOptions = appSchema.map((i) => ({
 const settings: Ref<Setting[]> = ref([])
 const logRetentionIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
-const exportModel: Ref<Type[]> = ref([])
+const exportModel: Ref<{ type: Type; group: Group }[]> = ref([])
 const exportOptions = [...schemaOptions]
 const accessOptions = ref([...schemaOptions])
 const accessModel = ref(accessOptions.value[0])
@@ -86,7 +86,6 @@ function onImportFile() {
     'info',
     async () => {
       try {
-        // TODO - Importing Settings (ignore Logs!)
         const parsedFileData = JSON.parse(await importFile.value.text())
 
         log.silentDebug('parsedFileData:', parsedFileData)
@@ -98,7 +97,6 @@ function onImportFile() {
           throw new Error(`Cannot import data from this app: ${appName} `)
         }
 
-        // TODO - Will need to use `yup` validators to validate imported data
         const types = Object.values(Type)
 
         const importedData = records?.filter((record: Record) => types.includes(record.type))
@@ -118,7 +116,7 @@ function onImportFile() {
 /**
  * On confirmation, exports your records as a JSON file.
  */
-function onExportRecords(types: Type[]) {
+function onExportRecords() {
   // Build export file name
   const appNameSlug = AppName.toLowerCase().split(' ').join('-')
   const date = new Date().toISOString().split('T')[0]
@@ -132,19 +130,20 @@ function onExportRecords(types: Type[]) {
     async () => {
       try {
         const records = (await DB.getAllRecords()) as Record[]
+        const types = exportModel.value.map((i) => i.type)
 
         // Build export file meta data
-        const exportData = {
+        const backupData = {
           appName: AppName,
-          exportedTimestamp: Date.now(),
+          backupTimestamp: Date.now(),
           settings: await DB.getAllSettings(), // Always including settings since they are small
           records: records.filter((r) => types.includes(r.type)),
-        } as ExportData
+        } as BackupData
 
-        log.silentDebug('exportData:', exportData)
+        log.silentDebug('backupData:', backupData)
 
         // Attempt to download the export records as a JSON file
-        const fileStatus = exportFile(filename, JSON.stringify(exportData), {
+        const fileStatus = exportFile(filename, JSON.stringify(backupData), {
           encoding: 'UTF-8',
           mimeType: 'application/json',
         })
@@ -182,8 +181,8 @@ async function onResetSettings() {
   confirmDialog(
     'Reset Settings',
     'Would you like to reset your app Settings? This does not change your records.',
-    Icon.SETTINGS,
-    'warning',
+    Icon.REFRESH,
+    'primary',
     async () => {
       try {
         await DB.resetSettings()
@@ -276,7 +275,7 @@ function getSettingValue(key: Key) {
 
         <div class="q-mb-md">
           <p>Reset your app Settings without changing any of your data.</p>
-          <QBtn label="Reset Settings" color="warning" @click="onResetSettings()" />
+          <QBtn label="Reset Settings" color="primary" @click="onResetSettings()" />
         </div>
 
         <div class="q-mb-md">
@@ -373,7 +372,7 @@ function getSettingValue(key: Key) {
             :disable="exportModel.length === 0"
             label="Export"
             color="primary"
-            @click="onExportRecords(exportModel)"
+            @click="onExportRecords()"
           />
         </div>
 

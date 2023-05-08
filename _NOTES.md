@@ -106,3 +106,96 @@ Would like a script that can change various variables throughout the app.
 - App Name
 - App Colors
 - etc...
+
+---
+
+# Lunch Ideas
+
+## Validating Data with `yup`
+
+### AppSchema Validator
+
+- Add the type Validator to `appSchema`
+
+```typescript
+const appSchema = {
+  {
+    validator: logValidator
+  }
+}
+```
+
+### `add`
+
+- Must validate record properties and ignore unknown ones
+- Failure should produce an `Error` and stop operation
+
+### `update`
+
+- Must validate the `changes` properties
+- Failure should produce an `Error` and stop operation
+
+### `bulkAdd` (importRecords)
+
+- Must loop through records and validate properties
+- Build an `Id Replacement` object to store lookups to the new ids
+- Must take into account the `reservedIds` list
+- Call `bulkAdd` on the validated records
+- What do I do with records that failed validation? (ignore them?)
+- Failed items can have there `id` reported in a string
+
+```typescript
+async function importRecords(backupData: BackupData) {
+  // Check that its from this app (appName)
+  const AppName = 'My App'
+  if (backupData.appName !== AppName) {
+    return new Error(`Can only import data from app ${AppName} (recieved ${backupData.appName})`)
+  }
+  // Run 'yup' validation on Settings
+  // - Only 'keep' settings that are valid for importing
+  // Run 'yup' validation on Records
+  // - Translate ids that fail validation to new UIDs
+  // Complete the import
+}
+
+function test() {
+  const failedRecords = [
+    'test-123',
+    Infinity,
+    'abc-123',
+    'bad-id-1',
+    NaN,
+    'not-an-id',
+    12345,
+    null,
+    undefined,
+    undefined,
+    null,
+  ]
+  new Error(`The following records could not be imported: ${failedRecords.map(String).join(', ')}`)
+}
+
+const replacementIds = {
+  'my-old-id': uuid(), // 1
+  'another-old-id': uuid(), // 2
+  // ...
+}
+
+const newId = replacementIds['my-old-id'] // 1
+```
+
+### Reserved UIDs
+
+- Create a reserved UID enum that can contain the UIDs used for defaults in the app
+
+```typescript
+export enum ReservedId {
+  UID_01 = 'uuid-123'
+  UID_02 = 'uuid-456'
+  // ...
+}
+```
+
+## Code Improvements
+
+- Move some of the confusing `ParentInfoCard` logic to a composable with good error messages

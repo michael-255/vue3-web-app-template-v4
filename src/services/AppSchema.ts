@@ -15,6 +15,13 @@ import {
   testChildFields,
   testParentFields,
 } from '@/services/blueprints/field-props'
+import {
+  exampleChildValidator,
+  exampleParentValidator,
+  logValidator,
+  testChildValidator,
+  testParentValidator,
+} from '@/services/Validators'
 
 export const appSchema: AppSchema[] = [
   {
@@ -23,6 +30,7 @@ export const appSchema: AppSchema[] = [
     labelSingular: 'Log',
     labelPlural: 'Logs',
     icon: Icon.LOGS,
+    validator: logValidator,
     supportedActions: [Action.INSPECT],
     visibleColumns: [Field.TIMESTAMP, Field.SEVERITY, Field.LABEL],
     tableColumns: logColumns,
@@ -35,6 +43,7 @@ export const appSchema: AppSchema[] = [
     labelSingular: 'Example Parent',
     labelPlural: 'Example Parents',
     icon: Icon.EXAMPLES,
+    validator: exampleParentValidator,
     supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE, Action.CHARTS],
     visibleColumns: [Field.UID, Field.TIMESTAMP, Field.NAME],
     tableColumns: exampleParentColumns,
@@ -47,6 +56,7 @@ export const appSchema: AppSchema[] = [
     labelSingular: 'Example Child',
     labelPlural: 'Example Children',
     icon: Icon.EXAMPLES,
+    validator: exampleChildValidator,
     supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE],
     visibleColumns: [Field.UID, Field.TIMESTAMP],
     tableColumns: exampleChildColumns,
@@ -59,6 +69,7 @@ export const appSchema: AppSchema[] = [
     labelSingular: 'Test Parent',
     labelPlural: 'Test Parents',
     icon: Icon.TESTS,
+    validator: testParentValidator,
     supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE, Action.CHARTS],
     visibleColumns: [Field.UID, Field.TIMESTAMP, Field.NAME],
     tableColumns: testParentColumns,
@@ -71,6 +82,7 @@ export const appSchema: AppSchema[] = [
     labelSingular: 'Test Child',
     labelPlural: 'Test Children',
     icon: Icon.TESTS,
+    validator: testChildValidator,
     supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE],
     visibleColumns: [Field.UID, Field.TIMESTAMP],
     tableColumns: testChildColumns,

@@ -71,12 +71,11 @@ export enum ChartTime {
 }
 
 /**
- * Format of the JSON file from an export. Any table can be exported.
+ * Format of the JSON file from an export.
  */
-export type ExportData = {
+export type BackupData = {
   appName: string
-  exportedTimestamp: number
-  logs: Log[]
+  backupTimestamp: number
   settings: Setting[]
   records: Record[]
 }
@@ -107,6 +106,7 @@ export type AppSchema = {
   labelSingular: string
   labelPlural: string
   icon: Icon
+  validator: any
   supportedActions: Action[]
   visibleColumns: Field[]
   tableColumns: QTableColumn[]

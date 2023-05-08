@@ -24,8 +24,8 @@ const timePicker: Ref<string> = ref('')
 
 onMounted(() => {
   const existingTime = actionStore.record[props.field] ?? props.getDefault()
-  datePicker.value = date.formatDate(existingTime, 'YYYY/MM/DD')
-  timePicker.value = date.formatDate(existingTime, 'HH:mm')
+  datePicker.value = date.formatDate(existingTime, 'ddd MMM DD YYYY')
+  timePicker.value = date.formatDate(existingTime, 'HH:mm:00')
   updateDisplayDate(existingTime)
 })
 
@@ -69,7 +69,7 @@ function onPickerUpdate() {
           <!-- Date Picker -->
           <QBtn :icon="Icon.CALENDAR_DATE" color="primary" class="q-px-sm">
             <QPopupProxy>
-              <QDate v-model="datePicker">
+              <QDate v-model="datePicker" mask="ddd MMM DD YYYY">
                 <div class="row items-center justify-end q-gutter-sm">
                   <QBtn label="Cancel" flat v-close-popup />
                   <QBtn label="OK" color="primary" flat @click="onPickerUpdate()" v-close-popup />
@@ -81,7 +81,7 @@ function onPickerUpdate() {
           <!-- Time Picker -->
           <QBtn :icon="Icon.CLOCK" color="primary" class="q-ml-sm q-px-sm">
             <QPopupProxy>
-              <QTime v-model="timePicker" now-btn>
+              <QTime v-model="timePicker" mask="HH:mm:00" now-btn>
                 <div class="row items-center justify-end q-gutter-sm">
                   <QBtn label="Cancel" flat v-close-popup />
                   <QBtn label="OK" color="primary" flat @click="onPickerUpdate()" v-close-popup />

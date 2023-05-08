@@ -67,7 +67,7 @@ const detailsField: Readonly<FieldProps> = {
   getDefault: () => undefined,
   validator: (val: any) => detailsValidator.isValid(val),
   validationMessage: '',
-  inspectFormat: (val: any) => JSON.stringify(val),
+  inspectFormat: (val: any) => (val ? JSON.stringify(val) : '-'),
 }
 
 const messageField: Readonly<FieldProps> = {

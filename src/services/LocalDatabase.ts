@@ -40,6 +40,24 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
+   * Used to ensure that record has the required fields used to further validate.
+   * - Requires UID, Group ID, valid Type, and valid Group
+   * @param record
+   */
+  hasRequiredFields(record: Record) {
+    if (
+      !record.uid ||
+      !record.groupId ||
+      !Object.values(Type).includes(record.type) ||
+      !Object.values(Group).includes(record.group)
+    ) {
+      return false
+    } else {
+      return true
+    }
+  }
+
+  /**
    * Initializes all settings with existing or default values.
    */
   async initSettings() {
@@ -156,7 +174,20 @@ export class LocalDatabase extends Dexie {
    * @param record
    */
   async add(record: Record) {
-    return await this.Records.add(record)
+    if (!this.hasRequiredFields(record)) {
+      throw new Error('Record is missing one or more required fields.')
+    }
+
+    const recordValidator = appSchema.find(
+      (s) => s.type === record.type && s.group === record.group
+    )?.validator
+
+    if (await recordValidator.isValid(record)) {
+      const cleanedRecord = await recordValidator.validate(record)
+      return await this.Records.add(cleanedRecord)
+    } else {
+      throw new Error('Record failed validation.')
+    }
   }
 
   /**
@@ -164,7 +195,38 @@ export class LocalDatabase extends Dexie {
    * @param records
    */
   async bulkAdd(records: Record[]) {
-    return await this.Records.bulkAdd(records, { allKeys: true }) // allKeys returns the new record ids
+    const validRecords: Record[] = []
+    const skippedRecords: Record[] = []
+
+    for await (const r of records) {
+      // Must have required fields
+      if (this.hasRequiredFields(r)) {
+        // Get validator for record type and group
+        const recordValidator = appSchema.find(
+          (s) => s.type === r.type && s.group === r.group
+        )?.validator
+
+        // Valid records get cleaned and pushed to valid records array
+        if (await recordValidator.isValid(r)) {
+          validRecords.push(await recordValidator.validate(r))
+        } else {
+          skippedRecords.push(r)
+        }
+      } else {
+        skippedRecords.push(r)
+      }
+    }
+
+    // Bulk add valid records
+    await this.Records.bulkAdd(validRecords)
+
+    if (skippedRecords.length > 0) {
+      throw new Error(
+        `Some records could not be added due to validation failures: ${skippedRecords.map((r) =>
+          String(r.uid)
+        )}`
+      )
+    }
   }
 
   /**
@@ -293,6 +355,13 @@ export class LocalDatabase extends Dexie {
    * @param changes
    */
   async update(uid: string, changes: Partial<Record>) {
+    // Only valid fields can be updated (not a great solution)
+    Object.keys(changes).forEach((key) => {
+      if (!Object.values(Field).includes(key as Field)) {
+        throw new Error('Update field not recognized.')
+      }
+    })
+
     return await this.Records.update(uid, changes)
   }
 
@@ -377,7 +446,7 @@ export class LocalDatabase extends Dexie {
         return await this.Records.delete(uid)
       }
     } else {
-      new Error(`Record with UID ${uid} does not exist`)
+      throw new Error(`Record with UID ${uid} does not exist`)
     }
   }
 
