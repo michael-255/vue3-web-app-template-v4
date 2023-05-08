@@ -171,7 +171,7 @@ const testPksField: Readonly<FieldProps> = {
   validator: (val: string[]) => testPksValidator.isValid(val),
   validationMessage: '* Required',
   inspectFormat: (val: string[]) => `${val || '-'}`,
-  component: defineAsyncComponent(() => import('@/components/inputs/TestPksInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/TestUidsInput.vue')),
 }
 
 const percentField: Readonly<FieldProps> = {
