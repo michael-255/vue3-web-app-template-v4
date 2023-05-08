@@ -1,1 +1,0 @@
-import{bB as r,a3 as e,bC as E}from"./index-85cdcb14.js";const T=r({id:"ui",state:()=>({drawer:!1,dashboardListIndex:0,chartTime:e.THREE_MONTHS}),getters:{getChartTimeMilliseconds:t=>({[e.ONE_MONTH]:E.PER_MONTH,[e.THREE_MONTHS]:E.PER_THREE_MONTHS,[e.SIX_MONTHS]:E.PER_SIX_MONTHS,[e.ONE_YEAR]:E.PER_YEAR,[e.ALL_TIME]:E.FOREVER})[t.chartTime]}});export{T as u};
