@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { DatabaseField } from '@/types/database'
+import { Field } from '@/types/database'
 
 const useActionStore = defineStore({
   id: 'action',
@@ -8,10 +8,10 @@ const useActionStore = defineStore({
     /**
      * Used as the WIP record for creates and updates.
      */
-    record: Object.values(DatabaseField).reduce((acc, field) => {
-      acc[field] = null as any
+    record: Object.values(Field).reduce((acc, field) => {
+      acc[field] = null
       return acc
-    }, {} as { [key in DatabaseField]: any }),
+    }, {} as { [key in Field]: any }),
   }),
 })
 

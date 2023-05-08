@@ -2,15 +2,19 @@
 import { RouterView, useRoute } from 'vue-router'
 import { Icon } from '@/types/icons'
 import { RouteName } from '@/router/route-names'
-// import { getParentCategoryTypes, getLabel, getIcon, getSlug } from '@/services/Blueprints'
 import { AppHeaderColor, AppName } from '@/types/misc'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
+import { appSchema } from '@/services/AppSchema'
+import { Group } from '@/types/database'
 
 // Composables & Stores
 const { goBack } = useRoutables()
 const uiStore = useUIStore()
 const route = useRoute()
+
+// Data
+const schemaParents = appSchema.filter((i) => i.group === Group.PARENT)
 </script>
 
 <template>
@@ -51,24 +55,24 @@ const route = useRoute()
 
         <QSeparator spaced="md" inset />
 
-        <!-- Parent Data Links (uses DataBlueprint) -->
-        <!-- <QItem
-          v-for="(parentType, i) in getParentCategoryTypes()"
+        <!-- Parent Data Table Links -->
+        <QItem
+          v-for="(parent, i) in schemaParents"
           :key="i"
           clickable
           v-ripple
           :to="{
             name: RouteName.DATA,
-            params: { databaseTypeSlug: getSlug(parentType) },
+            params: { type: parent.type, group: parent.group },
           }"
         >
           <QItemSection avatar>
-            <QIcon color="primary" :name="getIcon(parentType)" />
+            <QIcon color="primary" :name="parent.icon" />
           </QItemSection>
-          <QItemSection>{{ getLabel(parentType, 'plural') }}</QItemSection>
+          <QItemSection>{{ parent.labelPlural }}</QItemSection>
         </QItem>
 
-        <QSeparator spaced="md" inset /> -->
+        <QSeparator spaced="md" inset />
 
         <!-- Common App Links -->
         <QItem clickable v-ripple :to="{ name: RouteName.SETTINGS }">

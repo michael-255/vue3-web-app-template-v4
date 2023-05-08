@@ -1,38 +1,35 @@
-import Dexie, { liveQuery, type PromiseExtended, type Table } from 'dexie'
+import Dexie, { liveQuery, type Table } from 'dexie'
 import type { Log, Record, Setting } from '@/types/models'
-import { Milliseconds, AppName } from '@/types/misc'
-import { Dark } from 'quasar'
+import { Milliseconds, AppName, type DashboardCard } from '@/types/misc'
+import { Dark, uid } from 'quasar'
 import {
   Severity,
   Type,
   Field,
   LogRetention,
-  LogIndex,
-  SettingIndex,
-  PrimaryCompoundIndex,
-  IdIndex,
-  RelationIndex,
-  Relation,
+  Group,
   Key,
+  UniqueIdIndex,
+  GroupIdIndex,
+  GroupIndex,
+  TypeIndex,
   SettingField,
 } from '@/types/database'
+import { appSchema } from './AppSchema'
 
 /**
  * A Dexie wrapper class that acts as a local database.
  */
 export class LocalDatabase extends Dexie {
-  Logs!: Table<Log>
   Settings!: Table<Setting>
-  Records!: Table<Record>
+  Records!: Table<Partial<Record>>
 
   constructor(name: string) {
     super(name)
 
-    // TODO - Try incrementing schema to rebuild DB
     this.version(1).stores({
-      Logs: LogIndex,
-      Settings: SettingIndex,
-      Records: `${PrimaryCompoundIndex}, ${IdIndex}, ${RelationIndex}`,
+      Settings: SettingField.KEY,
+      Records: `${UniqueIdIndex}, ${GroupIdIndex}, ${TypeIndex}, ${GroupIndex}`,
     })
   }
 
@@ -49,10 +46,9 @@ export class LocalDatabase extends Dexie {
     const defaultSettings: Readonly<{
       [key in Key]: any
     }> = {
-      [Key.SHOW_INTRODUCTION]: true,
-      [Key.SHOW_DASHBOARD_DESCRIPTIONS]: true,
+      [Key.SHOW_WELCOME]: true,
+      [Key.SHOW_DESCRIPTIONS]: true,
       [Key.DARK_MODE]: true,
-      [Key.SHOW_ALL_DATA_COLUMNS]: false,
       [Key.SHOW_CONSOLE_LOGS]: false,
       [Key.SHOW_INFO_MESSAGES]: true,
       [Key.LOG_RETENTION_TIME]: LogRetention.THREE_MONTHS,
@@ -82,54 +78,71 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Observable of Logs table with newest logs first.
-   */
-  liveLogs() {
-    return liveQuery(() => this.Logs.reverse().toArray())
-  }
-
-  /**
-   * Observable of Settings table sorted by KEY.
+   * Observable of Settings table.
    */
   liveSettings() {
-    return liveQuery(() => this.Settings.toCollection().sortBy(SettingField.KEY))
+    return liveQuery(() => this.Settings.toArray())
   }
 
   /**
-   * Observable of Records table with newest records first.
-   */
-  liveRecords() {
-    return liveQuery(() => this.Records.toCollection().sortBy(Field.TIMESTAMP))
-  }
-
-  /**
-   * Observable of Records table with enabled Parent Types sorted by name for the Dasboard.
+   * Observable of dashboard cards for the Dashboard page.
    */
   liveDashboard() {
-    return liveQuery(() =>
-      this.Records.where({ relation: Relation.PARENT })
+    return liveQuery(async () => {
+      // Initial Records query for parent and enabled records sorted by name
+      const records = await this.Records.where(Field.GROUP)
+        .equals(Group.PARENT)
         .filter((r) => r.enabled === true)
         .sortBy(Field.NAME)
-    )
+
+      const favorites: DashboardCard[] = []
+      const nonFavorites: DashboardCard[] = []
+
+      // Build Dashboard Cards from Records and the previous child record
+      for await (const r of records) {
+        const previous = await this.getPreviousChild(r.groupId as string)
+
+        const dashboardCard: DashboardCard = {
+          labelPlural: appSchema.find((i) => i.type === r.type && i.group === Group.PARENT)
+            ?.labelPlural,
+          uid: r.uid as string,
+          groupId: r.groupId as string,
+          type: r.type as Type,
+          group: r.group as Group,
+          timestamp: r.timestamp as number,
+          name: r.name as string,
+          desc: r.desc as string,
+          favorited: r.favorited as boolean,
+          previousNote: previous ? previous.note : undefined,
+          previousTimestamp: previous ? previous.timestamp : undefined,
+        }
+
+        // Add to favorites or non-favorites
+        if (r.favorited === true) {
+          favorites.push(dashboardCard)
+        } else {
+          nonFavorites.push(dashboardCard)
+        }
+      }
+
+      // Return with favorites prioritized
+      return [...favorites, ...nonFavorites]
+    })
   }
 
   /**
-   * Observable for Data View with any table with Type and Relation to control results.
-   * @param relation
+   * Observable for Data Table View with any table with Type and Group to control results.
    * @param type
+   * @param group
    */
-  liveData(relation: Relation, type: Type) {
-    if (type === Type.LOG) {
-      return this.liveLogs()
-    } else if (type === Type.SETTING) {
-      return this.liveSettings()
-    } else {
-      return liveQuery(() =>
-        this.Records.where({ relation })
-          .filter((r) => r.type === type)
-          .sortBy(Field.TIMESTAMP)
-      )
-    }
+  liveDataTable(type: Type, group: Group) {
+    return liveQuery(async () => {
+      // Records sorted by timestamp
+      return await this.Records.where(Field.TYPE)
+        .equals(type)
+        .filter((r) => r.group === group)
+        .sortBy(Field.TIMESTAMP)
+    })
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -147,40 +160,10 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * - Look at Record `type` to determine valid fields
-   * - Record must have required fields that pass minimum validity rules (Regex?)
-   * - Record must NOT already exist in the Database
-   * - Auto remediate small issues like undefined notes and descriptions
-   * @param record
-   */
-  // async addRecord(record: Record) {
-  //   const addCommand: Readonly<{
-  //     [key in Type]: () => any
-  //   }> = {
-  //     [Type.LOG]: () => {
-  //       throw new Error(`Invalid Record type: ${record.type}`)
-  //     },
-  //     [Type.SETTING]: () => {
-  //       throw new Error(`Invalid Record type: ${record.type}`)
-  //     },
-  //     [Type.EXAMPLE]: () =>
-  //       this.Records.toCollection()
-  //         .filter((r) => r.type === Type.EXAMPLE)
-  //         .delete(),
-  //     [Type.TEST]: () =>
-  //       this.Records.toCollection()
-  //         .filter((r) => r.type === Type.TEST)
-  //         .delete(),
-  //   }
-
-  //   return await this.Records.add(record)
-  // }
-
-  /**
    * Bulk add records to the database. The new record ids will be returned in an array.
    * @param records
    */
-  async blukAdd(records: Record[]) {
+  async bulkAdd(records: Record[]) {
     return await this.Records.bulkAdd(records, { allKeys: true }) // allKeys returns the new record ids
   }
 
@@ -191,8 +174,11 @@ export class LocalDatabase extends Dexie {
    * @param details
    */
   async addLog(severity: Severity, label: string, details?: any) {
-    // AutoId is handled by Dexie
     const log: Log = {
+      uid: uid(),
+      groupId: uid(),
+      type: Type.LOG,
+      group: Group.INTERNAL,
       timestamp: Date.now(),
       severity,
       label,
@@ -210,7 +196,7 @@ export class LocalDatabase extends Dexie {
       }
     }
 
-    return await this.Logs.add(log)
+    return await this.Records.add(log)
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -218,14 +204,6 @@ export class LocalDatabase extends Dexie {
   //     READ                                                                //
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Get exact Log by its autoId.
-   * @param autoId
-   */
-  async getLog(autoId: number) {
-    return await this.Logs.get(autoId)
-  }
 
   /**
    * Get exact Setting by its key.
@@ -236,44 +214,70 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Get all Records.
+   * Get all logs from database without sorting.
+   */
+  async getAllLogs() {
+    return await this.Records.where(Field.TYPE).equals(Type.LOG).toArray()
+  }
+
+  /**
+   * Get all settings from database without sorting.
+   */
+  async getAllSettings() {
+    return await this.Settings.toArray()
+  }
+
+  /**
+   * Get all records from database without sorting.
    */
   async getAllRecords() {
     return await this.Records.toArray()
   }
 
   /**
-   * Get exact Record by id and timestamp.
-   * @param id
-   * @param timestamp
+   * Get exact record by UID.
+   * @param uid
    */
-  async getRecord(id: string, timestamp: number) {
-    return await this.Records.get([id, timestamp])
+  async getRecord(uid: string) {
+    return await this.Records.get(uid)
   }
 
   /**
-   * Get the parent record by id only.
-   * @param id
+   * Get all parent records by type.
    */
-  async getParent(id: string) {
-    return (await this.Records.where({ id }).toArray()).find((r) => r.relation === Relation.PARENT)
+  async getAllParentTypes(type: Type) {
+    return (await this.Records.where(Field.GROUP).equals(Group.PARENT).toArray()).filter(
+      (r) => r.type === type
+    )
   }
 
   /**
-   * Get all Child Records for an id.
-   * @param id
+   * Get the parent record by group id.
+   * @param groupId
    */
-  async getChildren(id: string) {
-    return (await this.Records.where({ id }).toArray()).filter((r) => r.relation === Relation.CHILD)
+  async getParent(groupId: string) {
+    return (await this.Records.where(Field.GROUP_ID).equals(groupId).toArray()).find(
+      (r) => r.group === Group.PARENT
+    )
   }
 
   /**
-   * Get previous child Record by Type.
-   * @param id
+   * Get all child records by group id.
+   * @param groupId
    */
-  async getPreviousChild(id: string) {
-    return (await this.Records.where({ id }).toArray())
-      .filter((r) => r.relation === Relation.CHILD)
+  async getChildren(groupId: string) {
+    return (await this.Records.where(Field.GROUP_ID).equals(groupId).toArray()).filter(
+      (r) => r.group === Group.CHILD
+    )
+  }
+
+  /**
+   * Get previous child record by group id.
+   * @param groupId
+   */
+  async getPreviousChild(groupId: string) {
+    return (await this.Records.where(Field.GROUP_ID).equals(groupId).toArray())
+      .filter((r) => r.group === Group.CHILD)
       .reverse()[0]
   }
 
@@ -284,13 +288,12 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Update exact Record by id and timestamp with the properties you want to change.
-   * @param id
-   * @param timestamp
+   * Update exact Record by UID with the properties you want to change.
+   * @param uid
    * @param changes
    */
-  async update(id: string, timestamp: number, changes: Partial<Record>) {
-    return await this.Records.update([id, timestamp], changes)
+  async update(uid: string, changes: Partial<Record>) {
+    return await this.Records.update(uid, changes)
   }
 
   /**
@@ -323,7 +326,7 @@ export class LocalDatabase extends Dexie {
 
   /**
    * Deletes all logs that are older than the log retention time Setting.
-   * Should run once every time the app starts.
+   * - Should run once every time the app starts
    */
   async deleteExpiredLogs() {
     const logRetentionTime = (await this.Settings.get(Key.LOG_RETENTION_TIME))
@@ -342,7 +345,7 @@ export class LocalDatabase extends Dexie {
       [LogRetention.FOREVER]: Milliseconds.FOREVER,
     }
 
-    const logs = await this.Logs.toArray()
+    const logs = (await this.getAllLogs()) as Log[]
 
     // Find Logs that are older than the retention time and map them to their keys
     const removableLogs = logs
@@ -351,7 +354,7 @@ export class LocalDatabase extends Dexie {
         const logAgeMilliseconds = Date.now() - logTimestamp
         return logAgeMilliseconds > lookupMilliseconds[logRetentionTime]
       })
-      .map((log: Log) => [log.autoId, log.timestamp] as [number, number]) // Map remaining Log keys for removal
+      .map((log: Log) => log.uid) // Map remaining Log keys for removal
 
     await this.Records.bulkDelete(removableLogs)
 
@@ -359,43 +362,46 @@ export class LocalDatabase extends Dexie {
   }
 
   /**
-   * Delete exact Record by id and timestamp.
-   * @param id
-   * @param timestamp
+   * Delete parent and children or exact Record by UID.
+   * @param uid
    */
-  async deleteRecord(id: string, timestamp: number) {
-    return await this.Records.delete([id, timestamp])
+  async deleteRecord(uid: string) {
+    const record = (await this.Records.get(uid)) as Record
+
+    if (record) {
+      if (record.group === Group.PARENT) {
+        // Delete parent and child records
+        return await this.Records.where(Field.GROUP_ID).equals(record.groupId).delete()
+      } else {
+        // Delete single record
+        return await this.Records.delete(uid)
+      }
+    } else {
+      new Error(`Record with UID ${uid} does not exist`)
+    }
   }
 
   /**
-   * Delete all data of a specific Type.
+   * Deletes and resets all settings.
+   */
+  async resetSettings() {
+    await this.Settings.clear()
+    await this.initSettings()
+  }
+
+  /**
+   * Delete all data of a specific type.
    * @param type
    */
   async clearByType(type: Type) {
-    const clearCommand: Readonly<{
-      [key in Type]: () => PromiseExtended<void | number>
-    }> = {
-      [Type.LOG]: () => this.Logs.clear(),
-      [Type.SETTING]: () => this.Settings.clear(),
-      [Type.EXAMPLE]: () =>
-        this.Records.toCollection()
-          .filter((r) => r.type === Type.EXAMPLE)
-          .delete(),
-      [Type.TEST]: () =>
-        this.Records.toCollection()
-          .filter((r) => r.type === Type.TEST)
-          .delete(),
-    }
-
-    // Run the clear command for the given type
-    return await clearCommand[type]()
+    return await this.Records.where(Field.TYPE).equals(type).delete()
   }
 
   /**
    * Deletes all data from the database.
    */
   async clearAllData() {
-    return Promise.all([this.Logs.clear(), this.Settings.clear(), this.Records.clear()])
+    return Promise.all([this.Settings.clear(), this.Records.clear()])
   }
 
   /**

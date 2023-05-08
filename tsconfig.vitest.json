@@ -3,8 +3,9 @@
   "exclude": [],
   "compilerOptions": {
     "composite": true,
-    "lib": [],
     "types": ["node", "jsdom"],
+    "target": "es2022",
+    "lib": ["es2022", "dom"],
     "ignoreDeprecations": "5.0"
   }
 }

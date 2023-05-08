@@ -3,6 +3,10 @@
 This Vue 3 Typescript project can be used as a web application template to help you get started
 developing. Read through this README to have a better understanding of how this project is setup.
 
+## TODO
+
+- Get `yup` validation to work with `add` and `bulkAdd`?
+
 ## Post Cloning Steps
 
 - [ ] Update `package.json`
@@ -256,13 +260,12 @@ Details on the steps I took to create this project.
    }
    ```
 
-1. Define the `ECMAScript` version you want TypeScript to use in `tsconfig.json`:
+1. Define the `ECMAScript` version you want TypeScript to use in the `tsconfig` files:
 
    ```json
    {
      "compilerOptions": {
        "target": "es2022",
-       "module": "es2022",
        "lib": ["es2022", "dom"],
        "ignoreDeprecations": "5.0"
      }

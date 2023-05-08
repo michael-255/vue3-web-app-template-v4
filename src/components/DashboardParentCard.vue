@@ -1,14 +1,8 @@
 <script setup lang="ts">
 import { useTimeAgo } from '@vueuse/core'
-import {
-  DatabaseField,
-  DatabaseType,
-  type DatabaseParentType,
-  type SettingValue,
-} from '@/types/database'
 import { Icon } from '@/types/icons'
 import { getDisplayDate } from '@/utils/common'
-import type { Optional } from '@/types/misc'
+import type { DashboardCard } from '@/types/misc'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import useRoutables from '@/composables/useRoutables'
@@ -16,16 +10,8 @@ import DB from '@/services/LocalDatabase'
 
 // Props & Emits
 defineProps<{
-  type: DatabaseParentType
-  id: string
-  name: string
-  showDescription: Optional<SettingValue>
-  description: Optional<string>
-  isFavorited: boolean
-  // Will be undefined if no records have been recorded yet
-  previousNote?: string
-  previousCreatedTimestamp?: number
-  previousNumber?: number
+  showDescription: boolean
+  dashboardCard: DashboardCard
 }>()
 
 // Composables & Stores
@@ -43,11 +29,10 @@ async function viewPreviousNote(note: string) {
 
 /**
  * On confirmation, favorite the matching record in the database.
- * @param type
- * @param id
+ * @param uid
  * @param name
  */
-async function onFavorite(type: DatabaseParentType, id: string, name: string) {
+async function onFavorite(uid: string, name: string) {
   confirmDialog(
     'Favorite',
     `Do you want to favorite ${name}?`,
@@ -55,8 +40,8 @@ async function onFavorite(type: DatabaseParentType, id: string, name: string) {
     'info',
     async () => {
       try {
-        await DB.updateRecord(type, id, { [DatabaseField.IS_FAVORITED]: true })
-        log.info(`${name} favorited`, { favoritedRecordType: type, favoritedRecordId: id })
+        await DB.update(uid, { favorited: true })
+        log.info(`${name} favorited`, { uid, name })
       } catch (error) {
         log.error('Favorite update failed', error)
       }
@@ -66,11 +51,10 @@ async function onFavorite(type: DatabaseParentType, id: string, name: string) {
 
 /**
  * On confirmation, unfavorite the matching record in the database.
- * @param type
- * @param id
+ * @param uid
  * @param name
  */
-async function onUnfavorite(type: DatabaseParentType, id: string, name: string) {
+async function onUnfavorite(uid: string, name: string) {
   confirmDialog(
     'Unfavorite',
     `Do you want to unfavorite ${name}?`,
@@ -78,11 +62,8 @@ async function onUnfavorite(type: DatabaseParentType, id: string, name: string) 
     'info',
     async () => {
       try {
-        await DB.updateRecord(type, id, { [DatabaseField.IS_FAVORITED]: false })
-        log.info(`${name} unfavorited`, {
-          unfavoritedRecordType: type,
-          unfavoritedRecordId: id,
-        })
+        await DB.update(uid, { favorited: false })
+        log.info(`${name} unfavorited`, { uid, name })
       } catch (error) {
         log.error('Unfavorite update failed', error)
       }
@@ -91,20 +72,20 @@ async function onUnfavorite(type: DatabaseParentType, id: string, name: string) 
 }
 
 /**
- * On confirmation, delete the matching record from the database.
- * @param type
- * @param id
+ * On confirmation, delete the parent and children records from the database.
+ * @param uid
+ * @param name
  */
-async function onDeleteRecord(type: DatabaseType, id: string) {
+async function onParentDelete(uid: string, name: string) {
   confirmDialog(
-    'Delete Record',
-    `Permanently delete record ${id} from ${type}?`,
+    'Delete',
+    `Permanently delete ${name}? This will also delete any underlying child records.`,
     Icon.DELETE,
     'negative',
     async () => {
       try {
-        await DB.deleteRecord(type, id)
-        log.info('Successfully deleted record', { deletedRecordType: type, deletedRecordId: id })
+        await DB.deleteRecord(uid)
+        log.info(`${name} and grouped records deleted`, { uid, name })
       } catch (error) {
         log.error('Delete failed', error)
       }
@@ -116,39 +97,39 @@ async function onDeleteRecord(type: DatabaseType, id: string) {
 <template>
   <QCard>
     <QCardSection>
-      <div class="text-h6 q-mb-md">{{ name }}</div>
+      <p class="text-h6">{{ dashboardCard.name }}</p>
 
       <!-- Description (if show setting is true) -->
-      <div v-if="showDescription" class="q-mb-md">{{ description }}</div>
+      <p v-if="showDescription">{{ dashboardCard.desc }}</p>
 
       <!-- Top right corner buttons on card -->
       <div class="absolute-top-right q-ma-xs">
         <!-- Note Icon -->
         <QIcon
-          v-show="previousNote"
+          v-show="dashboardCard.previousNote"
           :name="Icon.NOTE"
           color="primary"
           size="md"
           class="cursor-pointer q-mr-xs"
-          @click="viewPreviousNote(previousNote || '')"
+          @click="viewPreviousNote(dashboardCard.previousNote || '')"
         />
 
         <!-- Favorite Star Icon -->
         <QIcon
-          v-show="isFavorited"
+          v-show="dashboardCard.favorited"
           :name="Icon.FAVORITE_ON"
           color="warning"
           size="md"
           class="cursor-pointer"
-          @click="onUnfavorite(type, id, name)"
+          @click="onUnfavorite(dashboardCard.uid, dashboardCard.name)"
         />
         <QIcon
-          v-show="!isFavorited"
+          v-show="!dashboardCard.favorited"
           :name="Icon.FAVORITE_OFF"
           color="grey"
           size="md"
           class="cursor-pointer"
-          @click="onFavorite(type, id, name)"
+          @click="onFavorite(dashboardCard.uid, dashboardCard.name)"
         />
 
         <!-- Vertical Actions Menu -->
@@ -160,21 +141,30 @@ async function onDeleteRecord(type: DatabaseType, id: string) {
             transition-hide="flip-left"
           >
             <QList>
-              <QItem clickable @click="goToInspect(type, id)">
+              <QItem
+                clickable
+                @click="goToInspect(dashboardCard.type, dashboardCard.group, dashboardCard.uid)"
+              >
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.INSPECT" />
                 </QItemSection>
                 <QItemSection>Inspect</QItemSection>
               </QItem>
 
-              <QItem clickable @click="goToEdit(type, id)">
+              <QItem
+                clickable
+                @click="goToEdit(dashboardCard.type, dashboardCard.group, dashboardCard.uid)"
+              >
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.EDIT" />
                 </QItemSection>
                 <QItemSection>Edit</QItemSection>
               </QItem>
 
-              <QItem clickable @click="goToCharts(type, id)">
+              <QItem
+                clickable
+                @click="goToCharts(dashboardCard.type, dashboardCard.group, dashboardCard.uid)"
+              >
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.CHARTS" />
                 </QItemSection>
@@ -183,7 +173,7 @@ async function onDeleteRecord(type: DatabaseType, id: string) {
 
               <QSeparator />
 
-              <QItem clickable @click="onDeleteRecord(type, id)">
+              <QItem clickable @click="onParentDelete(dashboardCard.uid, dashboardCard.name)">
                 <QItemSection avatar>
                   <QIcon color="negative" :name="Icon.DELETE" />
                 </QItemSection>
@@ -199,20 +189,16 @@ async function onDeleteRecord(type: DatabaseType, id: string) {
         <QBadge rounded color="secondary" class="q-py-none">
           <QIcon :name="Icon.PREVIOUS" />
           <span class="text-caption q-ml-xs">
-            {{ useTimeAgo(previousCreatedTimestamp || '').value || 'No previous records' }}
+            {{ useTimeAgo(dashboardCard.previousTimestamp || '').value || 'No previous records' }}
           </span>
         </QBadge>
 
         <!-- Previous Record Created Date -->
-        <div v-if="previousCreatedTimestamp">
+        <div v-if="dashboardCard.previousTimestamp">
           <QIcon :name="Icon.CALENDAR_CHECK" />
-          <span class="text-caption q-ml-xs">{{ getDisplayDate(previousCreatedTimestamp) }}</span>
-        </div>
-
-        <!-- Previous Record Number -->
-        <div v-if="previousNumber !== undefined && previousNumber !== null">
-          <QIcon :name="Icon.EXAMPLES" />
-          <span class="text-caption q-ml-xs">{{ previousNumber }}</span>
+          <span class="text-caption q-ml-xs">
+            {{ getDisplayDate(dashboardCard.previousTimestamp) }}
+          </span>
         </div>
       </div>
 

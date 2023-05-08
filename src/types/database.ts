@@ -5,19 +5,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database LogField enum defines all fields a Log model can have.
- */
-export enum LogField {
-  AUTO_ID = 'autoId',
-  TIMESTAMP = 'timestamp', // match
-  SEVERITY = 'severity',
-  LABEL = 'label',
-  DETAILS = 'details',
-  MESSAGE = 'message',
-  STACK = 'stack',
-}
-
-/**
  * Database SettingField enum defines all fields a Setting model can have.
  */
 export enum SettingField {
@@ -30,10 +17,17 @@ export enum SettingField {
  */
 export enum Field {
   // RECORDS
-  ID = 'id',
-  TIMESTAMP = 'timestamp', // match
+  UID = 'uid',
+  GROUP_ID = 'groupId',
   TYPE = 'type',
-  RELATION = 'relation',
+  GROUP = 'group',
+  TIMESTAMP = 'timestamp',
+  // LOGS
+  SEVERITY = 'severity',
+  LABEL = 'label',
+  DETAILS = 'details',
+  MESSAGE = 'message',
+  STACK = 'stack',
   // PARENTS
   NAME = 'name',
   DESC = 'desc',
@@ -42,64 +36,51 @@ export enum Field {
   // CHILDREN
   NOTE = 'note',
   // EXAMPLE PARENT
-  TEST_IDS = 'testIds',
+  TEST_UIDS = 'testUids',
   // EXAMPLE CHILD
   // ...
   // TEST PARENT
-  TEST_INPUTS = 'testInputs',
+  // ...
   // TEST CHILD
   PERCENT = 'percent',
-  TEST_NUMBER = 'testNumber',
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     DATABASE INDICES                                                      //
+//     RECORD INDICES                                                        //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database LogIndex uses an auto incrementing (++) auto id as its Primary Key.
- * - Logs Table
- */
-export const LogIndex = `++${LogField.AUTO_ID}` as const
-
-/**
- * Database SettingIndex uses key as its Primary Key.
- * - Settings Table
- */
-export const SettingIndex = SettingField.KEY as const
-
-/**
- * Database PrimaryCompoundIndex uses uniqueness enforced (&) compound id and timestamp.
- * - Records Table
+ * Database UniqueIdIndex uses uniqueness enforced uid.
  * - Used for exact record matches
- * - Should NEVER alter the id after creation
- * - Validate and provide warnings when altering the timestamp
+ * - NEVER alter uid after creation
  * @example
- * `id      timestamp   type     relation`
- * `ex-123  1234567890  example  parent`
- * `ex-123  1234567891  example  child`
- * `ex-123  1234567892  example  child`
- * `ex-123  1234567893  example  child`
+ * `uid     groupId  type     group`
+ * `abc-123 ex-12345 example  parent`
+ * `efg-456 ex-12345 example  child`
+ * `hij-789 ex-12345 example  child`
+ * `klm-012 ex-12345 example  child`
  */
-export const PrimaryCompoundIndex = `&[${Field.ID}+${Field.TIMESTAMP}]` as const
+export const UniqueIdIndex = `&${Field.UID}` as const
 
 /**
- * Database IdIndex uses id.
- * - Records Table
- * - Used for Parent with Children queries
- * - Filter on relation to get Parent
- * - Filter on relation with reverse sorting to grab previous Child Record
+ * Database GroupIdIndex uses a repeatable uid.
+ * - NEVER alter uid after creation
  */
-export const IdIndex = Field.ID as const
+export const GroupIdIndex = Field.GROUP_ID as const
 
 /**
- * Database RelationIndex uses relation.
- * - Records Table
- * - Used for Dashboard and Data view queries to get all records by relation
+ * Database TypeIndex uses type to separate records.
+ * - Used for any type specific query
  */
-export const RelationIndex = Field.RELATION as const
+export const TypeIndex = Field.TYPE as const
+
+/**
+ * Database GroupIndex uses group parent, child, or internal to separate records.
+ * - Used for Dashboard and Data view queries to get all records by a group
+ */
+export const GroupIndex = Field.GROUP as const
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -121,10 +102,9 @@ export enum Severity {
  * Database Setting Key enum defines all valid settings that the app supports.
  */
 export enum Key {
-  SHOW_INTRODUCTION = 'show-introduction',
-  SHOW_DASHBOARD_DESCRIPTIONS = 'show-dashboard-descriptions',
+  SHOW_WELCOME = 'show-welcome-overlay',
+  SHOW_DESCRIPTIONS = 'show-dashboard-descriptions',
   DARK_MODE = 'dark-mode',
-  SHOW_ALL_DATA_COLUMNS = 'show-all-data-columns',
   SHOW_CONSOLE_LOGS = 'show-console-logs',
   SHOW_INFO_MESSAGES = 'show-info-messages',
   LOG_RETENTION_TIME = 'log-retention-time',
@@ -136,28 +116,18 @@ export enum Key {
  */
 export enum Type {
   LOG = 'log', // Intentionally first in order for auto selection purposes
-  SETTING = 'setting',
   EXAMPLE = 'example',
   TEST = 'test',
 }
 
 /**
- * Database Record Relation enum defines the record relationship with its peer records.
+ * Database Record Group enum defines the record relationship with its peer records.
  * - Must be a URL friendly slug
- * - Parent and Metadata records are the top level records (with a 0 timestamp to prevent duplication)
- * - Child records are the second level records which use a timestamp to ensure uniqueness
  */
-export enum Relation {
+export enum Group {
   PARENT = 'parent',
   CHILD = 'child',
-}
-
-/**
- * Database Test Input enum defines the inputs that are selectable for the Test Parent.
- */
-export enum TestInput {
-  PERCENT = 'Percentage',
-  TEST_NUMBER = 'Test Number',
+  INTERNAL = 'internal',
 }
 
 /**

@@ -1,0 +1,80 @@
+import { Action, Field, Group, Type } from '@/types/database'
+import { Icon } from '@/types/icons'
+import type { AppSchema } from '@/types/misc'
+import {
+  exampleChildColumns,
+  exampleParentColumns,
+  logColumns,
+  testChildColumns,
+  testParentColumns,
+} from '@/services/blueprints/table-columns'
+import {
+  exampleChildFields,
+  exampleParentFields,
+  logFields,
+  testChildFields,
+  testParentFields,
+} from '@/services/blueprints/field-props'
+
+export const appSchema: AppSchema[] = [
+  {
+    type: Type.LOG,
+    group: Group.INTERNAL,
+    labelSingular: 'Log',
+    labelPlural: 'Logs',
+    icon: Icon.LOGS,
+    supportedActions: [Action.INSPECT],
+    visibleColumns: [Field.TIMESTAMP, Field.SEVERITY, Field.LABEL],
+    tableColumns: logColumns,
+    fieldProps: logFields,
+    chartProps: [],
+  },
+  {
+    type: Type.EXAMPLE,
+    group: Group.PARENT,
+    labelSingular: 'Example Parent',
+    labelPlural: 'Example Parents',
+    icon: Icon.EXAMPLES,
+    supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE, Action.CHARTS],
+    visibleColumns: [Field.UID, Field.TIMESTAMP, Field.NAME],
+    tableColumns: exampleParentColumns,
+    fieldProps: exampleParentFields,
+    chartProps: [],
+  },
+  {
+    type: Type.EXAMPLE,
+    group: Group.CHILD,
+    labelSingular: 'Example Child',
+    labelPlural: 'Example Children',
+    icon: Icon.EXAMPLES,
+    supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE],
+    visibleColumns: [Field.UID, Field.TIMESTAMP],
+    tableColumns: exampleChildColumns,
+    fieldProps: exampleChildFields,
+    chartProps: [],
+  },
+  {
+    type: Type.TEST,
+    group: Group.PARENT,
+    labelSingular: 'Test Parent',
+    labelPlural: 'Test Parents',
+    icon: Icon.TESTS,
+    supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE, Action.CHARTS],
+    visibleColumns: [Field.UID, Field.TIMESTAMP, Field.NAME],
+    tableColumns: testParentColumns,
+    fieldProps: testParentFields,
+    chartProps: [],
+  },
+  {
+    type: Type.TEST,
+    group: Group.CHILD,
+    labelSingular: 'Test Child',
+    labelPlural: 'Test Children',
+    icon: Icon.TESTS,
+    supportedActions: [Action.INSPECT, Action.CREATE, Action.EDIT, Action.DELETE],
+    visibleColumns: [Field.UID, Field.TIMESTAMP],
+    tableColumns: testChildColumns,
+    fieldProps: testChildFields,
+    chartProps: [],
+  },
+]

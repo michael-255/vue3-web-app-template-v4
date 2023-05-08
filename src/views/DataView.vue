@@ -1,69 +1,97 @@
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar'
 import { Icon } from '@/types/icons'
-import { DatabaseAction, DatabaseType, SettingId } from '@/types/database'
-import { type Ref, ref, onMounted, onUnmounted } from 'vue'
-import type { DatabaseRecord } from '@/types/models'
-import {
-  getTableColumns,
-  getFields,
-  getVisibleColumns,
-  getSupportedActions,
-} from '@/services/Blueprints'
+import { Action, Field, Group } from '@/types/database'
+import { type Ref, ref, onUnmounted } from 'vue'
 import { AppName } from '@/types/misc'
 import { useMeta } from 'quasar'
 import { getRecordsCountDisplay } from '@/utils/common'
+import { appSchema } from '@/services/AppSchema'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
-import useActions from '@/composables/useActions'
+import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/LocalDatabase'
 
 useMeta({ title: `${AppName} - Data` })
 
 // Composables & Stores
 const { log } = useLogger()
-const { routeDatabaseType, goToCharts, goToInspect, goToEdit, goToCreate, goBack } = useRoutables()
-const { onDeleteRecord } = useActions()
+const { routeType, routeGroup, goToCharts, goToInspect, goToEdit, goToCreate, goBack } =
+  useRoutables()
+const { confirmDialog } = useDialogs()
 
 // Data
-const columns: Ref<QTableColumn[]> = ref(getTableColumns(routeDatabaseType) ?? [])
+const schemaTableTitle = appSchema.find(
+  (i) => i.type === routeType && (!i.group || i.group === routeGroup)
+)?.labelPlural
+const schemaTableColumns =
+  appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
+    ?.tableColumns ?? []
+const schemaVisibleColumns =
+  appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
+    ?.visibleColumns ?? []
+const schemaSupportedActions =
+  appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
+    ?.supportedActions ?? []
+
+/**
+ * Update these if you change the schema.
+ */
+const hiddenColumns = ['hiddenType', 'hiddenGroup', 'hiddenGroupId', 'hiddenUid']
+const columns: Ref<QTableColumn[]> = ref(schemaTableColumns)
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
 )
-const visibleColumns: Ref<string[]> = ref([])
-const rows: Ref<DatabaseRecord[]> = ref([])
+const visibleColumns: Ref<Field[]> = ref(schemaVisibleColumns)
+const rows: Ref<any[]> = ref([])
 const searchFilter: Ref<string> = ref('')
 
-const subscription = DB.liveDataType(routeDatabaseType).subscribe({
+const subscription = DB.liveDataTable(routeType, routeGroup).subscribe({
   next: (records) => {
     rows.value = records
   },
   error: (error) => {
-    log.error('Error during data retrieval', error)
+    log.error('Error fetching live Data Table', error)
   },
-})
-
-onMounted(async () => {
-  try {
-    // Get the setting for showing all columns
-    const showAllDataColumns = (
-      await DB.getRecord(DatabaseType.SETTING, SettingId.SHOW_ALL_DATA_COLUMNS)
-    )?.value
-
-    // This sets up what is currently visible on the QTable
-    if (showAllDataColumns) {
-      visibleColumns.value = getFields(routeDatabaseType) ?? [] // All columns
-    } else {
-      visibleColumns.value = getVisibleColumns(routeDatabaseType) ?? [] // Default columns
-    }
-  } catch (error) {
-    log.error('Error loading data view', error)
-  }
 })
 
 onUnmounted(() => {
   subscription.unsubscribe()
 })
+
+/**
+ * On confirmation, delete the matching record from the database.
+ * @param uid
+ */
+async function onDelete(uid: string) {
+  confirmDialog(
+    'Delete',
+    `Permanently delete this record? This will also delete any underlying child records.`,
+    Icon.DELETE,
+    'negative',
+    async () => {
+      try {
+        await DB.deleteRecord(uid)
+        log.info('Successfully deleted grouped records', { uid })
+      } catch (error) {
+        log.error('Delete failed', error)
+      }
+    }
+  )
+}
+
+/**
+ * Helper function to parse the props from the QTable in a readable way.
+ * @param props QTable props
+ */
+function parseProps(props: any) {
+  return {
+    type: props.cols[0].value,
+    group: props.cols[1].value,
+    groupId: props.cols[2].value,
+    uid: props.cols[3].value,
+  }
+}
 </script>
 
 <template>
@@ -80,10 +108,10 @@ onUnmounted(() => {
     <!-- Column Headers -->
     <template v-slot:header="props">
       <QTr :props="props">
-        <!-- Do not show "hiddenType" and "hiddenId" -->
+        <!-- Do not show hidden columns -->
         <QTh
-          v-for="col in (props.cols as QTableColumn[])"
-          v-show="col.name !== 'hiddenType' && col.name !== 'hiddenId'"
+          v-for="col in props.cols"
+          v-show="!hiddenColumns.includes(col.name)"
           :key="col.name"
           :props="props"
         >
@@ -96,52 +124,58 @@ onUnmounted(() => {
     <!-- Rows -->
     <template v-slot:body="props">
       <QTr :props="props">
-        <QTd v-for="col in (props.cols as any[])" :key="col.name" :props="props">
+        <QTd v-for="col in props.cols" :key="col.name" :props="props">
           {{ col.value }}
         </QTd>
         <QTd auto-width>
           <!-- CHARTS -->
           <QBtn
-            v-if="getSupportedActions(routeDatabaseType).includes(DatabaseAction.CHARTS)"
+            v-if="schemaSupportedActions.includes(Action.CHARTS)"
             flat
             round
             dense
             class="q-ml-xs"
             color="accent"
             :icon="Icon.CHARTS"
-            @click="goToCharts(props.cols[0].value, props.cols[1].value)"
+            @click="
+              goToCharts(parseProps(props).type, parseProps(props).group, parseProps(props).uid)
+            "
           />
           <!-- INSPECT -->
           <QBtn
-            v-if="getSupportedActions(routeDatabaseType).includes(DatabaseAction.INSPECT)"
+            v-if="schemaSupportedActions.includes(Action.INSPECT)"
             flat
             round
             dense
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="goToInspect(props.cols[0].value, props.cols[1].value)"
+            @click="
+              goToInspect(parseProps(props).type, parseProps(props).group, parseProps(props).uid)
+            "
           />
           <!-- EDIT -->
           <QBtn
-            v-if="getSupportedActions(routeDatabaseType).includes(DatabaseAction.EDIT)"
+            v-if="schemaSupportedActions.includes(Action.EDIT)"
             flat
             round
             dense
             class="q-ml-xs"
             color="orange-9"
             :icon="Icon.EDIT"
-            @click="goToEdit(props.cols[0].value, props.cols[1].value)"
+            @click="
+              goToEdit(parseProps(props).type, parseProps(props).group, parseProps(props).uid)
+            "
           />
           <!-- DELETE -->
           <QBtn
-            v-if="getSupportedActions(routeDatabaseType).includes(DatabaseAction.DELETE)"
+            v-if="schemaSupportedActions.includes(Action.DELETE)"
             flat
             round
             dense
             class="q-ml-xs"
             color="negative"
-            @click="onDeleteRecord(props.cols[0].value, props.cols[1].value)"
+            @click="onDelete(parseProps(props).uid)"
             :icon="Icon.DELETE"
           />
         </QTd>
@@ -150,8 +184,8 @@ onUnmounted(() => {
 
     <template v-slot:top>
       <div class="row justify-start full-width q-mb-md">
-        <!-- Tabel Title -->
-        <div class="col-10 text-h6 ellipsis">{{ routeDatabaseType }}</div>
+        <!-- Table Title -->
+        <div class="col-10 text-h6 ellipsis">{{ schemaTableTitle }}</div>
         <!-- Go Back Button -->
         <QBtn
           round
@@ -175,13 +209,13 @@ onUnmounted(() => {
             placeholder="Search"
           >
             <template v-slot:before>
-              <!-- CREATE -->
+              <!-- CREATE - Child records cannot be created alone on the data table -->
               <QBtn
-                v-if="getSupportedActions(routeDatabaseType).includes(DatabaseAction.CREATE)"
+                v-if="schemaSupportedActions.includes(Action.CREATE) && routeGroup !== Group.CHILD"
                 color="positive"
                 class="q-px-sm q-mr-xs"
                 :icon="Icon.ADD"
-                @click="goToCreate(routeDatabaseType)"
+                @click="goToCreate(routeType, routeGroup)"
               />
               <!-- OPTIONS (Visible Columns) -->
               <QSelect

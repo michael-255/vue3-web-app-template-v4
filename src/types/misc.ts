@@ -1,6 +1,7 @@
 import type { Icon } from '@/types/icons'
 import type { Log, Record, Setting } from '@/types/models'
 import type { QTableColumn } from 'quasar'
+import type { Action, Field, Group, Type } from '@/types/database'
 
 /**
  * App display name.
@@ -27,12 +28,9 @@ export const AppHeaderColor = 'primary'
  */
 export enum Limit {
   MAX_FILE_SIZE = 1_000_000,
-  MAX_ID_LENGTH = 50,
-  MIN_ID_LENGTH = 1,
+  MAX_TEXT_AREA_LENGTH = 500,
   MAX_NAME_LENGTH = 50,
   MIN_NAME_LENGTH = 1,
-  MAX_DESCRIPTION_LENGTH = 500,
-  MAX_NOTE_LENGTH = 500,
 }
 
 /**
@@ -84,54 +82,57 @@ export type ExportData = {
 }
 
 /**
- * Used to display data from parent types on the dashboard.
+ * Card properties for Dashboard items.
  */
-// export type DashboardParent = {
-//   [DatabaseField.TYPE]: DatabaseParentType
-//   [DatabaseField.ID]: string
-//   [DatabaseField.NAME]: string
-//   [DatabaseField.DESCRIPTION]: Optional<string>
-//   [DatabaseField.IS_FAVORITED]: boolean
-//   previousNote?: string
-//   previousCreatedTimestamp?: number
-//   previousNumber?: number
-// }
+export type DashboardCard = {
+  labelPlural?: string // Use as key on Dashboard page
+  [Field.UID]: string
+  [Field.GROUP_ID]: string
+  [Field.TYPE]: Type
+  [Field.GROUP]: Group
+  [Field.TIMESTAMP]: number
+  [Field.NAME]: string
+  [Field.DESC]: string
+  [Field.FAVORITED]: boolean
+  previousNote?: string
+  previousTimestamp?: number
+}
 
 /**
- * A core blueprint defines the properties of a database type and how the app can use them.
+ * How data in the app is set up for display and use.
  */
-// export type CoreBlueprint = {
-//   readonly type: DatabaseType
-//   readonly typeSlug: string
-//   readonly category: DatabaseCategory
-//   readonly singularLabel: string
-//   readonly pluralLabel: string
-//   readonly icon: Icon
-//   readonly parentType: Optional<DatabaseParentType>
-//   readonly childType: Optional<DatabaseChildType>
-//   readonly supportedActions: DatabaseAction[]
-//   readonly chartBluprints: ChartBlueprint[]
-//   readonly fieldBlueprints: FieldBlueprint[]
-//   readonly visibleColumns: DatabaseField[]
-//   readonly tableColumns: QTableColumn[]
-// }
+export type AppSchema = {
+  [Field.TYPE]: Type
+  [Field.GROUP]: Group
+  labelSingular: string
+  labelPlural: string
+  icon: Icon
+  supportedActions: Action[]
+  visibleColumns: Field[]
+  tableColumns: QTableColumn[]
+  fieldProps: FieldProps[]
+  chartProps: ChartProps[]
+}
 
 /**
- * Field properties commonly used together by app components.
- * Any field with no component doesn't support rendering for operations like create and update.
+ * TODO
  */
-// export type FieldBlueprint = {
-//   readonly field: DatabaseField
-//   readonly label: string
-//   readonly inspectFormat: (val: any) => string
-//   readonly component?: any // Vue component used when rendering (if any)
-// }
+export type FieldProps = {
+  field: Field
+  label: string
+  desc: string
+  getDefault: () => any
+  validator: (val: any) => Promise<boolean>
+  validationMessage: string
+  inspectFormat: (val: any) => string
+  component?: any // Vue component used when rendering, can be omitted
+}
 
 /**
- * Chart properties required for chart components.
+ * TODO
  */
-export type ChartBlueprint = {
-  readonly label: string
-  readonly chartOptions: AppObject
-  readonly component: any // Vue component used when rendering
+export type ChartProps = {
+  label: string
+  chartOptions: AppObject // TODO
+  component: any // Vue component used when rendering
 }
