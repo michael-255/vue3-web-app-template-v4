@@ -6,6 +6,7 @@ developing. Read through this README to have a better understanding of how this 
 ## TODO
 
 - Get `yup` validation to work with `add` and `bulkAdd`?
+- Delete `_NOTES.md` file when done
 
 ## Post Cloning Steps
 
