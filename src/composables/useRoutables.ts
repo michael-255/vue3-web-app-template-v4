@@ -12,13 +12,13 @@ export default function useRoutables() {
   const { log } = useLogger()
 
   // Possible route params
-  const pk = route.params.pk
-  const sk = route.params.sk
+  const uid = route.params.uid
+  const groupId = route.params.groupId
   const type = route.params.type
   const group = route.params.group
   // Cleaned route params
-  const routePk = Array.isArray(pk) ? String(pk[0]) : String(pk)
-  const routeSk = Array.isArray(sk) ? String(sk[0]) : String(sk)
+  const routeUid = Array.isArray(uid) ? String(uid[0]) : String(uid)
+  const routeGroupId = Array.isArray(groupId) ? String(groupId[0]) : String(groupId)
   const routeType = (Array.isArray(type) ? type[0] : type) as Type
   const routeGroup = (Array.isArray(group) ? group[0] : group) as Group
 
@@ -27,7 +27,7 @@ export default function useRoutables() {
    * @param type
    * @param group
    */
-  async function goToData(type: Type, group?: Group) {
+  async function goToData(type: Type, group: Group) {
     try {
       router.push({
         name: RouteName.DATA,
@@ -42,13 +42,13 @@ export default function useRoutables() {
    * Go to record creation route.
    * @param type
    * @param group
-   * @param sk
+   * @param groupId
    */
-  function goToCreate(type: Type, group: Group, sk?: string) {
+  function goToCreate(type: Type, group: Group, groupId?: string) {
     try {
       router.push({
         name: RouteName.CREATE,
-        params: { type, group, sk },
+        params: { type, group, groupId },
       })
     } catch (error) {
       log.error('Error accessing create route', error)
@@ -59,13 +59,13 @@ export default function useRoutables() {
    * Go to record inspection route.
    * @param type
    * @param group
-   * @param pk
+   * @param uid
    */
-  function goToInspect(type: Type, group: Group, pk: string) {
+  function goToInspect(type: Type, group: Group, uid: string) {
     try {
       router.push({
         name: RouteName.INSPECT,
-        params: { type, group, pk },
+        params: { type, group, uid },
       })
     } catch (error) {
       log.error('Error accessing inspect route', error)
@@ -76,13 +76,13 @@ export default function useRoutables() {
    * Go to record edit route.
    * @param type
    * @param group
-   * @param pk
+   * @param uid
    */
-  function goToEdit(type: Type, group: Group, pk: string) {
+  function goToEdit(type: Type, group: Group, uid: string) {
     try {
       router.push({
         name: RouteName.EDIT,
-        params: { type, group, pk },
+        params: { type, group, uid },
       })
     } catch (error) {
       log.error('Error accessing edit route', error)
@@ -93,13 +93,13 @@ export default function useRoutables() {
    * Go to charts route.
    * @param type
    * @param group
-   * @param pk
+   * @param uid
    */
-  function goToCharts(type: Type, group: Group, pk: string) {
+  function goToCharts(type: Type, group: Group, uid: string) {
     try {
       router.push({
         name: RouteName.CHARTS,
-        params: { type, group, pk },
+        params: { type, group, uid },
       })
     } catch (error) {
       log.error('Error accessing charts route', error)
@@ -122,8 +122,8 @@ export default function useRoutables() {
   }
 
   return {
-    routePk,
-    routeSk,
+    routeUid,
+    routeGroupId,
     routeType,
     routeGroup,
     goToData,

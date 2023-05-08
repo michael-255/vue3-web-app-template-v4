@@ -3,12 +3,9 @@
 This Vue 3 Typescript project can be used as a web application template to help you get started
 developing. Read through this README to have a better understanding of how this project is setup.
 
-## TODOS
+## TODO
 
-- `Create` and it's fields
-- `Edit` and it's fields
-- Get `yup` validation to work with these...
-- How routing is handled for theses...
+- Get `yup` validation to work with `add` and `bulkAdd`?
 
 ## Post Cloning Steps
 

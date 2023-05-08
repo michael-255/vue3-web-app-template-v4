@@ -131,14 +131,13 @@ function onExportRecords(types: Type[]) {
     'info',
     async () => {
       try {
-        const records = await DB.getAllRecords()
+        const records = (await DB.getAllRecords()) as Record[]
 
         // Build export file meta data
         const exportData = {
           appName: AppName,
           exportedTimestamp: Date.now(),
-          logs: types.includes(Type.LOG) ? await DB.getAllLogs() : [],
-          settings: types.includes(Type.SETTING) ? await DB.getAllSettings() : [],
+          settings: await DB.getAllSettings(), // Always including settings since they are small
           records: records.filter((r) => types.includes(r.type)),
         } as ExportData
 
@@ -177,10 +176,30 @@ async function onChangeLogRetention(logRetentionIndex: number) {
 }
 
 /**
+ * On confirmation, reset all your app Settings.
+ */
+async function onResetSettings() {
+  confirmDialog(
+    'Reset Settings',
+    'Would you like to reset your app Settings? This does not change your records.',
+    Icon.SETTINGS,
+    'warning',
+    async () => {
+      try {
+        await DB.resetSettings()
+        log.info('Successfully reset settings')
+      } catch (error) {
+        log.error('Error reseting settings', error)
+      }
+    }
+  )
+}
+
+/**
  * On confirmation, deletes all records of a specified type.
  * @param type
  */
-async function onDeleteBy(label: string, type: Type, group?: Group) {
+async function onDeleteBy(label: string, type: Type) {
   confirmDialog(
     `Delete ${label}`,
     `Permanetly delete all ${label} from the database?`,
@@ -188,7 +207,7 @@ async function onDeleteBy(label: string, type: Type, group?: Group) {
     'negative',
     async () => {
       try {
-        await DB.clearBy(type, group)
+        await DB.clearByType(type)
         await DB.initSettings()
         log.info(`${type} successfully deleted`)
       } catch (error) {
@@ -254,6 +273,11 @@ function getSettingValue(key: Key) {
     <QCard class="q-mb-md">
       <QCardSection>
         <p class="text-h6">Options</p>
+
+        <div class="q-mb-md">
+          <p>Reset your app Settings without changing any of your data.</p>
+          <QBtn label="Reset Settings" color="warning" @click="onResetSettings()" />
+        </div>
 
         <div class="q-mb-md">
           <p>
@@ -451,9 +475,7 @@ function getSettingValue(key: Key) {
                 :disable="!deleteModel"
                 label="Delete Data"
                 color="negative"
-                @click="
-                  onDeleteBy(deleteModel.label, deleteModel.value?.type, deleteModel.value?.group)
-                "
+                @click="onDeleteBy(deleteModel.label, deleteModel.value?.type)"
               />
             </template>
           </QSelect>

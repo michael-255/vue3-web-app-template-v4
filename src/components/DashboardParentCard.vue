@@ -29,10 +29,10 @@ async function viewPreviousNote(note: string) {
 
 /**
  * On confirmation, favorite the matching record in the database.
- * @param pk
+ * @param uid
  * @param name
  */
-async function onFavorite(pk: string, name: string) {
+async function onFavorite(uid: string, name: string) {
   confirmDialog(
     'Favorite',
     `Do you want to favorite ${name}?`,
@@ -40,8 +40,8 @@ async function onFavorite(pk: string, name: string) {
     'info',
     async () => {
       try {
-        await DB.update(pk, { favorited: true })
-        log.info(`${name} favorited`, { pk, name })
+        await DB.update(uid, { favorited: true })
+        log.info(`${name} favorited`, { uid, name })
       } catch (error) {
         log.error('Favorite update failed', error)
       }
@@ -51,10 +51,10 @@ async function onFavorite(pk: string, name: string) {
 
 /**
  * On confirmation, unfavorite the matching record in the database.
- * @param pk
+ * @param uid
  * @param name
  */
-async function onUnfavorite(pk: string, name: string) {
+async function onUnfavorite(uid: string, name: string) {
   confirmDialog(
     'Unfavorite',
     `Do you want to unfavorite ${name}?`,
@@ -62,8 +62,8 @@ async function onUnfavorite(pk: string, name: string) {
     'info',
     async () => {
       try {
-        await DB.update(pk, { favorited: false })
-        log.info(`${name} unfavorited`, { pk, name })
+        await DB.update(uid, { favorited: false })
+        log.info(`${name} unfavorited`, { uid, name })
       } catch (error) {
         log.error('Unfavorite update failed', error)
       }
@@ -73,19 +73,19 @@ async function onUnfavorite(pk: string, name: string) {
 
 /**
  * On confirmation, delete the parent and children records from the database.
- * @param pk
+ * @param uid
  * @param name
  */
-async function onParentDelete(pk: string, name: string) {
+async function onParentDelete(uid: string, name: string) {
   confirmDialog(
     'Delete',
-    `Permanently delete ${name} and all child records under it?`,
+    `Permanently delete ${name}? This will also delete any underlying child records.`,
     Icon.DELETE,
     'negative',
     async () => {
       try {
-        await DB.deleteParent(pk)
-        log.info(`${name} and child records deleted`, { pk, name })
+        await DB.deleteRecord(uid)
+        log.info(`${name} and grouped records deleted`, { uid, name })
       } catch (error) {
         log.error('Delete failed', error)
       }
@@ -121,7 +121,7 @@ async function onParentDelete(pk: string, name: string) {
           color="warning"
           size="md"
           class="cursor-pointer"
-          @click="onUnfavorite(dashboardCard.pk, dashboardCard.name)"
+          @click="onUnfavorite(dashboardCard.uid, dashboardCard.name)"
         />
         <QIcon
           v-show="!dashboardCard.favorited"
@@ -129,7 +129,7 @@ async function onParentDelete(pk: string, name: string) {
           color="grey"
           size="md"
           class="cursor-pointer"
-          @click="onFavorite(dashboardCard.pk, dashboardCard.name)"
+          @click="onFavorite(dashboardCard.uid, dashboardCard.name)"
         />
 
         <!-- Vertical Actions Menu -->
@@ -143,7 +143,7 @@ async function onParentDelete(pk: string, name: string) {
             <QList>
               <QItem
                 clickable
-                @click="goToInspect(dashboardCard.type, dashboardCard.group, dashboardCard.pk)"
+                @click="goToInspect(dashboardCard.type, dashboardCard.group, dashboardCard.uid)"
               >
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.INSPECT" />
@@ -153,7 +153,7 @@ async function onParentDelete(pk: string, name: string) {
 
               <QItem
                 clickable
-                @click="goToEdit(dashboardCard.type, dashboardCard.group, dashboardCard.pk)"
+                @click="goToEdit(dashboardCard.type, dashboardCard.group, dashboardCard.uid)"
               >
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.EDIT" />
@@ -163,7 +163,7 @@ async function onParentDelete(pk: string, name: string) {
 
               <QItem
                 clickable
-                @click="goToCharts(dashboardCard.type, dashboardCard.group, dashboardCard.pk)"
+                @click="goToCharts(dashboardCard.type, dashboardCard.group, dashboardCard.uid)"
               >
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.CHARTS" />
@@ -173,7 +173,7 @@ async function onParentDelete(pk: string, name: string) {
 
               <QSeparator />
 
-              <QItem clickable @click="onParentDelete(dashboardCard.pk, dashboardCard.name)">
+              <QItem clickable @click="onParentDelete(dashboardCard.uid, dashboardCard.name)">
                 <QItemSection avatar>
                   <QIcon color="negative" :name="Icon.DELETE" />
                 </QItemSection>

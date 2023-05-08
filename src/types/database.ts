@@ -5,19 +5,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database LogField enum defines all fields a Log model can have.
- */
-export enum LogField {
-  AUTO_ID = 'autoId',
-  TIMESTAMP = 'timestamp',
-  SEVERITY = 'severity',
-  LABEL = 'label',
-  DETAILS = 'details',
-  MESSAGE = 'message',
-  STACK = 'stack',
-}
-
-/**
  * Database SettingField enum defines all fields a Setting model can have.
  */
 export enum SettingField {
@@ -30,11 +17,17 @@ export enum SettingField {
  */
 export enum Field {
   // RECORDS
-  PK = 'pk',
-  SK = 'sk',
+  UID = 'uid',
+  GROUP_ID = 'groupId',
   TYPE = 'type',
   GROUP = 'group',
   TIMESTAMP = 'timestamp',
+  // LOGS
+  SEVERITY = 'severity',
+  LABEL = 'label',
+  DETAILS = 'details',
+  MESSAGE = 'message',
+  STACK = 'stack',
   // PARENTS
   NAME = 'name',
   DESC = 'desc',
@@ -43,7 +36,7 @@ export enum Field {
   // CHILDREN
   NOTE = 'note',
   // EXAMPLE PARENT
-  TEST_PKS = 'testPks',
+  TEST_UIDS = 'testUids',
   // EXAMPLE CHILD
   // ...
   // TEST PARENT
@@ -54,46 +47,37 @@ export enum Field {
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     DATABASE INDICES                                                      //
+//     RECORD INDICES                                                        //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Database LogIndex uses an auto incrementing (++) auto id as its Primary Key.
- * - Logs Table
- */
-export const LogIndex = `++${LogField.AUTO_ID}` as const
-
-/**
- * Database SettingIndex uses key as its Primary Key.
- * - Settings Table
- */
-export const SettingIndex = SettingField.KEY as const
-
-/**
- * Database PrimaryKeyIndex uses uniqueness enforced uid.
- * - Records Table
+ * Database UniqueIdIndex uses uniqueness enforced uid.
  * - Used for exact record matches
  * - NEVER alter uid after creation
  * @example
- * `pk      sk     type     group`
- * `abc-123 ex-123 example  parent`
- * `efg-456 ex-123 example  child`
- * `hij-789 ex-123 example  child`
- * `klm-012 ex-123 example  child`
+ * `uid     groupId  type     group`
+ * `abc-123 ex-12345 example  parent`
+ * `efg-456 ex-12345 example  child`
+ * `hij-789 ex-12345 example  child`
+ * `klm-012 ex-12345 example  child`
  */
-export const PrimaryKeyIndex = `&${Field.PK}` as const
+export const UniqueIdIndex = `&${Field.UID}` as const
 
 /**
- * Database SecondaryKeyIndex uses a repeatable uid.
- * - Records Table
+ * Database GroupIdIndex uses a repeatable uid.
  * - NEVER alter uid after creation
  */
-export const SecondaryKeyIndex = Field.SK as const
+export const GroupIdIndex = Field.GROUP_ID as const
 
 /**
- * Database GroupIndex uses group 'parent' or 'child' to separate records.
- * - Records Table
+ * Database TypeIndex uses type to separate records.
+ * - Used for any type specific query
+ */
+export const TypeIndex = Field.TYPE as const
+
+/**
+ * Database GroupIndex uses group parent, child, or internal to separate records.
  * - Used for Dashboard and Data view queries to get all records by a group
  */
 export const GroupIndex = Field.GROUP as const
@@ -132,7 +116,6 @@ export enum Key {
  */
 export enum Type {
   LOG = 'log', // Intentionally first in order for auto selection purposes
-  SETTING = 'setting',
   EXAMPLE = 'example',
   TEST = 'test',
 }
@@ -144,6 +127,7 @@ export enum Type {
 export enum Group {
   PARENT = 'parent',
   CHILD = 'child',
+  INTERNAL = 'internal',
 }
 
 /**

@@ -66,8 +66,8 @@ export default function useDefaults() {
 
             // Create Parent (1)
             records.push({
-              pk: uid(),
-              sk: groupId,
+              uid: uid(),
+              groupId,
               type,
               group: Group.PARENT,
               timestamp: Date.now(),
@@ -75,15 +75,15 @@ export default function useDefaults() {
               desc: `${name} ${type} description.`,
               enabled: true,
               favorited: randomBoolean(),
-              testPks: [],
+              testUids: [],
             } as ExampleParent)
 
             if (childCount > 0) {
               // Create Children (childCount)
               for (let i = 0; i < childCount; i++) {
                 records.push({
-                  pk: uid(),
-                  sk: groupId,
+                  uid: uid(),
+                  groupId,
                   type,
                   group: Group.CHILD,
                   timestamp: Date.now(),

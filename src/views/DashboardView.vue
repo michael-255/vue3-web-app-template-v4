@@ -35,7 +35,7 @@ const dashboardOptions = appSchema
 // Subscriptions
 const settingsSubscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
-    showDescription.value = liveSettings.find((s) => s.key === Key.SHOW_DESCRIPTIONS)?.value
+    showDescription.value = !!liveSettings.find((s) => s.key === Key.SHOW_DESCRIPTIONS)?.value
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)
@@ -117,10 +117,10 @@ function getSchemaType() {
         :dashboardCard="dashboardCard"
       >
         <QBtn
-          round
-          color="positive"
+          label="Attach Record"
+          color="primary"
           :icon="Icon.ADD_NOTE"
-          @click="goToCreate(dashboardCard.type, Group.CHILD, dashboardCard.sk)"
+          @click="goToCreate(dashboardCard.type, Group.CHILD, dashboardCard.groupId)"
         />
       </DashboardParentCard>
     </div>

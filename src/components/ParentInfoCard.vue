@@ -1,27 +1,47 @@
 <script setup lang="ts">
 import { type Ref, ref, onMounted } from 'vue'
 import type { Record } from '@/types/models'
-import useRoutables from '@/composables/useRoutables'
-import DB from '@/services/LocalDatabase'
 import { Group } from '@/types/database'
+import { uidValidator } from '@/services/Validators'
+import useRoutables from '@/composables/useRoutables'
+import useLogger from '@/composables/useLogger'
+import DB from '@/services/LocalDatabase'
 
 // Composables & Stores
-const { routeSk, routeGroup } = useRoutables()
+const { routeUid, routeGroupId, routeGroup } = useRoutables()
+const { log } = useLogger()
 
 // Data
 const isVisible: Ref<boolean> = ref(false)
 const parent: Ref<Record> = ref({} as Record)
 
 onMounted(async () => {
-  // Require SK and the child group to display parent info for child record
-  if (routeSk && routeGroup && routeGroup === Group.CHILD) {
-    parent.value = (await DB.getParent(routeSk)) as Record
+  try {
+    if (routeGroup === Group.CHILD) {
+      if (await uidValidator.isValid(routeGroupId)) {
+        // Child record creation route params
+        const parentRecord = (await DB.getParent(routeGroupId)) as Record
 
-    if (parent.value) {
-      isVisible.value = true
-    } else {
-      new Error('Error loading parent record for child creation')
+        if (parentRecord) {
+          parent.value = parentRecord
+          isVisible.value = true
+        }
+      } else if (await uidValidator.isValid(routeUid)) {
+        // Child record Inspect and Edit route params
+        const childRecord = (await DB.getRecord(routeUid)) as Record
+
+        if (childRecord) {
+          const parentRecord = (await DB.getParent(childRecord.groupId)) as Record
+
+          if (parentRecord) {
+            parent.value = parentRecord
+            isVisible.value = true
+          }
+        }
+      }
     }
+  } catch (error) {
+    log.error('Error loading parent info card', error)
   }
 })
 </script>
@@ -33,8 +53,8 @@ onMounted(async () => {
 
       <p>{{ parent.desc }}</p>
 
-      <p class="q-my-none q-py-none text-grey text-caption">PK {{ parent.pk }}</p>
-      <p class="q-my-none q-py-none text-grey text-caption">SK {{ parent.sk }}</p>
+      <p class="q-my-none q-py-none text-grey text-caption">Unique Id: {{ parent.uid }}</p>
+      <p class="q-my-none q-py-none text-grey text-caption">Group Id: {{ parent.groupId }}</p>
     </QCardSection>
   </QCard>
 </template>

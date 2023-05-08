@@ -6,6 +6,7 @@ import { AppName } from '@/types/misc'
 import { extend, useMeta } from 'quasar'
 import { appSchema } from '@/services/AppSchema'
 import type { Record } from '@/types/models'
+import { uidValidator } from '@/services/Validators'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import ParentInfoCard from '@/components/ParentInfoCard.vue'
 import useRoutables from '@/composables/useRoutables'
@@ -17,7 +18,7 @@ import DB from '@/services/LocalDatabase'
 useMeta({ title: `${AppName} - Edit Record` })
 
 // Composables & Stores
-const { routePk, routeType, routeGroup, goBack } = useRoutables()
+const { routeUid, routeType, routeGroup, goBack } = useRoutables()
 const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
@@ -34,19 +35,15 @@ const isFormValid = ref(true)
 
 onMounted(async () => {
   try {
-    if (routePk) {
-      const editRecord = await DB.getRecord(routePk)
+    if (await uidValidator.isValid(routeUid)) {
+      const editRecord = (await DB.getRecord(routeUid)) as Record
 
       if (editRecord) {
         // Assign values from record to the action store
         Object.keys(editRecord).forEach((key) => {
           actionStore.record[key as Field] = editRecord[key as Field]
         })
-      } else {
-        new Error('Record not found')
       }
-    } else {
-      new Error('No PK provided')
     }
   } catch (error) {
     log.error('Error loading edit view', error)
@@ -69,13 +66,16 @@ async function onSubmit() {
     async () => {
       try {
         const deepRecordCopy = extend(true, {}, actionStore.record) as Record
-        await DB.update(deepRecordCopy.pk, deepRecordCopy)
+
+        await DB.update(deepRecordCopy.uid, deepRecordCopy)
+
         log.info('Successfully updated record', {
-          pk: deepRecordCopy[Field.PK],
-          sk: deepRecordCopy[Field.SK],
+          uid: deepRecordCopy[Field.UID],
+          groupId: deepRecordCopy[Field.GROUP_ID],
           type: deepRecordCopy[Field.TYPE],
           group: deepRecordCopy[Field.GROUP],
         })
+
         goBack() // Return to previous page
       } catch (error) {
         log.error('Update failed', error)
@@ -104,7 +104,7 @@ async function onSubmit() {
         @validation-error="isFormValid = false"
         @validation-success="isFormValid = true"
       >
-        <!-- Parent info card for child record creation  -->
+        <!-- Parent info card for child record actions -->
         <ParentInfoCard />
         <!-- Dynamic Async Components -->
         <div v-for="(fieldProps, i) in schemaFieldProps" :key="i" class="q-mb-md">

@@ -1,9 +1,7 @@
 import {
-  autoIdValidator,
   detailsValidator,
   enabledValidator,
   favoritedValidator,
-  keyValidator,
   labelValidator,
   messageValidator,
   nameValidator,
@@ -13,104 +11,11 @@ import {
   stackValidator,
   testPksValidator,
   timestampValidator,
-  valueValidator,
 } from '@/services/Validators'
-import { Field, Key, LogField, SettingField, Severity } from '@/types/database'
+import { Field, Severity } from '@/types/database'
 import { Limit, type FieldProps } from '@/types/misc'
 import { getDisplayDate } from '@/utils/common'
 import { defineAsyncComponent } from 'vue'
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     LOGS                                                                  //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-const autoIdField: Readonly<FieldProps> = {
-  field: LogField.AUTO_ID,
-  label: 'Auto Id',
-  desc: 'Auto-generated integer id.',
-  getDefault: () => undefined,
-  validator: (val: number) => autoIdValidator.isValid(val),
-  validationMessage: '* Required',
-  inspectFormat: (val: number) => `${val}`,
-}
-
-const severityField: Readonly<FieldProps> = {
-  field: LogField.SEVERITY,
-  label: 'Severity',
-  desc: 'Issue severity level.',
-  getDefault: () => undefined,
-  validator: (val: Severity) => severityValidator.isValid(val),
-  validationMessage: '* Required',
-  inspectFormat: (val: Severity) => `${val}`,
-}
-
-const labelField: Readonly<FieldProps> = {
-  field: LogField.LABEL,
-  label: 'Label',
-  desc: 'Label or error code message.',
-  getDefault: () => undefined,
-  validator: (val: string) => labelValidator.isValid(val),
-  validationMessage: '* Required',
-  inspectFormat: (val: string) => `${val}`,
-}
-
-const detailsField: Readonly<FieldProps> = {
-  field: LogField.DETAILS,
-  label: 'Details',
-  desc: 'Customizable additional details about the issue.',
-  getDefault: () => undefined,
-  validator: (val: any) => detailsValidator.isValid(val),
-  validationMessage: '',
-  inspectFormat: (val: any) => JSON.stringify(val),
-}
-
-const messageField: Readonly<FieldProps> = {
-  field: LogField.MESSAGE,
-  label: 'Message',
-  desc: 'Error message.',
-  getDefault: () => undefined,
-  validator: (val: string) => messageValidator.isValid(val),
-  validationMessage: '',
-  inspectFormat: (val: string) => `${val}`,
-}
-
-const stackField: Readonly<FieldProps> = {
-  field: LogField.STACK,
-  label: 'Stack',
-  desc: 'Error stack trace.',
-  getDefault: () => undefined,
-  validator: (val: string) => stackValidator.isValid(val),
-  validationMessage: '',
-  inspectFormat: (val: string) => `${val}`,
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     SETTINGS                                                              //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-const keyField: Readonly<FieldProps> = {
-  field: SettingField.KEY,
-  label: 'Key',
-  desc: 'Key of the setting.',
-  getDefault: () => undefined,
-  validator: (val: Key) => keyValidator.isValid(val),
-  validationMessage: '* Required',
-  inspectFormat: (val: Key) => `${val}`,
-}
-
-const valueField: Readonly<FieldProps> = {
-  field: SettingField.VALUE,
-  label: 'Value',
-  desc: 'Value of the setting.',
-  getDefault: () => undefined,
-  validator: (val: any) => valueValidator.isValid(val),
-  validationMessage: '',
-  inspectFormat: (val: any) => `${val}`,
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -131,6 +36,62 @@ const timestampField: Readonly<FieldProps> = {
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
+//     LOGS                                                                  //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+const severityField: Readonly<FieldProps> = {
+  field: Field.SEVERITY,
+  label: 'Severity',
+  desc: 'Issue severity level.',
+  getDefault: () => undefined,
+  validator: (val: Severity) => severityValidator.isValid(val),
+  validationMessage: '* Required',
+  inspectFormat: (val: Severity) => `${val || '-'}`,
+}
+
+const labelField: Readonly<FieldProps> = {
+  field: Field.LABEL,
+  label: 'Label',
+  desc: 'Label or error code message.',
+  getDefault: () => undefined,
+  validator: (val: string) => labelValidator.isValid(val),
+  validationMessage: '* Required',
+  inspectFormat: (val: string) => `${val || '-'}`,
+}
+
+const detailsField: Readonly<FieldProps> = {
+  field: Field.DETAILS,
+  label: 'Details',
+  desc: 'Customizable additional details about the issue.',
+  getDefault: () => undefined,
+  validator: (val: any) => detailsValidator.isValid(val),
+  validationMessage: '',
+  inspectFormat: (val: any) => JSON.stringify(val),
+}
+
+const messageField: Readonly<FieldProps> = {
+  field: Field.MESSAGE,
+  label: 'Message',
+  desc: 'Error message.',
+  getDefault: () => undefined,
+  validator: (val: string) => messageValidator.isValid(val),
+  validationMessage: '',
+  inspectFormat: (val: string) => `${val || '-'}`,
+}
+
+const stackField: Readonly<FieldProps> = {
+  field: Field.STACK,
+  label: 'Stack',
+  desc: 'Error stack trace.',
+  getDefault: () => undefined,
+  validator: (val: string) => stackValidator.isValid(val),
+  validationMessage: '',
+  inspectFormat: (val: string) => `${val || '-'}`,
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
 //     PARENT                                                                //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
@@ -142,7 +103,7 @@ const nameField: Readonly<FieldProps> = {
   getDefault: () => '',
   validator: (val: string) => nameValidator.isValid(val),
   validationMessage: `Name must be between ${Limit.MIN_NAME_LENGTH} and ${Limit.MAX_NAME_LENGTH} characters`,
-  inspectFormat: (val: string) => `${val}`,
+  inspectFormat: (val: string) => `${val || '-'}`,
   component: defineAsyncComponent(() => import('@/components/inputs/NameInput.vue')),
 }
 
@@ -153,7 +114,7 @@ const descField: Readonly<FieldProps> = {
   getDefault: () => '',
   validator: (val: string) => textAreaValidator.isValid(val),
   validationMessage: `Description cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
-  inspectFormat: (val: string) => `${val}`,
+  inspectFormat: (val: string) => `${val || '-'}`,
   component: defineAsyncComponent(() => import('@/components/inputs/TextAreaInput.vue')),
 }
 
@@ -192,7 +153,7 @@ const noteField: Readonly<FieldProps> = {
   getDefault: () => '',
   validator: (val: string) => textAreaValidator.isValid(val),
   validationMessage: `Note cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
-  inspectFormat: (val: string) => `${val}`,
+  inspectFormat: (val: string) => `${val || '-'}`,
   component: defineAsyncComponent(() => import('@/components/inputs/TextAreaInput.vue')),
 }
 
@@ -203,13 +164,13 @@ const noteField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const testPksField: Readonly<FieldProps> = {
-  field: Field.TEST_PKS,
+  field: Field.TEST_UIDS,
   label: 'Tests',
   desc: 'Tests that are associated with the record.',
   getDefault: () => [],
   validator: (val: string[]) => testPksValidator.isValid(val),
   validationMessage: '* Required',
-  inspectFormat: (val: string[]) => `${val}`,
+  inspectFormat: (val: string[]) => `${val || '-'}`,
   component: defineAsyncComponent(() => import('@/components/inputs/TestPksInput.vue')),
 }
 
@@ -231,7 +192,6 @@ const percentField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 export const logFields: FieldProps[] = [
-  autoIdField,
   timestampField,
   severityField,
   labelField,
@@ -239,8 +199,6 @@ export const logFields: FieldProps[] = [
   messageField,
   stackField,
 ]
-
-export const settingFields: FieldProps[] = [keyField, valueField]
 
 export const exampleParentFields: FieldProps[] = [
   nameField,

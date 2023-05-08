@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar'
 import { Icon } from '@/types/icons'
-import { Action, SettingField, LogField, Field } from '@/types/database'
+import { Action, Field, Group } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
 import { AppName } from '@/types/misc'
 import { useMeta } from 'quasar'
@@ -34,12 +34,15 @@ const schemaSupportedActions =
   appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
     ?.supportedActions ?? []
 
-const hiddenColumns = ['hiddenType', 'hiddenGroup', 'hiddenPk']
+/**
+ * Update these if you change the schema.
+ */
+const hiddenColumns = ['hiddenType', 'hiddenGroup', 'hiddenGroupId', 'hiddenUid']
 const columns: Ref<QTableColumn[]> = ref(schemaTableColumns)
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
 )
-const visibleColumns: Ref<(Field | SettingField | LogField)[]> = ref(schemaVisibleColumns)
+const visibleColumns: Ref<Field[]> = ref(schemaVisibleColumns)
 const rows: Ref<any[]> = ref([])
 const searchFilter: Ref<string> = ref('')
 
@@ -58,17 +61,36 @@ onUnmounted(() => {
 
 /**
  * On confirmation, delete the matching record from the database.
- * @param pk
+ * @param uid
  */
-async function onDelete(pk: string) {
-  confirmDialog('Delete', `Permanently delete this record?`, Icon.DELETE, 'negative', async () => {
-    try {
-      await DB.deleteRecord(pk)
-      log.info('Successfully deleted record', { pk })
-    } catch (error) {
-      log.error('Delete failed', error)
+async function onDelete(uid: string) {
+  confirmDialog(
+    'Delete',
+    `Permanently delete this record? This will also delete any underlying child records.`,
+    Icon.DELETE,
+    'negative',
+    async () => {
+      try {
+        await DB.deleteRecord(uid)
+        log.info('Successfully deleted grouped records', { uid })
+      } catch (error) {
+        log.error('Delete failed', error)
+      }
     }
-  })
+  )
+}
+
+/**
+ * Helper function to parse the props from the QTable in a readable way.
+ * @param props QTable props
+ */
+function parseProps(props: any) {
+  return {
+    type: props.cols[0].value,
+    group: props.cols[1].value,
+    groupId: props.cols[2].value,
+    uid: props.cols[3].value,
+  }
 }
 </script>
 
@@ -115,7 +137,9 @@ async function onDelete(pk: string) {
             class="q-ml-xs"
             color="accent"
             :icon="Icon.CHARTS"
-            @click="goToCharts(props.cols[0].value, props.cols[1].value, props.cols[2].value)"
+            @click="
+              goToCharts(parseProps(props).type, parseProps(props).group, parseProps(props).uid)
+            "
           />
           <!-- INSPECT -->
           <QBtn
@@ -126,7 +150,9 @@ async function onDelete(pk: string) {
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="goToInspect(props.cols[0].value, props.cols[1].value, props.cols[2].value)"
+            @click="
+              goToInspect(parseProps(props).type, parseProps(props).group, parseProps(props).uid)
+            "
           />
           <!-- EDIT -->
           <QBtn
@@ -137,7 +163,9 @@ async function onDelete(pk: string) {
             class="q-ml-xs"
             color="orange-9"
             :icon="Icon.EDIT"
-            @click="goToEdit(props.cols[0].value, props.cols[1].value, props.cols[2].value)"
+            @click="
+              goToEdit(parseProps(props).type, parseProps(props).group, parseProps(props).uid)
+            "
           />
           <!-- DELETE -->
           <QBtn
@@ -147,7 +175,7 @@ async function onDelete(pk: string) {
             dense
             class="q-ml-xs"
             color="negative"
-            @click="onDelete(props.cols[2].value)"
+            @click="onDelete(parseProps(props).uid)"
             :icon="Icon.DELETE"
           />
         </QTd>
@@ -181,9 +209,9 @@ async function onDelete(pk: string) {
             placeholder="Search"
           >
             <template v-slot:before>
-              <!-- CREATE -->
+              <!-- CREATE - Child records cannot be created alone on the data table -->
               <QBtn
-                v-if="schemaSupportedActions.includes(Action.CREATE)"
+                v-if="schemaSupportedActions.includes(Action.CREATE) && routeGroup !== Group.CHILD"
                 color="positive"
                 class="q-px-sm q-mr-xs"
                 :icon="Icon.ADD"

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Icon } from '@/types/icons'
-import { Field, Group } from '@/types/database'
+import { Field } from '@/types/database'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { AppName } from '@/types/misc'
 import { extend, uid, useMeta } from 'quasar'
 import { appSchema } from '@/services/AppSchema'
 import type { Record } from '@/types/models'
+import { uidValidator } from '@/services/Validators'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import ParentInfoCard from '@/components/ParentInfoCard.vue'
 import useRoutables from '@/composables/useRoutables'
@@ -17,7 +18,7 @@ import DB from '@/services/LocalDatabase'
 useMeta({ title: `${AppName} - Create Record` })
 
 // Composables & Stores
-const { routeSk, routeType, routeGroup, goBack } = useRoutables()
+const { routeGroupId, routeType, routeGroup, goBack } = useRoutables()
 const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
@@ -34,16 +35,15 @@ const isFormValid = ref(true)
 
 onMounted(async () => {
   try {
-    if (routeSk && routeGroup && routeGroup === Group.CHILD) {
-      // Create with route SK means we are creating child record for parent
-      actionStore.record[Field.SK] = routeSk
+    if (await uidValidator.isValid(routeGroupId)) {
+      // Attaching child record to this group
+      actionStore.record[Field.GROUP_ID] = routeGroupId
     } else {
       // Creating new parent record
-      actionStore.record[Field.SK] = uid()
+      actionStore.record[Field.GROUP_ID] = uid()
     }
 
-    // Other required creation fields
-    actionStore.record[Field.PK] = uid()
+    actionStore.record[Field.UID] = uid() // New record UID
     actionStore.record[Field.TYPE] = routeType
     actionStore.record[Field.GROUP] = routeGroup
   } catch (error) {
@@ -67,13 +67,16 @@ async function onSubmit() {
     async () => {
       try {
         const deepRecordCopy = extend(true, {}, actionStore.record) as Record
+
         await DB.add(deepRecordCopy)
+
         log.info('Successfully created record', {
-          pk: deepRecordCopy[Field.PK],
-          sk: deepRecordCopy[Field.SK],
+          uid: deepRecordCopy[Field.UID],
+          groupId: deepRecordCopy[Field.GROUP_ID],
           type: deepRecordCopy[Field.TYPE],
           group: deepRecordCopy[Field.GROUP],
         })
+
         goBack() // Return to previous page
       } catch (error) {
         log.error('Create failed', error)
@@ -102,7 +105,7 @@ async function onSubmit() {
         @validation-error="isFormValid = false"
         @validation-success="isFormValid = true"
       >
-        <!-- Parent info card for child record creation  -->
+        <!-- Parent info card for child record actions -->
         <ParentInfoCard />
         <!-- Dynamic Async Components -->
         <div v-for="(fieldProps, i) in schemaFieldProps" :key="i" class="q-mb-md">

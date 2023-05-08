@@ -12,10 +12,10 @@ const router = createRouter({
     },
     {
       /**
-       * - Type required for table selection
-       * - Group needed for table selection when NOT Logs or Settings
+       * - Type required for table selection and appSchema selection
+       * - Group for appSchema selection
        */
-      path: '/data/:type/:group?',
+      path: '/data/:type/:group',
       name: RouteName.DATA,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DataView.vue'),
@@ -24,27 +24,27 @@ const router = createRouter({
       /**
        * - Type required for creation
        * - Group required for creation
-       * - SK needed if creating child of parent
+       * - SK needed for parent child info card
        */
-      path: '/create/:type/:group/:sk?',
+      path: '/create/:type/:group/:groupId?',
       name: RouteName.CREATE,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/CreateView.vue'),
     },
     {
-      path: '/inspect/:type/:group/:pk',
+      path: '/inspect/:type/:group/:uid',
       name: RouteName.INSPECT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/InspectView.vue'),
     },
     {
-      path: '/edit/:type/:group/:pk',
+      path: '/edit/:type/:group/:uid',
       name: RouteName.EDIT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/EditView.vue'),
     },
     {
-      path: '/charts/:type/:group/:pk',
+      path: '/charts/:type/:group/:uid',
       name: RouteName.CHARTS,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/ChartsView.vue'),

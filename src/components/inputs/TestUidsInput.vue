@@ -31,15 +31,15 @@ onMounted(async () => {
   try {
     actionStore.record[props.field] = actionStore.record[props.field] ?? props.getDefault()
 
-    const records = await DB.getAllParentTypes(routeType)
+    const records = (await DB.getAllParentTypes(routeType)) as Record[]
 
     // Build select box options
     options.value = records.map((r: Record) => ({
-      value: r.pk,
-      label: `${r.name} (${truncateString(r.pk, 4, '*')})`, // Truncate PK for readability
+      value: r.uid,
+      label: `${r.name} (${truncateString(r.uid, 4, '*')})`, // Truncate UID for readability
     }))
   } catch (error) {
-    log.error('Error with test pks input', error)
+    log.error('Error with test uids input', error)
   }
 })
 
