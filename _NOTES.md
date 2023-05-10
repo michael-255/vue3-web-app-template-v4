@@ -113,12 +113,12 @@ Would like a script that can change various variables throughout the app.
 
 ## Validating Data with `yup`
 
-### AppSchema Validator
+### DataSchema Validator
 
-- Add the type Validator to `appSchema`
+- Add the type Validator to `dataSchema`
 
 ```typescript
-const appSchema = {
+const dataSchema = {
   {
     validator: logValidator
   }

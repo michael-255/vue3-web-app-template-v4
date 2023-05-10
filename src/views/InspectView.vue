@@ -3,7 +3,7 @@ import { Icon } from '@/types/icons'
 import { onMounted, ref, type Ref } from 'vue'
 import { AppName } from '@/types/misc'
 import { useMeta } from 'quasar'
-import { appSchema } from '@/services/AppSchema'
+import { dataSchema } from '@/services/data-schema'
 import type { Record } from '@/types/models'
 import ParentInfoCard from '@/components/ParentInfoCard.vue'
 import useLogger from '@/composables/useLogger'
@@ -18,10 +18,10 @@ const { routeUid, routeType, routeGroup } = useRoutables()
 const { log } = useLogger()
 
 // Data
-const schemaLabelSingular = appSchema.find(
+const schemaLabelSingular = dataSchema.find(
   (i) => i.type === routeType && i.group === routeGroup
 )?.labelSingular
-const schemaFieldProps = appSchema.find(
+const schemaFieldProps = dataSchema.find(
   (i) => i.type === routeType && i.group === routeGroup
 )?.fieldProps
 

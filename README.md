@@ -5,6 +5,7 @@ developing. Read through this README to have a better understanding of how this 
 
 ## TODO
 
+- Fix build errors for `gh-pages` deployment
 - Delete `_NOTES.md` file when done
 
 ## Post Cloning Steps

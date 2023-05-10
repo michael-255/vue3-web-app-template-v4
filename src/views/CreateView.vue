@@ -4,7 +4,7 @@ import { Field } from '@/types/database'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { AppName } from '@/types/misc'
 import { extend, uid, useMeta } from 'quasar'
-import { appSchema } from '@/services/AppSchema'
+import { dataSchema } from '@/services/data-schema'
 import type { Record } from '@/types/models'
 import { idValidator } from '@/services/validators'
 import ResponsivePage from '@/components/ResponsivePage.vue'
@@ -24,10 +24,10 @@ const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
 
 // Data
-const schemaLabelSingular = appSchema.find(
+const schemaLabelSingular = dataSchema.find(
   (i) => i.type === routeType && i.group === routeGroup
 )?.labelSingular
-const schemaFieldProps = appSchema.find(
+const schemaFieldProps = dataSchema.find(
   (i) => i.type === routeType && i.group === routeGroup
 )?.fieldProps
 

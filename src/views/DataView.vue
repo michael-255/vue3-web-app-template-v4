@@ -6,7 +6,7 @@ import { type Ref, ref, onUnmounted } from 'vue'
 import { AppName } from '@/types/misc'
 import { useMeta } from 'quasar'
 import { getRecordsCountDisplay } from '@/utils/common'
-import { appSchema } from '@/services/AppSchema'
+import { dataSchema } from '@/services/data-schema'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
 import useDialogs from '@/composables/useDialogs'
@@ -21,17 +21,17 @@ const { routeType, routeGroup, goToCharts, goToInspect, goToEdit, goToCreate, go
 const { confirmDialog } = useDialogs()
 
 // Data
-const schemaTableTitle = appSchema.find(
+const schemaTableTitle = dataSchema.find(
   (i) => i.type === routeType && (!i.group || i.group === routeGroup)
 )?.labelPlural
 const schemaTableColumns =
-  appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
+  dataSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
     ?.tableColumns ?? []
 const schemaVisibleColumns =
-  appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
+  dataSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
     ?.visibleColumns ?? []
 const schemaSupportedActions =
-  appSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
+  dataSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
     ?.supportedActions ?? []
 
 /**
