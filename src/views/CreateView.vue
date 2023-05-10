@@ -6,7 +6,7 @@ import { AppName } from '@/types/misc'
 import { extend, uid, useMeta } from 'quasar'
 import { appSchema } from '@/services/AppSchema'
 import type { Record } from '@/types/models'
-import { uidValidator } from '@/services/Validators'
+import { idValidator } from '@/services/validators'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import ParentInfoCard from '@/components/ParentInfoCard.vue'
 import useRoutables from '@/composables/useRoutables'
@@ -35,7 +35,7 @@ const isFormValid = ref(true)
 
 onMounted(async () => {
   try {
-    if (await uidValidator.isValid(routeGroupId)) {
+    if (await idValidator.isValid(routeGroupId)) {
       // Attaching child record to this group
       actionStore.record[Field.GROUP_ID] = routeGroupId
     } else {

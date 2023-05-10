@@ -4,7 +4,8 @@ import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/LocalDatabase'
 import type { ExampleChild, ExampleParent, Record } from '@/types/models'
-import { Group, Type } from '@/types/database'
+import { Type } from '@/types/database'
+import { dataSchema } from '@/services/data-schema'
 
 /**
  * Composable with functions for generating default data for the app.
@@ -58,51 +59,61 @@ export default function useDefaults() {
             return Math.random() >= 0.5
           }
 
-          const records: Partial<Record>[] = []
+          const recordTypes: { [key in Type]: Record[] } = Object.values(Type).reduce(
+            (acc, type) => {
+              acc[type] = []
+              return acc
+            },
+            {} as { [key in Type]: Record[] }
+          )
 
-          const createRecords = (childCount: number, type: Type.EXAMPLE | Type.TEST) => {
-            const groupId = uid()
+          const createRecords = (
+            childCount: number,
+            type: Type.EXAMPLE_PARENT | Type.TEST_PARENT
+          ) => {
+            const parentId = uid()
             const name = randomGreekAlpha()
 
             // Create Parent (1)
-            records.push({
-              uid: uid(),
-              groupId,
-              type,
-              group: Group.PARENT,
+            recordTypes[type].push({
+              id: parentId,
               timestamp: Date.now(),
               name,
               desc: `${name} ${type} description.`,
               enabled: true,
               favorited: randomBoolean(),
-              testUids: [],
-            } as ExampleParent)
+              testIds: type === Type.EXAMPLE_PARENT ? [uid()] : undefined,
+            } as Record)
 
             if (childCount > 0) {
+              const childType = dataSchema.find((s) => s.type === type)?.childType
               // Create Children (childCount)
               for (let i = 0; i < childCount; i++) {
-                records.push({
-                  uid: uid(),
-                  groupId,
-                  type,
-                  group: Group.CHILD,
+                recordTypes[childType as Type].push({
+                  id: uid(),
+                  parentId,
                   timestamp: Date.now(),
                   note: `Note ${i}`,
-                } as ExampleChild)
+                  percent: type === Type.TEST_PARENT ? 75 : undefined,
+                } as Record)
               }
             }
           }
 
-          createRecords(3, Type.EXAMPLE)
-          createRecords(3, Type.EXAMPLE)
-          createRecords(0, Type.EXAMPLE)
-          createRecords(0, Type.EXAMPLE)
-          createRecords(3, Type.TEST)
-          createRecords(0, Type.TEST)
+          createRecords(3, Type.EXAMPLE_PARENT)
+          createRecords(2, Type.EXAMPLE_PARENT)
+          createRecords(0, Type.EXAMPLE_PARENT)
+          createRecords(0, Type.EXAMPLE_PARENT)
+          createRecords(1, Type.TEST_PARENT)
+          createRecords(0, Type.TEST_PARENT)
 
-          await DB.bulkAdd(records as Record[])
+          log.silentDebug('recordTypes:', recordTypes)
 
-          log.info('Defaults loaded', { count: records.length })
+          await Promise.all(
+            Object.entries(recordTypes).map(([k, v]) => DB.importRecords(k as Type, v))
+          )
+
+          log.info('Defaults loaded')
         } catch (error) {
           log.error('Failed to load defaults', error)
         }

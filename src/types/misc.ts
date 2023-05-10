@@ -1,7 +1,16 @@
-import type { Icon } from '@/types/icons'
-import type { Log, Record, Setting } from '@/types/models'
+import type {
+  ExampleChild,
+  ExampleParent,
+  Log,
+  Setting,
+  TestChild,
+  TestParent,
+} from '@/types/models'
 import type { QTableColumn } from 'quasar'
 import type { Action, Field, Group, Type } from '@/types/database'
+import type { MixedSchema } from 'yup'
+import type { defineAsyncComponent } from 'vue'
+import type { Icon } from './icons'
 
 /**
  * App display name.
@@ -76,19 +85,20 @@ export enum ChartTime {
 export type BackupData = {
   appName: string
   backupTimestamp: number
-  settings: Setting[]
-  records: Record[]
+  [Type.LOG]: Log[]
+  [Type.SETTING]: Setting[]
+  [Type.EXAMPLE_PARENT]: ExampleParent[]
+  [Type.EXAMPLE_CHILD]: ExampleChild[]
+  [Type.TEST_PARENT]: TestParent[]
+  [Type.TEST_CHILD]: TestChild[]
 }
 
 /**
- * Card properties for Dashboard items.
+ * Properties for parent cards on the Dashboard page.
  */
-export type DashboardCard = {
-  labelPlural?: string // Use as key on Dashboard page
-  [Field.UID]: string
-  [Field.GROUP_ID]: string
-  [Field.TYPE]: Type
-  [Field.GROUP]: Group
+export type DashboardListCardProps = {
+  type: Type
+  [Field.ID]: string
   [Field.TIMESTAMP]: number
   [Field.NAME]: string
   [Field.DESC]: string
@@ -100,13 +110,14 @@ export type DashboardCard = {
 /**
  * How data in the app is set up for display and use.
  */
-export type AppSchema = {
-  [Field.TYPE]: Type
-  [Field.GROUP]: Group
+export type DataSchema = {
+  type: Type
+  childType?: Type
+  group: Group
+  icon: Icon
   labelSingular: string
   labelPlural: string
-  icon: Icon
-  validator: any
+  validator: MixedSchema<any, any, any>
   supportedActions: Action[]
   visibleColumns: Field[]
   tableColumns: QTableColumn[]
@@ -115,17 +126,18 @@ export type AppSchema = {
 }
 
 /**
- * TODO
+ * Defined properties for each field.
+ * - Component can be omitted for non-rendered fields
  */
 export type FieldProps = {
   field: Field
   label: string
   desc: string
   getDefault: () => any
-  validator: (val: any) => Promise<boolean>
+  validator: MixedSchema<any, any, any>
   validationMessage: string
   inspectFormat: (val: any) => string
-  component?: any // Vue component used when rendering, can be omitted
+  component?: ReturnType<typeof defineAsyncComponent>
 }
 
 /**
@@ -134,5 +146,5 @@ export type FieldProps = {
 export type ChartProps = {
   label: string
   chartOptions: AppObject // TODO
-  component: any // Vue component used when rendering
+  component: ReturnType<typeof defineAsyncComponent>
 }

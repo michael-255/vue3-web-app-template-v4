@@ -1,35 +1,33 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
 import type { Log, Record, Setting } from '@/types/models'
-import { Milliseconds, AppName, type DashboardCard } from '@/types/misc'
-import { Dark, uid } from 'quasar'
-import {
-  Severity,
-  Type,
-  Field,
-  LogRetention,
-  Group,
-  Key,
-  UniqueIdIndex,
-  GroupIdIndex,
-  GroupIndex,
-  TypeIndex,
-  SettingField,
-} from '@/types/database'
-import { appSchema } from './AppSchema'
+import { Milliseconds, AppName, type DashboardListCardProps } from '@/types/misc'
+import { Dark } from 'quasar'
+import { Severity, Type, Field, LogRetention, Key } from '@/types/database'
+import { dataSchema } from '@/services/data-schema'
+import { typeValidator, idValidator } from '@/services/validators'
+
+// Database indices
+const parentIndices = `&${Field.ID}`
+const childIndices = `&${Field.ID}, ${Field.PARENT_ID}`
 
 /**
- * A Dexie wrapper class that acts as a local database.
+ * Dexie wrapper that acts as a local database.
  */
 export class LocalDatabase extends Dexie {
   Settings!: Table<Setting>
+  Logs!: Table<Log>
   Records!: Table<Partial<Record>>
 
   constructor(name: string) {
     super(name)
 
     this.version(1).stores({
-      Settings: SettingField.KEY,
-      Records: `${UniqueIdIndex}, ${GroupIdIndex}, ${TypeIndex}, ${GroupIndex}`,
+      [Type.LOG]: `++${Field.AUTO_ID}`,
+      [Type.SETTING]: `&${Field.KEY}`,
+      [Type.EXAMPLE_PARENT]: parentIndices,
+      [Type.EXAMPLE_CHILD]: childIndices,
+      [Type.TEST_PARENT]: parentIndices,
+      [Type.TEST_CHILD]: childIndices,
     })
   }
 
@@ -38,24 +36,6 @@ export class LocalDatabase extends Dexie {
   //     MISCELLANEOUS                                                       //
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Used to ensure that record has the required fields used to further validate.
-   * - Requires UID, Group ID, valid Type, and valid Group
-   * @param record
-   */
-  hasRequiredFields(record: Record) {
-    if (
-      !record.uid ||
-      !record.groupId ||
-      !Object.values(Type).includes(record.type) ||
-      !Object.values(Group).includes(record.group)
-    ) {
-      return false
-    } else {
-      return true
-    }
-  }
 
   /**
    * Initializes all settings with existing or default values.
@@ -78,7 +58,7 @@ export class LocalDatabase extends Dexie {
     const settings = await Promise.all(
       keys.map(async (key) => ({
         key,
-        value: (await this.Settings.get(key))?.value ?? defaultSettings[key],
+        value: (await this.table(Type.SETTING).get(key))?.value ?? defaultSettings[key],
       }))
     )
 
@@ -96,70 +76,50 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Observable of Settings table.
+   * Observable of settings table. Used by pages that need to react to changes in settings.
    */
   liveSettings() {
-    return liveQuery(() => this.Settings.toArray())
+    return liveQuery(() => this.table(Type.SETTING).toArray())
   }
 
   /**
-   * Observable of dashboard cards for the Dashboard page.
+   * Observable of logs table. Used for the logs specific data table page.
+   */
+  liveLogs() {
+    return liveQuery(() => this.table(Type.LOG).orderBy(Field.AUTO_ID).reverse().toArray())
+  }
+
+  /**
+   * Observable of parent records. Used by the dashboard page to display parent list cards.
    */
   liveDashboard() {
     return liveQuery(async () => {
-      // Initial Records query for parent and enabled records sorted by name
-      const records = await this.Records.where(Field.GROUP)
-        .equals(Group.PARENT)
-        .filter((r) => r.enabled === true)
-        .sortBy(Field.NAME)
+      const records = await Promise.all([
+        await this.getDashboardParents(Type.EXAMPLE_PARENT),
+        await this.getDashboardParents(Type.TEST_PARENT),
+      ])
 
-      const favorites: DashboardCard[] = []
-      const nonFavorites: DashboardCard[] = []
+      const dashboardCards: { [key in Type]: DashboardListCardProps[] } = Object.values(
+        Type
+      ).reduce((acc, type) => {
+        acc[type] = []
+        return acc
+      }, {} as { [key in Type]: DashboardListCardProps[] })
 
-      // Build Dashboard Cards from Records and the previous child record
-      for await (const r of records) {
-        const previous = await this.getPreviousChild(r.groupId as string)
+      dashboardCards[Type.EXAMPLE_PARENT] = records[0]
+      dashboardCards[Type.TEST_PARENT] = records[1]
 
-        const dashboardCard: DashboardCard = {
-          labelPlural: appSchema.find((i) => i.type === r.type && i.group === Group.PARENT)
-            ?.labelPlural,
-          uid: r.uid as string,
-          groupId: r.groupId as string,
-          type: r.type as Type,
-          group: r.group as Group,
-          timestamp: r.timestamp as number,
-          name: r.name as string,
-          desc: r.desc as string,
-          favorited: r.favorited as boolean,
-          previousNote: previous ? previous.note : undefined,
-          previousTimestamp: previous ? previous.timestamp : undefined,
-        }
-
-        // Add to favorites or non-favorites
-        if (r.favorited === true) {
-          favorites.push(dashboardCard)
-        } else {
-          nonFavorites.push(dashboardCard)
-        }
-      }
-
-      // Return with favorites prioritized
-      return [...favorites, ...nonFavorites]
+      return dashboardCards
     })
   }
 
   /**
-   * Observable for Data Table View with any table with Type and Group to control results.
+   * Observable for data table with type defining the records to return.
    * @param type
-   * @param group
    */
-  liveDataTable(type: Type, group: Group) {
+  liveDataTable(type: Type) {
     return liveQuery(async () => {
-      // Records sorted by timestamp
-      return await this.Records.where(Field.TYPE)
-        .equals(type)
-        .filter((r) => r.group === group)
-        .sortBy(Field.TIMESTAMP)
+      return await this.table(type).orderBy(Field.TIMESTAMP).toArray()
     })
   }
 
@@ -170,61 +130,66 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Add new Record to the database.
+   * Add new record to the database.
+   * @param type
    * @param record
    */
-  async add(record: Record) {
-    if (!this.hasRequiredFields(record)) {
-      throw new Error('Record is missing one or more required fields.')
-    }
+  async addRecord(type: Type, record: Record) {
+    if (!(await typeValidator.isValid(type))) {
+      throw new Error('Invalid type error')
+    } // TODO
 
-    const recordValidator = appSchema.find(
-      (s) => s.type === record.type && s.group === record.group
-    )?.validator
+    // Find record specific validator
+    const recordValidator = dataSchema.find((s) => s.type === type)?.validator
 
-    if (await recordValidator.isValid(record)) {
-      const cleanedRecord = await recordValidator.validate(record)
-      return await this.Records.add(cleanedRecord)
-    } else {
-      throw new Error('Record failed validation.')
-    }
+    if (!recordValidator) {
+      throw new Error('Record validator not found')
+    } // TODO
+    if (!(await recordValidator.isValid(record))) {
+      throw new Error('Invalid record error')
+    } // TODO
+
+    // Validate cleans record of unknown properties
+    return await this.table(type).add(await recordValidator.validate(record))
   }
 
   /**
-   * Bulk add records to the database. The new record ids will be returned in an array.
+   * Import records into the database.
+   * @param type
    * @param records
    */
-  async bulkAdd(records: Record[]) {
+  async importRecords(type: Type, records: Record[]) {
+    if (!(await typeValidator.isValid(type))) {
+      throw new Error('Invalid type error')
+    } // TODO
+
+    // Find record specific validator
+    const recordValidator = dataSchema.find((s) => s.type === type)?.validator
+    if (!recordValidator) {
+      throw new Error('Record validator not found')
+    } // TODO
+
     const validRecords: Record[] = []
     const skippedRecords: Record[] = []
 
     for await (const r of records) {
-      // Must have required fields
-      if (this.hasRequiredFields(r)) {
-        // Get validator for record type and group
-        const recordValidator = appSchema.find(
-          (s) => s.type === r.type && s.group === r.group
-        )?.validator
-
-        // Valid records get cleaned and pushed to valid records array
-        if (await recordValidator.isValid(r)) {
-          validRecords.push(await recordValidator.validate(r))
-        } else {
-          skippedRecords.push(r)
-        }
+      if (await recordValidator.isValid(r)) {
+        // Valid records get cleaned and pushed to valid records
+        validRecords.push(await recordValidator.validate(r))
       } else {
         skippedRecords.push(r)
       }
     }
 
-    // Bulk add valid records
-    await this.Records.bulkAdd(validRecords)
+    // Only importing the valid records
+    await this.table(type).bulkAdd(validRecords)
 
     if (skippedRecords.length > 0) {
+      // Error for the frontend to report if any records were skipped
       throw new Error(
-        `Some records could not be added due to validation failures: ${skippedRecords.map((r) =>
-          String(r.uid)
-        )}`
+        `Records skipped due to validation failures (${
+          skippedRecords.length
+        }): ${skippedRecords.map((r) => String(r.id))}`
       )
     }
   }
@@ -237,10 +202,7 @@ export class LocalDatabase extends Dexie {
    */
   async addLog(severity: Severity, label: string, details?: any) {
     const log: Log = {
-      uid: uid(),
-      groupId: uid(),
-      type: Type.LOG,
-      group: Group.INTERNAL,
+      // Auto Id handled by Dexie
       timestamp: Date.now(),
       severity,
       label,
@@ -258,7 +220,7 @@ export class LocalDatabase extends Dexie {
       }
     }
 
-    return await this.Records.add(log)
+    return await this.addRecord(Type.LOG, log)
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -268,79 +230,80 @@ export class LocalDatabase extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
+   * Get exact record for type by id.
+   * @param id
+   * @param type
+   */
+  async getRecord(type: Type, id: string): Promise<Record | undefined> {
+    return await this.table(type).get(id)
+  }
+
+  /**
    * Get exact Setting by its key.
    * @param key
    */
-  async getSetting(key: Key) {
-    return await this.Settings.get(key)
+  async getSetting(key: Key): Promise<Setting | undefined> {
+    return await this.table(Type.SETTING).get(key)
   }
 
   /**
-   * Get all logs from database without sorting.
+   * Get all records of a type without sorting.
+   * @param type
    */
-  async getAllLogs() {
-    return await this.Records.where(Field.TYPE).equals(Type.LOG).toArray()
+  async getAll(type: Type): Promise<Record[]> {
+    return await this.table(type).toArray()
   }
 
   /**
-   * Get all settings from database without sorting.
+   * Get previous child record by type and parent id.
+   * @param type
+   * @param parentId
    */
-  async getAllSettings() {
-    return await this.Settings.toArray()
+  async getPreviousChild(type: Type, parentId: string) {
+    return (await this.table(type).where(Field.PARENT_ID).equals(parentId).toArray()).reverse()[0]
   }
 
   /**
-   * Get all records from database without sorting.
+   * To be used with live dashboard and parent types only.
+   * @param type
    */
-  async getAllRecords() {
-    return await this.Records.toArray()
-  }
+  async getDashboardParents(type: Type) {
+    // Get enabled parent records
+    const records = await this.table(type)
+      .filter((r) => r.enabled === true)
+      .sortBy(Field.NAME)
 
-  /**
-   * Get exact record by UID.
-   * @param uid
-   */
-  async getRecord(uid: string) {
-    return await this.Records.get(uid)
-  }
+    const favorites: DashboardListCardProps[] = []
+    const nonFavorites: DashboardListCardProps[] = []
 
-  /**
-   * Get all parent records by type.
-   */
-  async getAllParentTypes(type: Type) {
-    return (await this.Records.where(Field.GROUP).equals(Group.PARENT).toArray()).filter(
-      (r) => r.type === type
-    )
-  }
+    // Build dashboard list cards
+    for await (const r of records) {
+      const previous = (await this.getPreviousChild(
+        dataSchema.find((s) => s.type === type)?.childType as Type,
+        r.id
+      )) as Record
 
-  /**
-   * Get the parent record by group id.
-   * @param groupId
-   */
-  async getParent(groupId: string) {
-    return (await this.Records.where(Field.GROUP_ID).equals(groupId).toArray()).find(
-      (r) => r.group === Group.PARENT
-    )
-  }
+      const dashboardListCard: DashboardListCardProps = {
+        type,
+        id: r.id,
+        timestamp: r.timestamp,
+        name: r.name,
+        desc: r.desc,
+        favorited: r.favorited,
+        previousNote: previous?.note,
+        previousTimestamp: previous?.timestamp,
+      }
 
-  /**
-   * Get all child records by group id.
-   * @param groupId
-   */
-  async getChildren(groupId: string) {
-    return (await this.Records.where(Field.GROUP_ID).equals(groupId).toArray()).filter(
-      (r) => r.group === Group.CHILD
-    )
-  }
+      // Add to favorites or non-favorites
+      if (r.favorited === true) {
+        favorites.push(dashboardListCard)
+      } else {
+        nonFavorites.push(dashboardListCard)
+      }
+    }
 
-  /**
-   * Get previous child record by group id.
-   * @param groupId
-   */
-  async getPreviousChild(groupId: string) {
-    return (await this.Records.where(Field.GROUP_ID).equals(groupId).toArray())
-      .filter((r) => r.group === Group.CHILD)
-      .reverse()[0]
+    // Return with favorites prioritized
+    return [...favorites, ...nonFavorites]
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -354,15 +317,38 @@ export class LocalDatabase extends Dexie {
    * @param uid
    * @param changes
    */
-  async update(uid: string, changes: Partial<Record>) {
-    // Only valid fields can be updated (not a great solution)
-    Object.keys(changes).forEach((key) => {
-      if (!Object.values(Field).includes(key as Field)) {
-        throw new Error('Update field not recognized.')
-      }
+  async updateRecord(type: Type, id: string, changes: { [key in Field]?: any }) {
+    console.log('updateRecord', type, id, changes)
+    if (!(await idValidator.isValid(id))) {
+      throw new Error('Invalid id error')
+    } // TODO
+    if (!(await typeValidator.isValid(type))) {
+      throw new Error('Invalid type error')
+    } // TODO
+
+    // Get the original record
+    const record = await this.table(type).get(id)
+    if (!record) {
+      throw new Error('No record exists to update')
+    } // TODO
+
+    // Overwrite original fields with changes
+    Object.keys(changes).forEach((k) => {
+      record[k as Field] = changes[k as Field]
     })
 
-    return await this.Records.update(uid, changes)
+    // Find record specific validator
+    const recordValidator = dataSchema.find((s) => s.type === type)?.validator
+    if (!recordValidator) {
+      throw new Error('Record validator not found')
+    } // TODO
+
+    if (!(await recordValidator.isValid(record))) {
+      throw new Error('May have invalid record changes') // TODO
+    }
+
+    // Validate cleans record of unknown properties
+    return await this.table(type).update(id, await recordValidator.validate(record))
   }
 
   /**
@@ -378,12 +364,12 @@ export class LocalDatabase extends Dexie {
 
     const setting: Setting = { key, value }
 
-    if (!(await this.Settings.get(setting.key))) {
+    if (!(await this.table(Type.SETTING).get(setting.key))) {
       // Add Setting if it doesn't exist
-      return await this.Settings.add(setting)
+      return await this.addRecord(Type.SETTING, setting)
     } else {
       // Update Setting if it does exist
-      return await this.Settings.update(setting.key, { value: setting.value })
+      return await this.table(Type.SETTING).update(setting.key, { value: setting.value })
     }
   }
 
@@ -395,11 +381,10 @@ export class LocalDatabase extends Dexie {
 
   /**
    * Deletes all logs that are older than the log retention time Setting.
-   * - Should run once every time the app starts
+   * - Runs once every time the app starts
    */
   async deleteExpiredLogs() {
-    const logRetentionTime = (await this.Settings.get(Key.LOG_RETENTION_TIME))
-      ?.value as LogRetention
+    const logRetentionTime = (await this.getSetting(Key.LOG_RETENTION_TIME))?.value as LogRetention
 
     if (!logRetentionTime || logRetentionTime === LogRetention.FOREVER) {
       return 0 // No logs purged
@@ -414,7 +399,7 @@ export class LocalDatabase extends Dexie {
       [LogRetention.FOREVER]: Milliseconds.FOREVER,
     }
 
-    const logs = (await this.getAllLogs()) as Log[]
+    const logs = (await this.getAll(Type.LOG)) as Log[]
 
     // Find Logs that are older than the retention time and map them to their keys
     const removableLogs = logs
@@ -423,39 +408,44 @@ export class LocalDatabase extends Dexie {
         const logAgeMilliseconds = Date.now() - logTimestamp
         return logAgeMilliseconds > lookupMilliseconds[logRetentionTime]
       })
-      .map((log: Log) => log.uid) // Map remaining Log keys for removal
+      .map((log: Log) => log.autoId as number) // Map remaining Log ids for removal
 
-    await this.Records.bulkDelete(removableLogs)
+    await this.table(Type.LOG).bulkDelete(removableLogs)
 
     return removableLogs.length // Number of logs deleted
   }
 
   /**
-   * Delete parent and children or exact Record by UID.
-   * @param uid
+   * Delete single or grouped records by id.
+   * - Deleting parent deletes all associated children
+   * - Deleting child only deletes that single record
+   * @param type
+   * @param id
    */
-  async deleteRecord(uid: string) {
-    const record = (await this.Records.get(uid)) as Record
+  async deleteRecord(type: Type, id: string) {
+    if (!(await idValidator.isValid(id))) {
+      throw new Error('Invalid id error')
+    } // TODO
+    if (!(await typeValidator.isValid(type))) {
+      throw new Error('Invalid type error')
+    } // TODO
 
-    if (record) {
-      if (record.group === Group.PARENT) {
-        // Delete parent and child records
-        return await this.Records.where(Field.GROUP_ID).equals(record.groupId).delete()
-      } else {
-        // Delete single record
-        return await this.Records.delete(uid)
-      }
-    } else {
-      throw new Error(`Record with UID ${uid} does not exist`)
+    const recordToDelete = await this.getRecord(type, id)
+    if (!recordToDelete) {
+      throw new Error(`Record with UID ${id} does not exist.`)
+    } // TODO
+
+    // Delete the exact record first
+    await this.table(type).delete(id)
+
+    const childType = dataSchema.find((s) => s.type === type)?.childType as Type
+
+    if (childType) {
+      // Delete children asscoiated with parent record
+      await this.table(childType).where(Field.PARENT_ID).equals(id).delete()
     }
-  }
 
-  /**
-   * Deletes and resets all settings.
-   */
-  async resetSettings() {
-    await this.Settings.clear()
-    await this.initSettings()
+    return recordToDelete // Returns initial deleted record
   }
 
   /**
@@ -463,14 +453,24 @@ export class LocalDatabase extends Dexie {
    * @param type
    */
   async clearByType(type: Type) {
-    return await this.Records.where(Field.TYPE).equals(type).delete()
+    await this.table(type).clear()
+    return await this.initSettings() // Re-initialize settings just in case
   }
 
   /**
-   * Deletes all data from the database.
+   * Deletes all data from the database and resets settings.
    */
   async clearAllData() {
-    return Promise.all([this.Settings.clear(), this.Records.clear()])
+    await Promise.all(Object.values(Type).map((type) => this.table(type).clear()))
+    return await this.resetSettings()
+  }
+
+  /**
+   * Deletes and resets all settings.
+   */
+  async resetSettings() {
+    await this.table(Type.SETTING).clear()
+    await this.initSettings()
   }
 
   /**

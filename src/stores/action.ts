@@ -1,17 +1,14 @@
 import { defineStore } from 'pinia'
-import { Field } from '@/types/database'
+import type { Record } from '@/types/models'
 
 const useActionStore = defineStore({
   id: 'action',
 
   state: () => ({
     /**
-     * Used as the WIP record for creates and updates.
+     * In progress record for create and update actions
      */
-    record: Object.values(Field).reduce((acc, field) => {
-      acc[field] = null
-      return acc
-    }, {} as { [key in Field]: any }),
+    record: {} as Partial<Record>,
   }),
 })
 

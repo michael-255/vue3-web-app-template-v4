@@ -2,7 +2,8 @@
 import { useTimeAgo } from '@vueuse/core'
 import { Icon } from '@/types/icons'
 import { getDisplayDate } from '@/utils/common'
-import type { DashboardCard } from '@/types/misc'
+import type { DashboardListCardProps } from '@/types/misc'
+import type { Type } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import useRoutables from '@/composables/useRoutables'
@@ -11,7 +12,7 @@ import DB from '@/services/LocalDatabase'
 // Props & Emits
 defineProps<{
   showDescription: boolean
-  dashboardCard: DashboardCard
+  dashboardCard: DashboardListCardProps
 }>()
 
 // Composables & Stores
@@ -32,7 +33,7 @@ async function viewPreviousNote(note: string) {
  * @param uid
  * @param name
  */
-async function onFavorite(uid: string, name: string) {
+async function onFavorite(type: Type, id: string, name: string) {
   confirmDialog(
     'Favorite',
     `Do you want to favorite ${name}?`,
@@ -40,8 +41,8 @@ async function onFavorite(uid: string, name: string) {
     'info',
     async () => {
       try {
-        await DB.update(uid, { favorited: true })
-        log.info(`${name} favorited`, { uid, name })
+        await DB.updateRecord(type, id, { favorited: true })
+        log.info(`${name} favorited`, { type, id, name })
       } catch (error) {
         log.error('Favorite update failed', error)
       }
@@ -54,7 +55,7 @@ async function onFavorite(uid: string, name: string) {
  * @param uid
  * @param name
  */
-async function onUnfavorite(uid: string, name: string) {
+async function onUnfavorite(type: Type, id: string, name: string) {
   confirmDialog(
     'Unfavorite',
     `Do you want to unfavorite ${name}?`,
@@ -62,8 +63,8 @@ async function onUnfavorite(uid: string, name: string) {
     'info',
     async () => {
       try {
-        await DB.update(uid, { favorited: false })
-        log.info(`${name} unfavorited`, { uid, name })
+        await DB.updateRecord(type, id, { favorited: false })
+        log.info(`${name} unfavorited`, { type, id, name })
       } catch (error) {
         log.error('Unfavorite update failed', error)
       }
@@ -76,7 +77,7 @@ async function onUnfavorite(uid: string, name: string) {
  * @param uid
  * @param name
  */
-async function onParentDelete(uid: string, name: string) {
+async function onParentDelete(type: Type, id: string, name: string) {
   confirmDialog(
     'Delete',
     `Permanently delete ${name}? This will also delete any underlying child records.`,
@@ -84,8 +85,8 @@ async function onParentDelete(uid: string, name: string) {
     'negative',
     async () => {
       try {
-        await DB.deleteRecord(uid)
-        log.info(`${name} and grouped records deleted`, { uid, name })
+        await DB.deleteRecord(type, id)
+        log.info(`${name} and grouped records deleted`, { type, id, name })
       } catch (error) {
         log.error('Delete failed', error)
       }
@@ -121,7 +122,7 @@ async function onParentDelete(uid: string, name: string) {
           color="warning"
           size="md"
           class="cursor-pointer"
-          @click="onUnfavorite(dashboardCard.uid, dashboardCard.name)"
+          @click="onUnfavorite(dashboardCard.type, dashboardCard.id, dashboardCard.name)"
         />
         <QIcon
           v-show="!dashboardCard.favorited"
@@ -129,7 +130,7 @@ async function onParentDelete(uid: string, name: string) {
           color="grey"
           size="md"
           class="cursor-pointer"
-          @click="onFavorite(dashboardCard.uid, dashboardCard.name)"
+          @click="onFavorite(dashboardCard.type, dashboardCard.id, dashboardCard.name)"
         />
 
         <!-- Vertical Actions Menu -->
@@ -141,30 +142,21 @@ async function onParentDelete(uid: string, name: string) {
             transition-hide="flip-left"
           >
             <QList>
-              <QItem
-                clickable
-                @click="goToInspect(dashboardCard.type, dashboardCard.group, dashboardCard.uid)"
-              >
+              <QItem clickable @click="goToInspect(dashboardCard.type, dashboardCard.id)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.INSPECT" />
                 </QItemSection>
                 <QItemSection>Inspect</QItemSection>
               </QItem>
 
-              <QItem
-                clickable
-                @click="goToEdit(dashboardCard.type, dashboardCard.group, dashboardCard.uid)"
-              >
+              <QItem clickable @click="goToEdit(dashboardCard.type, dashboardCard.id)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.EDIT" />
                 </QItemSection>
                 <QItemSection>Edit</QItemSection>
               </QItem>
 
-              <QItem
-                clickable
-                @click="goToCharts(dashboardCard.type, dashboardCard.group, dashboardCard.uid)"
-              >
+              <QItem clickable @click="goToCharts(dashboardCard.type, dashboardCard.id)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.CHARTS" />
                 </QItemSection>
@@ -173,7 +165,10 @@ async function onParentDelete(uid: string, name: string) {
 
               <QSeparator />
 
-              <QItem clickable @click="onParentDelete(dashboardCard.uid, dashboardCard.name)">
+              <QItem
+                clickable
+                @click="onParentDelete(dashboardCard.type, dashboardCard.id, dashboardCard.name)"
+              >
                 <QItemSection avatar>
                   <QIcon color="negative" :name="Icon.DELETE" />
                 </QItemSection>

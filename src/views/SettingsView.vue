@@ -2,11 +2,11 @@
 import { exportFile } from 'quasar'
 import { Icon } from '@/types/icons'
 import { type BackupData, AppName, Limit } from '@/types/misc'
-import { Type, Key, LogRetention, Group } from '@/types/database'
+import { Type, Key, LogRetention } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
-import type { Setting, Record } from '@/types/models'
+import type { Setting } from '@/types/models'
 import { useMeta } from 'quasar'
-import { appSchema } from '@/services/AppSchema'
+import { dataSchema } from '@/services/data-schema'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
 import useDialogs from '@/composables/useDialogs'
@@ -25,15 +25,15 @@ const { onDefaults } = useDefaults()
 const { goToData } = useRoutables()
 
 // Data
-const schemaOptions = appSchema.map((i) => ({
-  label: i.labelPlural,
-  value: { type: i.type, group: i.group },
+const schemaOptions = dataSchema.map((s) => ({
+  label: s.labelPlural,
+  value: s.type,
 }))
 
 const settings: Ref<Setting[]> = ref([])
 const logRetentionIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
-const exportModel: Ref<{ type: Type; group: Group }[]> = ref([])
+const exportModel: Ref<Type[]> = ref([])
 const exportOptions = [...schemaOptions]
 const accessOptions = ref([...schemaOptions])
 const accessModel = ref(accessOptions.value[0])
@@ -72,7 +72,7 @@ function onTestLogger() {
  */
 function onRejectedFile(entries: any) {
   const fileName = entries[0]?.importFile?.name || undefined
-  log.warn(`Cannot import "${fileName}"`, entries)
+  log.warn(`Cannot import"${fileName}`, entries)
 }
 
 /**
@@ -81,30 +81,23 @@ function onRejectedFile(entries: any) {
 function onImportFile() {
   confirmDialog(
     'Import',
-    `Import data from ${importFile?.value?.name} and attempt to load records into the database from it?`,
+    `Import backup data from ${importFile?.value?.name} and attempt to load records into the database from it?`,
     Icon.INFO,
     'info',
     async () => {
       try {
-        const parsedFileData = JSON.parse(await importFile.value.text())
+        const backupData = JSON.parse(await importFile.value.text()) as BackupData
 
-        log.silentDebug('parsedFileData:', parsedFileData)
-
-        const { appName, records } = parsedFileData
+        log.silentDebug('backupData:', backupData)
 
         // Do NOT allow importing data from another app
-        if (appName !== AppName) {
-          throw new Error(`Cannot import data from this app: ${appName} `)
-        }
+        if (backupData.appName !== AppName)
+          throw new Error(`Cannot import data from this app: ${backupData.appName} `)
 
-        const types = Object.values(Type)
-
-        const importedData = records?.filter((record: Record) => types.includes(record.type))
-
-        await DB.bulkAdd(importedData)
+        const types = Object.values(Type).filter((type) => type !== Type.LOG) // Not importing logs
+        await Promise.all(types.map((type) => DB.importRecords(type, backupData[type])))
 
         importFile.value = null // Clear input
-
         log.info('Successfully imported available data')
       } catch (error) {
         log.error('Import failed', error)
@@ -129,15 +122,26 @@ function onExportRecords() {
     'info',
     async () => {
       try {
-        const records = (await DB.getAllRecords()) as Record[]
-        const types = exportModel.value.map((i) => i.type)
+        const types = exportModel.value
 
-        // Build export file meta data
+        // Build backup data
         const backupData = {
           appName: AppName,
           backupTimestamp: Date.now(),
-          settings: await DB.getAllSettings(), // Always including settings since they are small
-          records: records.filter((r) => types.includes(r.type)),
+          [Type.LOG]: types.includes(Type.LOG) ? await DB.getAll(Type.LOG) : [],
+          [Type.SETTING]: types.includes(Type.SETTING) ? await DB.getAll(Type.SETTING) : [],
+          [Type.EXAMPLE_PARENT]: types.includes(Type.EXAMPLE_PARENT)
+            ? await DB.getAll(Type.EXAMPLE_PARENT)
+            : [],
+          [Type.EXAMPLE_CHILD]: types.includes(Type.EXAMPLE_CHILD)
+            ? await DB.getAll(Type.EXAMPLE_CHILD)
+            : [],
+          [Type.TEST_PARENT]: types.includes(Type.TEST_PARENT)
+            ? await DB.getAll(Type.TEST_PARENT)
+            : [],
+          [Type.TEST_CHILD]: types.includes(Type.TEST_CHILD)
+            ? await DB.getAll(Type.TEST_CHILD)
+            : [],
         } as BackupData
 
         log.silentDebug('backupData:', backupData)
@@ -207,10 +211,9 @@ async function onDeleteBy(label: string, type: Type) {
     async () => {
       try {
         await DB.clearByType(type)
-        await DB.initSettings()
         log.info(`${type} successfully deleted`)
       } catch (error) {
-        log.error(`Error deleting ${type}`, error)
+        log.error(`Error deleting ${label}`, error)
       }
     }
   )
@@ -228,7 +231,6 @@ async function onDeleteAll() {
     async () => {
       try {
         await DB.clearAllData()
-        await DB.initSettings()
         log.info('All data successfully deleted')
       } catch (error) {
         log.error('Error deleting all data', error)
@@ -390,7 +392,7 @@ function getSettingValue(key: Key) {
                 :disable="!accessModel"
                 label="Access Data"
                 color="primary"
-                @click="goToData(accessModel.value.type, accessModel.value.group)"
+                @click="goToData(accessModel.value)"
               />
             </template>
           </QSelect>
@@ -474,7 +476,7 @@ function getSettingValue(key: Key) {
                 :disable="!deleteModel"
                 label="Delete Data"
                 color="negative"
-                @click="onDeleteBy(deleteModel.label, deleteModel.value?.type)"
+                @click="onDeleteBy(deleteModel.label, deleteModel.value)"
               />
             </template>
           </QSelect>

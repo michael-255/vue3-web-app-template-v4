@@ -1,95 +1,48 @@
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     FIELDS                                                                //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
 /**
- * Database SettingField enum defines all fields a Setting model can have.
+ * Defines both the Dexie table and record type.
+ * - Must be a URL friendly slug
  */
-export enum SettingField {
-  KEY = 'key',
-  VALUE = 'value',
+export enum Type {
+  LOG = 'log',
+  SETTING = 'setting',
+  EXAMPLE_PARENT = 'example-parent',
+  EXAMPLE_CHILD = 'example-child',
+  TEST_PARENT = 'test-parent',
+  TEST_CHILD = 'test-child',
 }
 
 /**
- * Database Field enum defines all fields a Record model can have.
+ * Defines all potential record fields used by all types.
  */
 export enum Field {
-  // RECORDS
-  UID = 'uid',
-  GROUP_ID = 'groupId',
-  TYPE = 'type',
-  GROUP = 'group',
-  TIMESTAMP = 'timestamp',
-  // LOGS
+  // SHARED
+  ID = 'id', // Parent, Child
+  TIMESTAMP = 'timestamp', // Parent, Child, Log
+  // LOG
+  AUTO_ID = 'autoId',
   SEVERITY = 'severity',
   LABEL = 'label',
   DETAILS = 'details',
   MESSAGE = 'message',
   STACK = 'stack',
-  // PARENTS
+  // SETTING
+  KEY = 'key',
+  VALUE = 'value',
+  // PARENT
   NAME = 'name',
   DESC = 'desc',
   ENABLED = 'enabled',
   FAVORITED = 'favorited',
-  // CHILDREN
+  // CHILD
+  PARENT_ID = 'parentId',
   NOTE = 'note',
-  // EXAMPLE PARENT
-  TEST_UIDS = 'testUids',
-  // EXAMPLE CHILD
-  // ...
-  // TEST PARENT
-  // ...
-  // TEST CHILD
+  // RECORD SPECIFIC
+  TEST_IDS = 'testIds',
   PERCENT = 'percent',
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     RECORD INDICES                                                        //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
 /**
- * Database UniqueIdIndex uses uniqueness enforced uid.
- * - Used for exact record matches
- * - NEVER alter uid after creation
- * @example
- * `uid     groupId  type     group`
- * `abc-123 ex-12345 example  parent`
- * `efg-456 ex-12345 example  child`
- * `hij-789 ex-12345 example  child`
- * `klm-012 ex-12345 example  child`
- */
-export const UniqueIdIndex = `&${Field.UID}` as const
-
-/**
- * Database GroupIdIndex uses a repeatable uid.
- * - NEVER alter uid after creation
- */
-export const GroupIdIndex = Field.GROUP_ID as const
-
-/**
- * Database TypeIndex uses type to separate records.
- * - Used for any type specific query
- */
-export const TypeIndex = Field.TYPE as const
-
-/**
- * Database GroupIndex uses group parent, child, or internal to separate records.
- * - Used for Dashboard and Data view queries to get all records by a group
- */
-export const GroupIndex = Field.GROUP as const
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     MISCELLANEOUS                                                         //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Database Log Severity enum.
+ * Defines log severity levels.
  */
 export enum Severity {
   DEBUG = 'DEBUG',
@@ -99,7 +52,7 @@ export enum Severity {
 }
 
 /**
- * Database Setting Key enum defines all valid settings that the app supports.
+ * Defines key strings for all valid settings the app supports.
  */
 export enum Key {
   SHOW_WELCOME = 'show-welcome-overlay',
@@ -111,27 +64,7 @@ export enum Key {
 }
 
 /**
- * Database Record Type enum defines all types of data stored in the database.
- * - Must be a URL friendly slug
- */
-export enum Type {
-  LOG = 'log', // Intentionally first in order for auto selection purposes
-  EXAMPLE = 'example',
-  TEST = 'test',
-}
-
-/**
- * Database Record Group enum defines the record relationship with its peer records.
- * - Must be a URL friendly slug
- */
-export enum Group {
-  PARENT = 'parent',
-  CHILD = 'child',
-  INTERNAL = 'internal',
-}
-
-/**
- * Database Actions enum defines the actions that a Type can support and helps with action page routing.
+ * Defines actions that a database type can perform.
  */
 export enum Action {
   INSPECT = 'Inspect',
@@ -142,11 +75,20 @@ export enum Action {
 }
 
 /**
- * Database LogRetention enum duration strings.
+ * Defines duration strings for log rentention.
  */
 export enum LogRetention {
   ONE_WEEK = '7 Days',
   THREE_MONTHS = '90 Days',
   ONE_YEAR = 'One Year',
   FOREVER = 'Forever',
+}
+
+/**
+ * Defines the groups that a database type can belong to.
+ */
+export enum Group {
+  PARENT = 'parent',
+  CHILD = 'child',
+  INTERNAL = 'internal',
 }
