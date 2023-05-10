@@ -2,11 +2,11 @@
 import { Icon } from '@/types/icons'
 import { AppName } from '@/types/misc'
 import { useMeta } from 'quasar'
-import { Key, Group, Type } from '@/types/database'
+import { Group, Key, Type } from '@/types/database'
 import { ref, type Ref, onUnmounted } from 'vue'
-import type { DashboardCard } from '@/types/misc'
+import type { DashboardListCardProps } from '@/types/misc'
 import { getRecordsCountDisplay } from '@/utils/common'
-import { appSchema } from '@/services/AppSchema'
+import { dataSchema } from '@/services/data-schema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
 import DashboardParentCard from '@/components/DashboardParentCard.vue'
@@ -24,12 +24,17 @@ const { goToCreate } = useRoutables()
 
 // Data
 const showDescription: Ref<boolean> = ref(false)
-const dashboardCards: Ref<DashboardCard[]> = ref([])
-const dashboardOptions = appSchema
-  .filter((i) => i.group === Group.PARENT)
+const dashboardCards: Ref<{ [key in Type]: DashboardListCardProps[] }> = ref(
+  Object.values(Type).reduce((acc, type) => {
+    acc[type] = []
+    return acc
+  }, {} as { [key in Type]: DashboardListCardProps[] })
+)
+const dashboardOptions = dataSchema
+  .filter((s) => s.group === Group.PARENT)
   .map((p) => ({
     label: p.labelPlural,
-    value: p.labelPlural,
+    value: p.type,
   }))
 
 // Subscriptions
@@ -60,26 +65,21 @@ onUnmounted(() => {
  * Returns dashboard cards for current dashboard selection.
  */
 function currentDashboardCards() {
-  return dashboardCards.value.filter((dc) => dc.labelPlural === uiStore.dashboardSelection)
+  return dashboardCards.value[uiStore.dashboardType]
 }
 
 /**
  * Returns display string with record count for bottom of dashboard page.
  */
 function getCountDisplay() {
-  return getRecordsCountDisplay(
-    dashboardCards.value.filter((dc) => dc.labelPlural === uiStore.dashboardSelection)
-  )
+  return getRecordsCountDisplay(dashboardCards.value[uiStore.dashboardType])
 }
 
 /**
  * Returns label text for create button on bottom of dashboard page.
  */
 function getCreateLabel() {
-  const labelSingular = appSchema.find(
-    (i) => i.labelPlural === uiStore.dashboardSelection
-  )?.labelSingular
-
+  const labelSingular = dataSchema.find((s) => s.type === uiStore.dashboardType)?.labelSingular
   return `Create ${labelSingular}`
 }
 
@@ -87,7 +87,7 @@ function getCreateLabel() {
  * Returns schema type for creat based on dashboard selection.
  */
 function getSchemaType() {
-  return appSchema.find((i) => i.labelPlural === uiStore.dashboardSelection)?.type as Type
+  return dataSchema.find((s) => s.type === uiStore.dashboardType)?.type as Type
 }
 </script>
 
@@ -103,8 +103,8 @@ function getSchemaType() {
         <QOptionGroup
           color="primary"
           :options="dashboardOptions"
-          :model-value="uiStore.dashboardSelection"
-          @update:model-value="uiStore.dashboardSelection = $event"
+          :model-value="uiStore.dashboardType"
+          @update:model-value="uiStore.dashboardType = $event"
         />
       </QCardSection>
     </QCard>
@@ -120,7 +120,7 @@ function getSchemaType() {
           label="Attach Record"
           color="primary"
           :icon="Icon.ADD_NOTE"
-          @click="goToCreate(dashboardCard.type, Group.CHILD, dashboardCard.groupId)"
+          @click="goToCreate(dashboardCard.type, dashboardCard.id)"
         />
       </DashboardParentCard>
     </div>
@@ -137,7 +137,7 @@ function getSchemaType() {
         color="positive"
         :icon="Icon.CREATE"
         :label="`${getCreateLabel()}`"
-        @click="goToCreate(getSchemaType(), Group.PARENT)"
+        @click="goToCreate(uiStore.dashboardType)"
       />
     </div>
   </ResponsivePage>

@@ -3,10 +3,10 @@ import { RouterView, useRoute } from 'vue-router'
 import { Icon } from '@/types/icons'
 import { RouteName } from '@/router/route-names'
 import { AppHeaderColor, AppName } from '@/types/misc'
+import { dataSchema } from '@/services/data-schema'
+import { Group } from '@/types/database'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
-import { appSchema } from '@/services/AppSchema'
-import { Group } from '@/types/database'
 
 // Composables & Stores
 const { goBack } = useRoutables()
@@ -14,7 +14,7 @@ const uiStore = useUIStore()
 const route = useRoute()
 
 // Data
-const schemaParents = appSchema.filter((i) => i.group === Group.PARENT)
+const schemaParents = dataSchema.filter((s) => s.group === Group.PARENT)
 </script>
 
 <template>
@@ -63,7 +63,7 @@ const schemaParents = appSchema.filter((i) => i.group === Group.PARENT)
           v-ripple
           :to="{
             name: RouteName.DATA,
-            params: { type: parent.type, group: parent.group },
+            params: { type: parent.type },
           }"
         >
           <QItemSection avatar>

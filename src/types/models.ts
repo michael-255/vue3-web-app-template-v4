@@ -1,28 +1,25 @@
 import type {
-  logValidator,
   exampleParentValidator,
   exampleChildValidator,
   testParentValidator,
   testChildValidator,
   recordValidator,
-} from '@/services/Validators'
+  logValidator,
+  settingValidator,
+} from '@/services/validators'
 import type { InferType } from 'yup'
-import type { SettingField } from './database'
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     MODELS                                                                //
+//     MODELS (Infering from `yup` validators)                               //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-export type Setting = {
-  [SettingField.KEY]: string
-  [SettingField.VALUE]: string
-}
-
+// Infering user record types from the validators
 export type Log = InferType<typeof logValidator>
+export type Setting = InferType<typeof settingValidator>
 export type ExampleParent = InferType<typeof exampleParentValidator>
 export type ExampleChild = InferType<typeof exampleChildValidator>
 export type TestParent = InferType<typeof testParentValidator>
 export type TestChild = InferType<typeof testChildValidator>
-export type Record = InferType<typeof recordValidator>
+export type Record = Partial<InferType<typeof recordValidator>>

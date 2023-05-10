@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ChartTime, Milliseconds } from '@/types/misc'
-import { appSchema } from '@/services/AppSchema'
-import { Group } from '@/types/database'
+import { dataSchema } from '@/services/data-schema'
+import { Group, Type } from '@/types/database'
 
 const useUIStore = defineStore({
   id: 'ui',
@@ -12,11 +12,10 @@ const useUIStore = defineStore({
      */
     drawer: false,
     /**
-     * Currently selected dashboard list item.
+     * Currently selected dashboard list type.
+     * - Select first parent type by default
      */
-    dashboardSelection: appSchema
-      .filter((i) => i.group === Group.PARENT)
-      .map((p) => p.labelPlural)[0], // Select first parent type by default
+    dashboardType: dataSchema.filter((s) => s.group === Group.PARENT).map((p) => p.type)[0] as Type,
     /**
      * Currently selected chart time used for graphing.
      */

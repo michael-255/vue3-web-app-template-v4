@@ -2,7 +2,7 @@
 import { type Ref, ref, onMounted } from 'vue'
 import type { Record } from '@/types/models'
 import { Group } from '@/types/database'
-import { uidValidator } from '@/services/Validators'
+import { idValidator } from '@/services/validators'
 import useRoutables from '@/composables/useRoutables'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/LocalDatabase'
@@ -18,7 +18,7 @@ const parent: Ref<Record> = ref({} as Record)
 onMounted(async () => {
   try {
     if (routeGroup === Group.CHILD) {
-      if (await uidValidator.isValid(routeGroupId)) {
+      if (await idValidator.isValid(routeGroupId)) {
         // Child record creation route params
         const parentRecord = (await DB.getParent(routeGroupId)) as Record
 
@@ -26,7 +26,7 @@ onMounted(async () => {
           parent.value = parentRecord
           isVisible.value = true
         }
-      } else if (await uidValidator.isValid(routeUid)) {
+      } else if (await idValidator.isValid(routeUid)) {
         // Child record Inspect and Edit route params
         const childRecord = (await DB.getRecord(routeUid)) as Record
 

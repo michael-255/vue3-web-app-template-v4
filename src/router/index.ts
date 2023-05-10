@@ -11,40 +11,34 @@ const router = createRouter({
       component: () => import('../views/DashboardView.vue'),
     },
     {
-      /**
-       * - Type required for table selection and appSchema selection
-       * - Group for appSchema selection
-       */
-      path: '/data/:type/:group',
+      path: '/data/:type',
       name: RouteName.DATA,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DataView.vue'),
     },
     {
       /**
-       * - Type required for creation
-       * - Group required for creation
-       * - SK needed for parent child info card
+       * Parent Id required for child of parent creation
        */
-      path: '/create/:type/:group/:groupId?',
+      path: '/create/:type/:parentId?',
       name: RouteName.CREATE,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/CreateView.vue'),
     },
     {
-      path: '/inspect/:type/:group/:uid',
+      path: '/inspect/:type/:id',
       name: RouteName.INSPECT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/InspectView.vue'),
     },
     {
-      path: '/edit/:type/:group/:uid',
+      path: '/edit/:type/:id',
       name: RouteName.EDIT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/EditView.vue'),
     },
     {
-      path: '/charts/:type/:group/:uid',
+      path: '/charts/:type/:id',
       name: RouteName.CHARTS,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/ChartsView.vue'),

@@ -1,24 +1,41 @@
-import { Group, Severity, Type, Field } from '@/types/database'
+import { Type, Field, Severity } from '@/types/database'
 import { mixed, object, array, string, number, boolean } from 'yup'
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     LOGS                                                                  //
+//     LOG                                                                   //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
+export const autoIdValidator = number().integer()
+export const timestampValidator = number().required().integer()
 export const severityValidator = string().required().oneOf(Object.values(Severity))
 export const labelValidator = string().required().trim()
-export const detailsValidator = mixed()
-export const messageValidator = string()
-export const stackValidator = string()
+export const anyValidator = mixed()
+export const textValidator = string().trim()
 
 const log = object({
+  [Field.AUTO_ID]: autoIdValidator,
+  [Field.TIMESTAMP]: timestampValidator,
   [Field.SEVERITY]: severityValidator,
   [Field.LABEL]: labelValidator,
-  [Field.DETAILS]: detailsValidator,
-  [Field.MESSAGE]: messageValidator,
-  [Field.STACK]: stackValidator,
+  [Field.DETAILS]: anyValidator,
+  [Field.MESSAGE]: textValidator,
+  [Field.STACK]: textValidator,
+}).noUnknown()
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     SETTING                                                               //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+export const keyValidator = string().required().trim()
+export const valueValidator = mixed().required()
+
+const setting = object({
+  [Field.KEY]: keyValidator,
+  [Field.VALUE]: valueValidator,
 }).noUnknown()
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,16 +44,11 @@ const log = object({
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const uidValidator = string().required().uuid()
-export const timestampValidator = number().required().integer()
+export const idValidator = string().required().uuid()
 export const typeValidator = string().required().oneOf(Object.values(Type))
-export const groupValidator = string().required().oneOf(Object.values(Group))
 
 const core = object({
-  [Field.UID]: uidValidator,
-  [Field.GROUP_ID]: uidValidator,
-  [Field.TYPE]: typeValidator,
-  [Field.GROUP]: groupValidator,
+  [Field.ID]: idValidator,
   [Field.TIMESTAMP]: timestampValidator,
 }).noUnknown()
 
@@ -48,14 +60,13 @@ const core = object({
 
 export const nameValidator = string().required().min(1).max(50).trim()
 export const textAreaValidator = string().defined().max(500).trim()
-export const enabledValidator = boolean().defined()
-export const favoritedValidator = boolean().defined()
+export const booleanValidator = boolean().defined()
 
 const parent = object({
   [Field.NAME]: nameValidator,
   [Field.DESC]: textAreaValidator,
-  [Field.ENABLED]: enabledValidator,
-  [Field.FAVORITED]: favoritedValidator,
+  [Field.ENABLED]: booleanValidator,
+  [Field.FAVORITED]: booleanValidator,
 }).noUnknown()
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,6 +76,7 @@ const parent = object({
 ///////////////////////////////////////////////////////////////////////////////
 
 const child = object({
+  [Field.PARENT_ID]: idValidator,
   [Field.NOTE]: textAreaValidator,
 }).noUnknown()
 
@@ -74,11 +86,11 @@ const child = object({
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const testPksValidator = array().of(uidValidator).defined()
+export const testIdsValidator = array().of(idValidator).required()
 export const percentValidator = number().required().min(0).max(100)
 
 const exampleParent = object({
-  [Field.TEST_UIDS]: array().of(uidValidator).defined(),
+  [Field.TEST_IDS]: testIdsValidator,
 }).noUnknown()
 
 const testChild = object({
@@ -91,15 +103,17 @@ const testChild = object({
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-export const logValidator = mixed().concat(core).concat(log)
+export const logValidator = mixed().concat(log)
+export const settingValidator = mixed().concat(setting)
 export const exampleParentValidator = mixed().concat(core).concat(parent).concat(exampleParent)
 export const exampleChildValidator = mixed().concat(core).concat(child)
 export const testParentValidator = mixed().concat(core).concat(parent)
 export const testChildValidator = mixed().concat(core).concat(child).concat(testChild)
 export const recordValidator = mixed()
+  .concat(log)
+  .concat(setting)
   .concat(core)
   .concat(parent)
   .concat(child)
   .concat(exampleParent)
   .concat(testChild)
-  .concat(log)
