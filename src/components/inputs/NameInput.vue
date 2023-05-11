@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import type { Field } from '@/types/database'
-import { Limit } from '@/types/misc'
+import { Limit } from '@/types/general'
 import useActionStore from '@/stores/action'
 
 // Props & Emits

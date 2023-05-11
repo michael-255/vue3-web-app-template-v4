@@ -1,34 +1,24 @@
-import Dexie, { liveQuery, type Table } from 'dexie'
-import type { Log, Record, Setting } from '@/types/models'
-import { Milliseconds, AppName, type DashboardListCardProps } from '@/types/misc'
-import { Dark } from 'quasar'
-import { Severity, Type, Field, LogRetention, Key } from '@/types/database'
-import { dataSchema } from '@/services/data-schema'
+import Dexie, { liveQuery } from 'dexie'
+import type { Log, Record, Setting } from '@/types/database'
+import { Milliseconds, AppName, type DashboardListCardProps, LogRetention } from '@/types/general'
 import { typeValidator, idValidator } from '@/services/validators'
-
-// Database indices
-const parentIndices = `&${Field.ID}`
-const childIndices = `&${Field.ID}, ${Field.PARENT_ID}`
+import { Dark } from 'quasar'
+import { Severity, Type, Field, Key } from '@/types/database'
+import DataSchema from '@/services/DataSchema'
 
 /**
  * Dexie wrapper that acts as a local database.
  */
-export class LocalDatabase extends Dexie {
-  Settings!: Table<Setting>
-  Logs!: Table<Log>
-  Records!: Table<Partial<Record>>
-
+class Database extends Dexie {
   constructor(name: string) {
     super(name)
 
-    this.version(1).stores({
-      [Type.LOG]: `++${Field.AUTO_ID}`,
-      [Type.SETTING]: `&${Field.KEY}`,
-      [Type.EXAMPLE_PARENT]: parentIndices,
-      [Type.EXAMPLE_CHILD]: childIndices,
-      [Type.TEST_PARENT]: parentIndices,
-      [Type.TEST_CHILD]: childIndices,
-    })
+    this.version(1).stores(
+      Object.values(Type).reduce((acc, type) => {
+        acc[type] = DataSchema.getDatabaseIndices(type)
+        return acc
+      }, {} as { [key in Type]: string })
+    )
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -140,7 +130,7 @@ export class LocalDatabase extends Dexie {
     } // TODO
 
     // Find record specific validator
-    const recordValidator = dataSchema.find((s) => s.type === type)?.validator
+    const recordValidator = DataSchema.getValidator(type)
 
     if (!recordValidator) {
       throw new Error('Record validator not found')
@@ -164,7 +154,7 @@ export class LocalDatabase extends Dexie {
     } // TODO
 
     // Find record specific validator
-    const recordValidator = dataSchema.find((s) => s.type === type)?.validator
+    const recordValidator = DataSchema.getValidator(type)
     if (!recordValidator) {
       throw new Error('Record validator not found')
     } // TODO
@@ -279,7 +269,7 @@ export class LocalDatabase extends Dexie {
     // Build dashboard list cards
     for await (const r of records) {
       const previous = (await this.getPreviousChild(
-        dataSchema.find((s) => s.type === type)?.childType as Type,
+        DataSchema.getChildType(type) as Type,
         r.id
       )) as Record
 
@@ -338,7 +328,7 @@ export class LocalDatabase extends Dexie {
     })
 
     // Find record specific validator
-    const recordValidator = dataSchema.find((s) => s.type === type)?.validator
+    const recordValidator = DataSchema.getValidator(type)
     if (!recordValidator) {
       throw new Error('Record validator not found')
     } // TODO
@@ -438,7 +428,7 @@ export class LocalDatabase extends Dexie {
     // Delete the exact record first
     await this.table(type).delete(id)
 
-    const childType = dataSchema.find((s) => s.type === type)?.childType as Type
+    const childType = DataSchema.getChildType(type)
 
     if (childType) {
       // Delete children asscoiated with parent record
@@ -484,6 +474,6 @@ export class LocalDatabase extends Dexie {
 /**
  * Preconfigured LocalDatabase instance.
  */
-const DB = new LocalDatabase(AppName)
+const DB = new Database(AppName)
 
 export default DB

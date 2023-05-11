@@ -3,14 +3,14 @@ import type { QTableColumn } from 'quasar'
 import { Icon } from '@/types/icons'
 import { Action, Field, Group } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { AppName } from '@/types/misc'
+import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
 import { getRecordsCountDisplay } from '@/utils/common'
-import { dataSchema } from '@/services/data-schema'
+import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
 import useDialogs from '@/composables/useDialogs'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Data` })
 

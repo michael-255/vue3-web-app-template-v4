@@ -2,7 +2,7 @@ import { Icon } from '@/types/icons'
 import { Key, Severity } from '@/types/database'
 import useNotifications from '@/composables/useNotifications'
 import Logger from '@/services/Logger'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 
 /**
  * Composable with utilities for logging that include notifications and database entries.

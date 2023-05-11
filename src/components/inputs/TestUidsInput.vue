@@ -5,7 +5,7 @@ import type { Field } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
 import useRoutables from '@/composables/useRoutables'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 import type { Record } from '@/types/models'
 
 // Props & Emits

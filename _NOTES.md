@@ -199,3 +199,13 @@ export enum ReservedId {
 ## Code Improvements
 
 - Move some of the confusing `ParentInfoCard` logic to a composable with good error messages
+
+## Dashboard List Item Props
+
+```typescript
+export type DashboardCardProps = {
+  type: Type
+  parentRecord: ParentRecord && Record
+  previousChildRecord: ChildRecord && Record
+}
+```

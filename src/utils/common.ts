@@ -1,4 +1,4 @@
-import { Milliseconds } from '@/types/misc'
+import { Milliseconds } from '@/types/general'
 import { date } from 'quasar'
 import * as slug from 'slugify'
 

@@ -2,12 +2,12 @@
 import { RouterView, useRoute } from 'vue-router'
 import { onMounted, type Ref, ref, watch, markRaw } from 'vue'
 import { Icon } from '@/types/icons'
-import { type Optional, AppDescription } from '@/types/misc'
+import { AppDescription } from '@/types/general'
 import { useMeta } from 'quasar'
 import ErrorLayout from '@/components/ErrorLayout.vue'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 
 /**
  * Sets up the core meta tags and links for the app. These are for things like the favicons and manifest.
@@ -85,9 +85,10 @@ onMounted(async () => {
  * Watching route for the meta layout property to change. Sets the layout component.
  */
 watch(
-  () => route.meta?.layout as Optional<string>,
+  () => route.meta?.layout as string,
   async (metaLayout) => {
     try {
+      if (!metaLayout) return
       // metaLayout must exist && the imported component
       const component = metaLayout && (await import(`@/components/${metaLayout}.vue`))
       // markRaw to avoid reactivity on component definition

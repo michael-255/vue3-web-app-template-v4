@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Icon } from '@/types/icons'
 import { onMounted, ref, type Ref } from 'vue'
-import { AppName } from '@/types/misc'
+import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
-import { dataSchema } from '@/services/data-schema'
-import type { Record } from '@/types/models'
+import type { Record } from '@/types/database'
+import DataSchema from '@/services/DataSchema'
 import ParentInfoCard from '@/components/ParentInfoCard.vue'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
 import ResponsivePage from '@/components/ResponsivePage.vue'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Inspect Record` })
 

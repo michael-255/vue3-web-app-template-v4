@@ -1,6 +1,5 @@
 import { Field, Key, Severity } from '@/types/database'
-import { truncateString } from '@/utils/common'
-import { getDisplayDate } from '@/utils/common'
+import { truncateString, getDisplayDate } from '@/utils/common'
 import type { QTableColumn } from 'quasar'
 
 /**

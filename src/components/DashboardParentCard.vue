@@ -2,12 +2,12 @@
 import { useTimeAgo } from '@vueuse/core'
 import { Icon } from '@/types/icons'
 import { getDisplayDate } from '@/utils/common'
-import type { DashboardListCardProps } from '@/types/misc'
+import type { DashboardListCardProps } from '@/types/general'
 import type { Type } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import useRoutables from '@/composables/useRoutables'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 
 // Props & Emits
 defineProps<{

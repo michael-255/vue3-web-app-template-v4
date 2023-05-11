@@ -2,9 +2,8 @@
 import { RouterView, useRoute } from 'vue-router'
 import { Icon } from '@/types/icons'
 import { RouteName } from '@/router/route-names'
-import { AppHeaderColor, AppName } from '@/types/misc'
-import { dataSchema } from '@/services/data-schema'
-import { Group } from '@/types/database'
+import { AppHeaderColor, AppName } from '@/types/general'
+import DataSchema from '@/services/DataSchema'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
 
@@ -14,7 +13,7 @@ const uiStore = useUIStore()
 const route = useRoute()
 
 // Data
-const schemaParents = dataSchema.filter((s) => s.group === Group.PARENT)
+const parentSchemas = DataSchema.getParentSchemas()
 </script>
 
 <template>
@@ -57,7 +56,7 @@ const schemaParents = dataSchema.filter((s) => s.group === Group.PARENT)
 
         <!-- Parent Data Table Links -->
         <QItem
-          v-for="(parent, i) in schemaParents"
+          v-for="(parent, i) in parentSchemas"
           :key="i"
           clickable
           v-ripple

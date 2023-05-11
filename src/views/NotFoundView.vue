@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AppName } from '@/types/misc'
+import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 

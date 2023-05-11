@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { Icon } from '@/types/icons'
-import { AppName } from '@/types/misc'
+import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
-import { Group, Key, Type } from '@/types/database'
+import { Key, Type } from '@/types/database'
 import { ref, type Ref, onUnmounted } from 'vue'
-import type { DashboardListCardProps } from '@/types/misc'
+import type { DashboardListCardProps } from '@/types/general'
 import { getRecordsCountDisplay } from '@/utils/common'
-import { dataSchema } from '@/services/data-schema'
+import DataSchema from '@/services/DataSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
 import DashboardParentCard from '@/components/DashboardParentCard.vue'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
 import useLogger from '@/composables/useLogger'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Dashboard` })
 
@@ -30,12 +30,7 @@ const dashboardCards: Ref<{ [key in Type]: DashboardListCardProps[] }> = ref(
     return acc
   }, {} as { [key in Type]: DashboardListCardProps[] })
 )
-const dashboardOptions = dataSchema
-  .filter((s) => s.group === Group.PARENT)
-  .map((p) => ({
-    label: p.labelPlural,
-    value: p.type,
-  }))
+const dashboardOptions = DataSchema.getParentTypeOptions()
 
 // Subscriptions
 const settingsSubscription = DB.liveSettings().subscribe({
@@ -79,15 +74,8 @@ function getCountDisplay() {
  * Returns label text for create button on bottom of dashboard page.
  */
 function getCreateLabel() {
-  const labelSingular = dataSchema.find((s) => s.type === uiStore.dashboardType)?.labelSingular
+  const labelSingular = DataSchema.getLabelSingular(uiStore.dashboardType)
   return `Create ${labelSingular}`
-}
-
-/**
- * Returns schema type for creat based on dashboard selection.
- */
-function getSchemaType() {
-  return dataSchema.find((s) => s.type === uiStore.dashboardType)?.type as Type
 }
 </script>
 

@@ -2,11 +2,11 @@
 import { Icon } from '@/types/icons'
 import { type Ref, ref, onUnmounted } from 'vue'
 import { RouteName } from '@/router/route-names'
-import { AppName } from '@/types/misc'
+import { AppName } from '@/types/general'
 import { Key } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDefaults from '@/composables/useDefaults'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 
 // Composables & Stores
 const { onDefaults } = useDefaults()

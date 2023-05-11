@@ -1,19 +1,18 @@
 <script setup lang="ts">
 import { exportFile } from 'quasar'
 import { Icon } from '@/types/icons'
-import { type BackupData, AppName, Limit } from '@/types/misc'
-import { Type, Key, LogRetention } from '@/types/database'
+import { type BackupData, AppName, Limit, LogRetention } from '@/types/general'
+import { type Setting, Type, Key } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
-import type { Setting } from '@/types/models'
 import { useMeta } from 'quasar'
-import { dataSchema } from '@/services/data-schema'
+import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
 import useDialogs from '@/composables/useDialogs'
 import useDefaults from '@/composables/useDefaults'
 import useRoutables from '@/composables/useRoutables'
 import ResponsivePage from '@/components/ResponsivePage.vue'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Settings` })
 
@@ -25,19 +24,15 @@ const { onDefaults } = useDefaults()
 const { goToData } = useRoutables()
 
 // Data
-const schemaOptions = dataSchema.map((s) => ({
-  label: s.labelPlural,
-  value: s.type,
-}))
-
+const typeOptions = DataSchema.getTypeOptions()
 const settings: Ref<Setting[]> = ref([])
 const logRetentionIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
 const exportModel: Ref<Type[]> = ref([])
-const exportOptions = [...schemaOptions]
-const accessOptions = ref([...schemaOptions])
+const exportOptions = [...typeOptions]
+const accessOptions = ref([...typeOptions])
 const accessModel = ref(accessOptions.value[0])
-const deleteOptions = ref([...schemaOptions])
+const deleteOptions = ref([...typeOptions])
 const deleteModel = ref(deleteOptions.value[0])
 
 // Subscriptions

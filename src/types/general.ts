@@ -1,16 +1,12 @@
+import type { Field, Type } from '@/types/database'
 import type {
-  ExampleChild,
-  ExampleParent,
   Log,
   Setting,
   TestChild,
   TestParent,
-} from '@/types/models'
-import type { QTableColumn } from 'quasar'
-import type { Action, Field, Group, Type } from '@/types/database'
-import type { MixedSchema } from 'yup'
-import type { defineAsyncComponent } from 'vue'
-import type { Icon } from './icons'
+  ExampleChild,
+  ExampleParent,
+} from '@/types/database'
 
 /**
  * App display name.
@@ -43,16 +39,6 @@ export enum Limit {
 }
 
 /**
- * Type that allows for a value to be null or undefined.
- */
-export type Optional<T> = T | null | undefined
-
-/**
- * Generic type for an object with string based properties storing any value.
- */
-export type AppObject = { [x: string]: any }
-
-/**
  * Milliseconds per time value.
  */
 export enum Milliseconds {
@@ -66,6 +52,16 @@ export enum Milliseconds {
   PER_HOUR = 3_600_000,
   PER_MINUTE = 60_000,
   PER_SECOND = 1_000,
+}
+
+/**
+ * Defines duration strings for log rentention.
+ */
+export enum LogRetention {
+  ONE_WEEK = '7 Days',
+  THREE_MONTHS = '90 Days',
+  ONE_YEAR = 'One Year',
+  FOREVER = 'Forever',
 }
 
 /**
@@ -105,46 +101,4 @@ export type DashboardListCardProps = {
   [Field.FAVORITED]: boolean
   previousNote?: string
   previousTimestamp?: number
-}
-
-/**
- * How data in the app is set up for display and use.
- */
-export type DataSchema = {
-  type: Type
-  childType?: Type
-  group: Group
-  icon: Icon
-  labelSingular: string
-  labelPlural: string
-  validator: MixedSchema<any, any, any>
-  supportedActions: Action[]
-  visibleColumns: Field[]
-  tableColumns: QTableColumn[]
-  fieldProps: FieldProps[]
-  chartProps: ChartProps[]
-}
-
-/**
- * Defined properties for each field.
- * - Component can be omitted for non-rendered fields
- */
-export type FieldProps = {
-  field: Field
-  label: string
-  desc: string
-  getDefault: () => any
-  validator: MixedSchema<any, any, any>
-  validationMessage: string
-  inspectFormat: (val: any) => string
-  component?: ReturnType<typeof defineAsyncComponent>
-}
-
-/**
- * TODO
- */
-export type ChartProps = {
-  label: string
-  chartOptions: AppObject // TODO
-  component: ReturnType<typeof defineAsyncComponent>
 }

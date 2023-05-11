@@ -1,3 +1,23 @@
+import type { InferType, MixedSchema } from 'yup'
+import type { Icon } from '@/types/icons'
+import type { QTableColumn } from 'quasar'
+import type { defineAsyncComponent } from 'vue'
+import type {
+  exampleChildValidator,
+  exampleParentValidator,
+  logValidator,
+  recordValidator,
+  settingValidator,
+  testChildValidator,
+  testParentValidator,
+} from '@/services/validators'
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     DATABASE                                                              //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * Defines both the Dexie table and record type.
  * - Must be a URL friendly slug
@@ -63,6 +83,72 @@ export enum Key {
   LOG_RETENTION_TIME = 'log-retention-time',
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     MODELS                                                                //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+// Infering user record types from the validators
+export type Log = InferType<typeof logValidator>
+export type Setting = InferType<typeof settingValidator>
+export type ExampleParent = InferType<typeof exampleParentValidator>
+export type ExampleChild = InferType<typeof exampleChildValidator>
+export type TestParent = InferType<typeof testParentValidator>
+export type TestChild = InferType<typeof testChildValidator>
+export type Record = Partial<InferType<typeof recordValidator>>
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//     DATA SCHMEA                                                           //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * How data in the app is set up for display and use.
+ */
+export type TypeSchema = {
+  type: Type
+  childType?: Type
+  parentType?: Type
+  databaseIndices: string
+  group: Group
+  icon: Icon
+  labelSingular: string
+  labelPlural: string
+  validator: MixedSchema<any, any, any>
+  supportedActions: Action[]
+  visibleColumns: Field[]
+  tableColumns: QTableColumn[]
+  fieldProps: FieldProps[]
+  chartProps: ChartProps[]
+}
+
+/**
+ * Defined properties for each field.
+ * - Component can be omitted for non-rendered fields
+ */
+export type FieldProps = {
+  field: Field
+  label: string
+  desc: string
+  getDefault: () => any
+  validator: MixedSchema<any, any, any>
+  validationMessage: string
+  inspectFormat: (val: any) => string
+  component?: ReturnType<typeof defineAsyncComponent>
+}
+
+// TODO
+/**
+ *
+ */
+export type ChartProps = {
+  label: string
+  chartOptions: any // TODO
+  component: ReturnType<typeof defineAsyncComponent>
+}
+
 /**
  * Defines actions that a database type can perform.
  */
@@ -72,16 +158,6 @@ export enum Action {
   EDIT = 'Edit',
   DELETE = 'Delete',
   CHARTS = 'Charts',
-}
-
-/**
- * Defines duration strings for log rentention.
- */
-export enum LogRetention {
-  ONE_WEEK = '7 Days',
-  THREE_MONTHS = '90 Days',
-  ONE_YEAR = 'One Year',
-  FOREVER = 'Forever',
 }
 
 /**

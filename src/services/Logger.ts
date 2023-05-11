@@ -1,60 +1,48 @@
-import { AppName } from '@/types/misc'
+import { AppName } from '@/types/general'
 
 /**
  * Logger adds some style to your console.
- * @param name Logger name appearing in the console
  */
-export class ApplicationLogger {
-  private name: string
-  private style: {
-    print: string
-    debug: string
-    info: string
-    warn: string
-    error: string
+export default class Logger {
+  private static instance: Logger | null = null
+  private static loggerName: string = `%c${AppName}`
+  private static baseStyle = 'border-radius: 3px; padding: 2px 4px; color: white; background-color:'
+  // Was unable to get Quasar getPaletteColor() to work for this
+  // These color codes should be the same as those in ~/src/main.ts
+  private static style = {
+    print: `${Logger.baseStyle} #607d8b;`,
+    debug: `${Logger.baseStyle} #673ab7;`,
+    info: `${Logger.baseStyle} #0d47a1;`,
+    warn: `${Logger.baseStyle} #ff6f00;`,
+    error: `${Logger.baseStyle} #C10015;`,
   }
 
-  constructor(name = 'Logger') {
-    this.name = `%c${name}`
-
-    // Just needs color at the end of the string
-    const baseStyle = 'border-radius: 3px; padding: 2px 4px; color: white; background-color:'
-
-    // Tried using Quasar getPaletteColor() but it doesn't load them correctly.
-    // These color codes should be the same as those in ~/src/main.ts
-    this.style = {
-      print: `${baseStyle} #607d8b;`,
-      debug: `${baseStyle} #673ab7;`,
-      info: `${baseStyle} #0d47a1;`,
-      warn: `${baseStyle} #ff6f00;`,
-      error: `${baseStyle} #C10015;`,
+  constructor() {
+    // Singleton
+    if (Logger.instance) {
+      return Logger.instance
+    } else {
+      Logger.instance = this
     }
   }
 
-  print(message: any, ...args: any) {
-    console.log(this.name, this.style.print, message, ...args)
+  static print(message: any, ...args: any) {
+    console.log(this.loggerName, this.style.print, message, ...args)
   }
 
-  debug(message: any, ...args: any) {
-    console.log(this.name, this.style.debug, message, ...args)
+  static debug(message: any, ...args: any) {
+    console.log(this.loggerName, this.style.debug, message, ...args)
   }
 
-  info(message: any, ...args: any) {
-    console.log(this.name, this.style.info, message, ...args)
+  static info(message: any, ...args: any) {
+    console.log(this.loggerName, this.style.info, message, ...args)
   }
 
-  warn(message: any, ...args: any) {
-    console.warn(this.name, this.style.warn, message, ...args)
+  static warn(message: any, ...args: any) {
+    console.warn(this.loggerName, this.style.warn, message, ...args)
   }
 
-  error(message: any, ...args: any) {
-    console.error(this.name, this.style.error, message, ...args)
+  static error(message: any, ...args: any) {
+    console.error(this.loggerName, this.style.error, message, ...args)
   }
 }
-
-/**
- * Preconfigured ApplicationLogger instance.
- */
-const Logger = new ApplicationLogger(AppName)
-
-export default Logger

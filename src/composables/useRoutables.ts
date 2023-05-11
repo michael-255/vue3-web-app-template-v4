@@ -12,13 +12,15 @@ export default function useRoutables() {
   const { log } = useLogger()
 
   // Possible route params
-  const id = route.params.id
-  const parentId = route.params.parentId
-  const type = route.params.type
+  const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  const parentId = Array.isArray(route.params.parentId)
+    ? route.params.parentId[0]
+    : route.params.parentId
+  const type = Array.isArray(route.params.type) ? route.params.type[0] : route.params.type
   // Cleaned route params
-  const routeId = Array.isArray(id) ? String(id[0]) : String(id)
-  const routeParentId = Array.isArray(parentId) ? String(parentId[0]) : String(parentId)
-  const routeType = (Array.isArray(type) ? type[0] : type) as Type
+  const routeId = String(id) || undefined
+  const routeParentId = String(parentId) || undefined
+  const routeType = (String(type) as Type) || undefined
 
   /**
    * Go to data table route.

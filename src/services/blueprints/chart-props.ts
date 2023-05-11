@@ -1,5 +1,5 @@
-import type { ChartProps } from '@/types/misc'
 import { date } from 'quasar'
+import type { ChartProps } from '@/types/database'
 import { defineAsyncComponent } from 'vue'
 
 /*
@@ -41,6 +41,5 @@ export const numberChart: ChartProps = {
       },
     },
   },
-  component: null,
-  // component: defineAsyncComponent(() => import('@/components/charts/ChartNumbers.vue')),
+  component: defineAsyncComponent(() => import('@/components/WelcomeOverlay.vue')), // TODO
 }

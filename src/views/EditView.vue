@@ -1,19 +1,18 @@
 <script setup lang="ts">
 import { Icon } from '@/types/icons'
-import { Field } from '@/types/database'
+import { type Record, Field } from '@/types/database'
 import { onMounted, onUnmounted, ref } from 'vue'
-import { AppName } from '@/types/misc'
+import { AppName } from '@/types/general'
 import { extend, useMeta } from 'quasar'
-import { dataSchema } from '@/services/data-schema'
-import type { Record } from '@/types/models'
 import { idValidator } from '@/services/validators'
+import DataSchema from '@/services/DataSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import ParentInfoCard from '@/components/ParentInfoCard.vue'
 import useRoutables from '@/composables/useRoutables'
 import useActionStore from '@/stores/action'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
-import DB from '@/services/LocalDatabase'
+import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Edit Record` })
 

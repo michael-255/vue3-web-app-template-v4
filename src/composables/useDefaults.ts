@@ -1,11 +1,10 @@
 import { Icon } from '@/types/icons'
 import { uid } from 'quasar'
+import { type Record, Type } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
-import DB from '@/services/LocalDatabase'
-import type { ExampleChild, ExampleParent, Record } from '@/types/models'
-import { Type } from '@/types/database'
-import { dataSchema } from '@/services/data-schema'
+import DataSchema from '@/services/DataSchema'
+import DB from '@/services/Database'
 
 /**
  * Composable with functions for generating default data for the app.
@@ -86,7 +85,7 @@ export default function useDefaults() {
             } as Record)
 
             if (childCount > 0) {
-              const childType = dataSchema.find((s) => s.type === type)?.childType
+              const childType = DataSchema.getChildType(type)
               // Create Children (childCount)
               for (let i = 0; i < childCount; i++) {
                 recordTypes[childType as Type].push({

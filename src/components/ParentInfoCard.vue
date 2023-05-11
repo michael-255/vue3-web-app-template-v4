@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { type Ref, ref, onMounted } from 'vue'
-import type { Record } from '@/types/models'
-import { Group } from '@/types/database'
-import { idValidator } from '@/services/validators'
+import { type Record, Group } from '@/types/database'
+import { idValidator, typeValidator } from '@/services/validators'
 import useRoutables from '@/composables/useRoutables'
 import useLogger from '@/composables/useLogger'
-import DB from '@/services/LocalDatabase'
+import DataSchema from '@/services/DataSchema'
+import DB from '@/services/Database'
 
 // Composables & Stores
-const { routeUid, routeGroupId, routeGroup } = useRoutables()
+const { routeId, routeParentId, routeType } = useRoutables()
 const { log } = useLogger()
 
 // Data
@@ -17,6 +17,15 @@ const parent: Ref<Record> = ref({} as Record)
 
 onMounted(async () => {
   try {
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * /create/parentType
+     * /create/parentType/parentId -> create attached child record - DISPLAY HERE
+     * /(inspect|edit|charts)/parentType/id
+     * /(inspect|edit|charts)/childType/id - DISPLAY HERE
+     */
+    // TODO
+    ///////////////////////////////////////////////////////////////////////////
     if (routeGroup === Group.CHILD) {
       if (await idValidator.isValid(routeGroupId)) {
         // Child record creation route params

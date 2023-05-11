@@ -14,11 +14,11 @@ import {
   valueValidator,
   testIdsValidator,
 } from '@/services/validators'
-import { Field, Key, Severity } from '@/types/database'
-import { Limit, type FieldProps } from '@/types/misc'
+import { Field, Key, Severity, type FieldProps } from '@/types/database'
+import { Limit } from '@/types/general'
 import { getDisplayDate } from '@/utils/common'
-import { uid } from 'quasar'
 import { defineAsyncComponent } from 'vue'
+import { uid } from 'quasar'
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
