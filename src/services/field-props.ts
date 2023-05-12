@@ -106,7 +106,7 @@ const keyField: Readonly<FieldProps> = {
   validator: keyValidator,
   validationMessage: 'Invalid',
   inspectFormat: (val: Key) => `${val || '-'}`,
-  component: undefined, // TODO
+  // Not rendered
 }
 
 const valueField: Readonly<FieldProps> = {
@@ -117,7 +117,7 @@ const valueField: Readonly<FieldProps> = {
   validator: valueValidator,
   validationMessage: 'Invalid',
   inspectFormat: (val: any) => `${val || '-'}`,
-  component: undefined, // TODO
+  // Not rendered
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -264,7 +264,7 @@ const coreFields: FieldProps[] = [idField, timestampField]
 
 const parentFields: FieldProps[] = [nameField, descField, enabledField, favoritedField]
 
-const childFields: FieldProps[] = [parentIdField, noteField]
+const childFields: FieldProps[] = [parentIdField, noteField] // TODO - Add ParentInfoField component???
 
 export const logFields: FieldProps[] = [
   autoIdField,

@@ -19,9 +19,7 @@ onMounted(async () => {
   try {
     ///////////////////////////////////////////////////////////////////////////
     /**
-     * /create/parentType
-     * /create/parentType/parentId -> create attached child record - DISPLAY HERE
-     * /(inspect|edit|charts)/parentType/id
+     * /create/childType/parentId -> create attached child record - DISPLAY HERE
      * /(inspect|edit|charts)/childType/id - DISPLAY HERE
      */
     // TODO

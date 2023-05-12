@@ -7,7 +7,7 @@ import {
   settingColumns,
   testChildColumns,
   testParentColumns,
-} from '@/services/blueprints/table-columns'
+} from '@/services/table-columns'
 import {
   exampleChildFields,
   exampleParentFields,
@@ -15,7 +15,7 @@ import {
   settingFields,
   testChildFields,
   testParentFields,
-} from '@/services/blueprints/field-props'
+} from '@/services/field-props'
 import {
   exampleChildValidator,
   exampleParentValidator,

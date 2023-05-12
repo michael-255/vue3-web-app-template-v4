@@ -108,7 +108,7 @@ function getCreateLabel() {
           label="Attach Record"
           color="primary"
           :icon="Icon.ADD_NOTE"
-          @click="goToCreate(dashboardCard.type, dashboardCard.id)"
+          @click="goToCreate(DataSchema.getChildType(dashboardCard.type) as Type, dashboardCard.id)"
         />
       </DashboardParentCard>
     </div>

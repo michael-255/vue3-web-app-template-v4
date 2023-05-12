@@ -6,6 +6,20 @@ developing. Read through this README to have a better understanding of how this 
 ## TODO
 
 - Fix build errors for `gh-pages` deployment
+  - `Fix Views`
+  - `Fix Components`
+  - `Fix Composables`
+- `ParentInfoCard` logic should be in database as `getRouteParent(...)`
+- `DashboardListCardProps` updates
+
+```typescript
+export type DashboardCardProps = {
+  type: Type
+  parentRecord: ParentRecord && Record
+  previousChildRecord: ChildRecord && Record
+}
+```
+
 - Delete `_NOTES.md` file when done
 
 ## Post Cloning Steps
