@@ -1,4 +1,4 @@
-import { type TypeSchema, Action, Field, Group, Type } from '@/types/database'
+import { type TypeSchema, Action, Field, Group, Type, type FieldProps } from '@/types/database'
 import { Icon } from '@/types/icons'
 import {
   exampleChildColumns,
@@ -25,6 +25,7 @@ import {
   testParentValidator,
 } from '@/services/validators'
 import type { MixedSchema } from 'yup'
+import type { QTableColumn } from 'quasar'
 
 export default class DataSchema {
   private static instance: DataSchema | null = null
@@ -37,7 +38,7 @@ export default class DataSchema {
       labelSingular: 'Log',
       labelPlural: 'Logs',
       validator: logValidator,
-      supportedActions: [],
+      supportedActions: [Action.INSPECT],
       visibleColumns: [Field.TIMESTAMP, Field.SEVERITY, Field.LABEL],
       tableColumns: logColumns,
       fieldProps: logFields,
@@ -51,7 +52,7 @@ export default class DataSchema {
       labelSingular: 'Setting',
       labelPlural: 'Settings',
       validator: settingValidator,
-      supportedActions: [],
+      supportedActions: [Action.INSPECT],
       visibleColumns: [Field.KEY, Field.VALUE],
       tableColumns: settingColumns,
       fieldProps: settingFields,
@@ -130,6 +131,26 @@ export default class DataSchema {
 
   static getLabelSingular(type: Type) {
     return this.dataSchema.find((s) => s.type === type)?.labelSingular as string
+  }
+
+  static getLabelPlural(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.labelPlural as string
+  }
+
+  static getTableColumns(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.tableColumns as QTableColumn[]
+  }
+
+  static getVisibleColumns(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.visibleColumns as Field[]
+  }
+
+  static getSupportedActions(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.supportedActions as Action[]
+  }
+
+  static getFieldProps(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.fieldProps as FieldProps[]
   }
 
   static getTypeOptions() {

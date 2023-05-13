@@ -6,7 +6,8 @@ import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
 import useRoutables from '@/composables/useRoutables'
 import DB from '@/services/Database'
-import type { Record } from '@/types/models'
+import type { Record } from '@/types/database'
+import type { MixedSchema } from 'yup'
 
 // Props & Emits
 const props = defineProps<{
@@ -14,7 +15,7 @@ const props = defineProps<{
   label: string
   desc: string
   getDefault: () => any
-  validator: (val: any) => Promise<boolean>
+  validator: MixedSchema<any, any, any>
   validationMessage: string
 }>()
 
@@ -47,7 +48,7 @@ onMounted(async () => {
  * Input validation rule for the template component.
  */
 function validationRule() {
-  return async (val: string) => (await props.validator(val)) || props.validationMessage
+  return async (val: string) => (await props.validator.isValid(val)) || props.validationMessage
 }
 </script>
 

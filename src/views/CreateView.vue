@@ -17,34 +17,24 @@ import DB from '@/services/Database'
 useMeta({ title: `${AppName} - Create Record` })
 
 // Composables & Stores
-const { routeGroupId, routeType, routeGroup, goBack } = useRoutables()
+const { routeType, routeParentId, goBack } = useRoutables()
 const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
 
 // Data
-const schemaLabelSingular = dataSchema.find(
-  (i) => i.type === routeType && i.group === routeGroup
-)?.labelSingular
-const schemaFieldProps = dataSchema.find(
-  (i) => i.type === routeType && i.group === routeGroup
-)?.fieldProps
-
+const labelSingular = DataSchema.getLabelSingular(routeType)
+const fieldProps = DataSchema.getFieldProps(routeType)
 const isFormValid = ref(true)
 
 onMounted(async () => {
   try {
-    if (await idValidator.isValid(routeGroupId)) {
-      // Attaching child record to this group
-      actionStore.record[Field.GROUP_ID] = routeGroupId
-    } else {
-      // Creating new parent record
-      actionStore.record[Field.GROUP_ID] = uid()
+    if (await idValidator.isValid(routeParentId)) {
+      // Attaching child record to this parent id
+      actionStore.record[Field.PARENT_ID] = routeParentId
     }
 
-    actionStore.record[Field.UID] = uid() // New record UID
-    actionStore.record[Field.TYPE] = routeType
-    actionStore.record[Field.GROUP] = routeGroup
+    actionStore.record[Field.ID] = uid() // New record id
   } catch (error) {
     log.error('Error loading create view', error)
   }
@@ -58,37 +48,29 @@ onUnmounted(() => {
  * Confirmation creates a new record in the database. All inputs must be valid.
  */
 async function onSubmit() {
-  confirmDialog(
-    'Create',
-    `Create ${schemaLabelSingular} record?`,
-    Icon.CREATE,
-    'positive',
-    async () => {
-      try {
-        const deepRecordCopy = extend(true, {}, actionStore.record) as Record
+  confirmDialog('Create', `Create ${labelSingular} record?`, Icon.CREATE, 'positive', async () => {
+    try {
+      const deepRecordCopy = extend(true, {}, actionStore.record) as Record
 
-        await DB.add(deepRecordCopy)
+      await DB.addRecord(routeType, deepRecordCopy)
 
-        log.info('Successfully created record', {
-          uid: deepRecordCopy[Field.UID],
-          groupId: deepRecordCopy[Field.GROUP_ID],
-          type: deepRecordCopy[Field.TYPE],
-          group: deepRecordCopy[Field.GROUP],
-        })
+      log.info('Successfully created record', {
+        id: deepRecordCopy[Field.ID],
+        type: routeType,
+      })
 
-        goBack() // Return to previous page
-      } catch (error) {
-        log.error('Create failed', error)
-      }
+      goBack() // Return to previous page
+    } catch (error) {
+      log.error('Create failed', error)
     }
-  )
+  })
 }
 </script>
 
 <template>
-  <ResponsivePage :bannerIcon="Icon.CREATE" :bannerTitle="`Create ${schemaLabelSingular}`">
+  <ResponsivePage :bannerIcon="Icon.CREATE" :bannerTitle="`Create ${labelSingular}`">
     <!-- Error Render -->
-    <div v-if="!schemaLabelSingular || !schemaFieldProps">
+    <div v-if="!labelSingular || !fieldProps">
       <QCard class="q-mb-md">
         <QCardSection>
           <QIcon :name="Icon.WARN" size="md" color="warning" />
@@ -107,15 +89,15 @@ async function onSubmit() {
         <!-- Parent info card for child record actions -->
         <ParentInfoCard />
         <!-- Dynamic Async Components -->
-        <div v-for="(fieldProps, i) in schemaFieldProps" :key="i" class="q-mb-md">
+        <div v-for="(fieldProp, i) in fieldProps" :key="i" class="q-mb-md">
           <component
-            :is="fieldProps.component"
-            :field="fieldProps.field"
-            :label="fieldProps.label"
-            :desc="fieldProps.desc"
-            :getDefault="fieldProps.getDefault"
-            :validator="fieldProps.validator"
-            :validationMessage="fieldProps.validationMessage"
+            :is="fieldProp.component"
+            :field="fieldProp.field"
+            :label="fieldProp.label"
+            :desc="fieldProp.desc"
+            :getDefault="fieldProp.getDefault"
+            :validator="fieldProp.validator"
+            :validationMessage="fieldProp.validationMessage"
           />
         </div>
 

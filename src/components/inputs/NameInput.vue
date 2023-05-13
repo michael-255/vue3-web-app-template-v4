@@ -3,6 +3,7 @@ import { onMounted, ref, type Ref } from 'vue'
 import type { Field } from '@/types/database'
 import { Limit } from '@/types/general'
 import useActionStore from '@/stores/action'
+import type { MixedSchema } from 'yup'
 
 // Props & Emits
 const props = defineProps<{
@@ -10,7 +11,7 @@ const props = defineProps<{
   label: string
   desc: string
   getDefault: () => any
-  validator: (val: any) => Promise<boolean>
+  validator: MixedSchema<any, any, any>
   validationMessage: string
 }>()
 
@@ -28,7 +29,7 @@ onMounted(() => {
  * Input validation rule for the template component.
  */
 function validationRule() {
-  return async (val: string) => (await props.validator(val)) || props.validationMessage
+  return async (val: string) => (await props.validator.isValid(val)) || props.validationMessage
 }
 </script>
 
@@ -50,7 +51,7 @@ function validationRule() {
         dense
         outlined
         color="primary"
-        @blur="actionStore.record[field] = actionStore.record[field].trim()"
+        @blur="actionStore.record[field] = actionStore.record[field]?.trim()"
       />
     </QCardSection>
   </QCard>

@@ -240,7 +240,7 @@ const testIdsField: Readonly<FieldProps> = {
   validator: testIdsValidator,
   validationMessage: '* Required',
   inspectFormat: (val: string[]) => `${val || '-'}`,
-  component: defineAsyncComponent(() => import('@/components/inputs/TestUidsInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/TestIdsInput.vue')),
 }
 
 const percentField: Readonly<FieldProps> = {

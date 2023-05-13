@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type Ref, ref, onMounted } from 'vue'
-import { type Record, Group } from '@/types/database'
+import type { Record, Type } from '@/types/database'
 import { idValidator, typeValidator } from '@/services/validators'
 import useRoutables from '@/composables/useRoutables'
 import useLogger from '@/composables/useLogger'
@@ -17,33 +17,30 @@ const parent: Ref<Record> = ref({} as Record)
 
 onMounted(async () => {
   try {
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * /create/childType/parentId -> create attached child record - DISPLAY HERE
-     * /(inspect|edit|charts)/childType/id - DISPLAY HERE
-     */
-    // TODO
-    ///////////////////////////////////////////////////////////////////////////
-    if (routeGroup === Group.CHILD) {
-      if (await idValidator.isValid(routeGroupId)) {
-        // Child record creation route params
-        const parentRecord = (await DB.getParent(routeGroupId)) as Record
+    const isIdValid = await idValidator.isValid(routeId)
+    const isParentIdValid = await idValidator.isValid(routeParentId)
+    const isTypeValid = await typeValidator.isValid(routeType)
+
+    if (isTypeValid && isParentIdValid) {
+      // Creating child record attached to parent
+      const parentType = DataSchema.getParentType(routeType) as Type
+      const parentRecord = (await DB.getRecord(parentType, routeParentId as string)) as Record
+
+      if (parentRecord) {
+        parent.value = parentRecord
+        isVisible.value = true
+      }
+    } else if (isTypeValid && isIdValid) {
+      // Creating new child record, so need to get the child record to get the parent id
+      const childRecord = (await DB.getRecord(routeType, routeId as string)) as Record
+
+      if (childRecord && childRecord.parentId) {
+        const parentType = DataSchema.getParentType(routeType) as Type
+        const parentRecord = (await DB.getRecord(parentType, childRecord.parentId)) as Record
 
         if (parentRecord) {
           parent.value = parentRecord
           isVisible.value = true
-        }
-      } else if (await idValidator.isValid(routeUid)) {
-        // Child record Inspect and Edit route params
-        const childRecord = (await DB.getRecord(routeUid)) as Record
-
-        if (childRecord) {
-          const parentRecord = (await DB.getParent(childRecord.groupId)) as Record
-
-          if (parentRecord) {
-            parent.value = parentRecord
-            isVisible.value = true
-          }
         }
       }
     }
@@ -60,8 +57,7 @@ onMounted(async () => {
 
       <p>{{ parent.desc }}</p>
 
-      <p class="q-my-none q-py-none text-grey text-caption">Unique Id: {{ parent.uid }}</p>
-      <p class="q-my-none q-py-none text-grey text-caption">Group Id: {{ parent.groupId }}</p>
+      <p class="q-my-none q-py-none text-grey text-caption">Id: {{ parent.id }}</p>
     </QCardSection>
   </QCard>
 </template>

@@ -17,30 +17,25 @@ import DB from '@/services/Database'
 useMeta({ title: `${AppName} - Edit Record` })
 
 // Composables & Stores
-const { routeUid, routeType, routeGroup, goBack } = useRoutables()
+const { routeType, routeId, goBack } = useRoutables()
 const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
 
 // Data
-const schemaLabelSingular = dataSchema.find(
-  (i) => i.type === routeType && i.group === routeGroup
-)?.labelSingular
-const schemaFieldProps = dataSchema.find(
-  (i) => i.type === routeType && i.group === routeGroup
-)?.fieldProps
-
+const labelSingular = DataSchema.getLabelSingular(routeType)
+const fieldProps = DataSchema.getFieldProps(routeType)
 const isFormValid = ref(true)
 
 onMounted(async () => {
   try {
-    if (await idValidator.isValid(routeUid)) {
-      const editRecord = (await DB.getRecord(routeUid)) as Record
+    if (await idValidator.isValid(routeId)) {
+      const editRecord = (await DB.getRecord(routeType, routeId as string)) as Record
 
       if (editRecord) {
         // Assign values from record to the action store
         Object.keys(editRecord).forEach((key) => {
-          actionStore.record[key as Field] = editRecord[key as Field]
+          actionStore.record[key as Field] = editRecord[key as Field] as any
         })
       }
     }
@@ -57,37 +52,29 @@ onUnmounted(() => {
  * Confirmation creates a new record in the database. All inputs must be valid.
  */
 async function onSubmit() {
-  confirmDialog(
-    'Update',
-    `Update ${schemaLabelSingular} record?`,
-    Icon.CREATE,
-    'positive',
-    async () => {
-      try {
-        const deepRecordCopy = extend(true, {}, actionStore.record) as Record
+  confirmDialog('Update', `Update ${labelSingular} record?`, Icon.CREATE, 'positive', async () => {
+    try {
+      const deepRecordCopy = extend(true, {}, actionStore.record) as Record
 
-        await DB.update(deepRecordCopy.uid, deepRecordCopy)
+      await DB.updateRecord(routeType, routeId as string, deepRecordCopy)
 
-        log.info('Successfully updated record', {
-          uid: deepRecordCopy[Field.UID],
-          groupId: deepRecordCopy[Field.GROUP_ID],
-          type: deepRecordCopy[Field.TYPE],
-          group: deepRecordCopy[Field.GROUP],
-        })
+      log.info('Successfully updated record', {
+        id: deepRecordCopy[Field.ID],
+        type: routeType,
+      })
 
-        goBack() // Return to previous page
-      } catch (error) {
-        log.error('Update failed', error)
-      }
+      goBack() // Return to previous page
+    } catch (error) {
+      log.error('Update failed', error)
     }
-  )
+  })
 }
 </script>
 
 <template>
-  <ResponsivePage :bannerIcon="Icon.EDIT" :bannerTitle="`Edit ${schemaLabelSingular}`">
+  <ResponsivePage :bannerIcon="Icon.EDIT" :bannerTitle="`Edit ${labelSingular}`">
     <!-- Error Render -->
-    <div v-if="!schemaLabelSingular || !schemaFieldProps">
+    <div v-if="!labelSingular || !fieldProps">
       <QCard class="q-mb-md">
         <QCardSection>
           <QIcon :name="Icon.WARN" size="md" color="warning" />
@@ -106,15 +93,15 @@ async function onSubmit() {
         <!-- Parent info card for child record actions -->
         <ParentInfoCard />
         <!-- Dynamic Async Components -->
-        <div v-for="(fieldProps, i) in schemaFieldProps" :key="i" class="q-mb-md">
+        <div v-for="(fieldProp, i) in fieldProps" :key="i" class="q-mb-md">
           <component
-            :is="fieldProps.component"
-            :field="fieldProps.field"
-            :label="fieldProps.label"
-            :desc="fieldProps.desc"
-            :getDefault="fieldProps.getDefault"
-            :validator="fieldProps.validator"
-            :validationMessage="fieldProps.validationMessage"
+            :is="fieldProp.component"
+            :field="fieldProp.field"
+            :label="fieldProp.label"
+            :desc="fieldProp.desc"
+            :getDefault="fieldProp.getDefault"
+            :validator="fieldProp.validator"
+            :validationMessage="fieldProp.validationMessage"
           />
         </div>
 

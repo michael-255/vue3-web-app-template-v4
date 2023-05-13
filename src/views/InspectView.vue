@@ -14,22 +14,22 @@ import DB from '@/services/Database'
 useMeta({ title: `${AppName} - Inspect Record` })
 
 // Composables & Stores
-const { routeUid, routeType, routeGroup } = useRoutables()
+const { routeType, routeId } = useRoutables()
 const { log } = useLogger()
 
 // Data
-const schemaLabelSingular = dataSchema.find(
-  (i) => i.type === routeType && i.group === routeGroup
-)?.labelSingular
-const schemaFieldProps = dataSchema.find(
-  (i) => i.type === routeType && i.group === routeGroup
-)?.fieldProps
-
-const record: Ref<Record> = ref({} as Record)
+const labelSingular = DataSchema.getLabelSingular(routeType)
+const fieldProps = DataSchema.getFieldProps(routeType)
+const inspectRecord: Ref<Record> = ref({} as Record)
 
 onMounted(async () => {
   try {
-    record.value = (await DB.getRecord(routeUid)) as Record
+    if (routeId && routeType) {
+      const record = (await DB.getRecord(routeType, routeId)) as Record
+      if (record) {
+        inspectRecord.value = record
+      }
+    }
   } catch (error) {
     log.error('Error loading inspect view', error)
   }
@@ -37,14 +37,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <ResponsivePage :bannerIcon="Icon.INSPECT" :bannerTitle="`Inspect ${schemaLabelSingular}`">
+  <ResponsivePage :bannerIcon="Icon.INSPECT" :bannerTitle="`Inspect ${labelSingular}`">
     <!-- Parent info card for child record creation  -->
     <ParentInfoCard />
     <!-- Field Loop -->
-    <QCard v-for="(fieldProp, i) in schemaFieldProps" :key="i" class="q-mb-md">
+    <QCard v-for="(fieldProp, i) in fieldProps" :key="i" class="q-mb-md">
       <QCardSection>
         <p class="text-h6">{{ fieldProp.label }}</p>
-        <div>{{ fieldProp.inspectFormat(record?.[fieldProp.field]) }}</div>
+        <div>{{ fieldProp.inspectFormat(inspectRecord?.[fieldProp.field]) }}</div>
       </QCardSection>
     </QCard>
   </ResponsivePage>

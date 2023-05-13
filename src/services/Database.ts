@@ -109,7 +109,7 @@ class Database extends Dexie {
    */
   liveDataTable(type: Type) {
     return liveQuery(async () => {
-      return await this.table(type).orderBy(Field.TIMESTAMP).toArray()
+      return (await this.table(type).toCollection().sortBy(Field.TIMESTAMP)).reverse()
     })
   }
 

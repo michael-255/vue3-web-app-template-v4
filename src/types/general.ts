@@ -1,4 +1,4 @@
-import type { Field, Type } from '@/types/database'
+import { Type, type Field } from '@/types/database'
 import type {
   Log,
   Setting,
@@ -101,4 +101,7 @@ export type DashboardListCardProps = {
   [Field.FAVORITED]: boolean
   previousNote?: string
   previousTimestamp?: number
+  // TODO -  Replace fields with these for simplicity???
+  // parentRecord?: Record
+  // previousChildRecord?: Record
 }

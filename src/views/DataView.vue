@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar'
 import { Icon } from '@/types/icons'
-import { Action, Field, Group } from '@/types/database'
+import { Action, Field } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
 import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
@@ -16,37 +16,23 @@ useMeta({ title: `${AppName} - Data` })
 
 // Composables & Stores
 const { log } = useLogger()
-const { routeType, routeGroup, goToCharts, goToInspect, goToEdit, goToCreate, goBack } =
-  useRoutables()
+const { routeType, goToCharts, goToInspect, goToEdit, goToCreate, goBack } = useRoutables()
 const { confirmDialog } = useDialogs()
 
 // Data
-const schemaTableTitle = dataSchema.find(
-  (i) => i.type === routeType && (!i.group || i.group === routeGroup)
-)?.labelPlural
-const schemaTableColumns =
-  dataSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
-    ?.tableColumns ?? []
-const schemaVisibleColumns =
-  dataSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
-    ?.visibleColumns ?? []
-const schemaSupportedActions =
-  dataSchema.find((i) => i.type === routeType && (!i.group || i.group === routeGroup))
-    ?.supportedActions ?? []
-
-/**
- * Update these if you change the schema.
- */
-const hiddenColumns = ['hiddenType', 'hiddenGroup', 'hiddenGroupId', 'hiddenUid']
-const columns: Ref<QTableColumn[]> = ref(schemaTableColumns)
+const title = DataSchema.getLabelPlural(routeType)
+const tableColumns = DataSchema.getTableColumns(routeType)
+const tableVisibleColumns = DataSchema.getVisibleColumns(routeType)
+const supportedActions = DataSchema.getSupportedActions(routeType)
+const columns: Ref<QTableColumn[]> = ref(tableColumns)
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
 )
-const visibleColumns: Ref<Field[]> = ref(schemaVisibleColumns)
+const visibleColumns: Ref<Field[]> = ref(tableVisibleColumns)
 const rows: Ref<any[]> = ref([])
 const searchFilter: Ref<string> = ref('')
 
-const subscription = DB.liveDataTable(routeType, routeGroup).subscribe({
+const subscription = DB.liveDataTable(routeType).subscribe({
   next: (records) => {
     rows.value = records
   },
@@ -61,36 +47,23 @@ onUnmounted(() => {
 
 /**
  * On confirmation, delete the matching record from the database.
- * @param uid
+ * @param id
  */
-async function onDelete(uid: string) {
+async function onDelete(id: string) {
   confirmDialog(
     'Delete',
-    `Permanently delete this record? This will also delete any underlying child records.`,
+    `Permanently delete this record? This will also delete any underlying child records if this record is a parent record.`,
     Icon.DELETE,
     'negative',
     async () => {
       try {
-        await DB.deleteRecord(uid)
-        log.info('Successfully deleted grouped records', { uid })
+        await DB.deleteRecord(routeType, id)
+        log.info('Successfully deleted grouped records', { type: routeType, id })
       } catch (error) {
         log.error('Delete failed', error)
       }
     }
   )
-}
-
-/**
- * Helper function to parse the props from the QTable in a readable way.
- * @param props QTable props
- */
-function parseProps(props: any) {
-  return {
-    type: props.cols[0].value,
-    group: props.cols[1].value,
-    groupId: props.cols[2].value,
-    uid: props.cols[3].value,
-  }
 }
 </script>
 
@@ -111,7 +84,7 @@ function parseProps(props: any) {
         <!-- Do not show hidden columns -->
         <QTh
           v-for="col in (props.cols as any[])"
-          v-show="!hiddenColumns.includes(col.name)"
+          v-show="col.name !== 'hiddenId'"
           :key="col.name"
           :props="props"
         >
@@ -130,52 +103,46 @@ function parseProps(props: any) {
         <QTd auto-width>
           <!-- CHARTS -->
           <QBtn
-            v-if="schemaSupportedActions.includes(Action.CHARTS)"
+            v-if="supportedActions.includes(Action.CHARTS)"
             flat
             round
             dense
             class="q-ml-xs"
             color="accent"
             :icon="Icon.CHARTS"
-            @click="
-              goToCharts(parseProps(props).type, parseProps(props).group, parseProps(props).uid)
-            "
+            @click="goToCharts(routeType, props.cols[0].value)"
           />
           <!-- INSPECT -->
           <QBtn
-            v-if="schemaSupportedActions.includes(Action.INSPECT)"
+            v-if="supportedActions.includes(Action.INSPECT)"
             flat
             round
             dense
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="
-              goToInspect(parseProps(props).type, parseProps(props).group, parseProps(props).uid)
-            "
+            @click="goToInspect(routeType, props.cols[0].value)"
           />
           <!-- EDIT -->
           <QBtn
-            v-if="schemaSupportedActions.includes(Action.EDIT)"
+            v-if="supportedActions.includes(Action.EDIT)"
             flat
             round
             dense
             class="q-ml-xs"
             color="orange-9"
             :icon="Icon.EDIT"
-            @click="
-              goToEdit(parseProps(props).type, parseProps(props).group, parseProps(props).uid)
-            "
+            @click="goToEdit(routeType, props.cols[0].value)"
           />
           <!-- DELETE -->
           <QBtn
-            v-if="schemaSupportedActions.includes(Action.DELETE)"
+            v-if="supportedActions.includes(Action.DELETE)"
             flat
             round
             dense
             class="q-ml-xs"
             color="negative"
-            @click="onDelete(parseProps(props).uid)"
+            @click="onDelete(props.cols[0].value)"
             :icon="Icon.DELETE"
           />
         </QTd>
@@ -185,7 +152,7 @@ function parseProps(props: any) {
     <template v-slot:top>
       <div class="row justify-start full-width q-mb-md">
         <!-- Table Title -->
-        <div class="col-10 text-h6 ellipsis">{{ schemaTableTitle }}</div>
+        <div class="col-10 text-h6 ellipsis">{{ title }}</div>
         <!-- Go Back Button -->
         <QBtn
           round
@@ -211,11 +178,11 @@ function parseProps(props: any) {
             <template v-slot:before>
               <!-- CREATE - Child records cannot be created alone on the data table -->
               <QBtn
-                v-if="schemaSupportedActions.includes(Action.CREATE) && routeGroup !== Group.CHILD"
+                v-if="supportedActions.includes(Action.CREATE)"
                 color="positive"
                 class="q-px-sm q-mr-xs"
                 :icon="Icon.ADD"
-                @click="goToCreate(routeType, routeGroup)"
+                @click="goToCreate(routeType)"
               />
               <!-- OPTIONS (Visible Columns) -->
               <QSelect
