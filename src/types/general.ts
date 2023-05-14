@@ -101,7 +101,12 @@ export type DashboardListCardProps = {
   [Field.FAVORITED]: boolean
   previousNote?: string
   previousTimestamp?: number
-  // TODO -  Replace fields with these for simplicity???
-  // parentRecord?: Record
-  // previousChildRecord?: Record
+}
+
+/**
+ * Defines unique ids that are reserved for specific records.
+ * - Mainly used for cross referencing when doing imports
+ */
+export enum ReservedId {
+  UID_01 = '00000000-0000-0000-0000-000000000001',
 }

@@ -145,6 +145,13 @@ async function onParentDelete(type: Type, id: string, name: string) {
             transition-hide="flip-left"
           >
             <QList>
+              <QItem clickable @click="goToCharts(dashboardCard.type, dashboardCard.id)">
+                <QItemSection avatar>
+                  <QIcon color="accent" :name="Icon.CHARTS" />
+                </QItemSection>
+                <QItemSection>Charts</QItemSection>
+              </QItem>
+
               <QItem clickable @click="goToInspect(dashboardCard.type, dashboardCard.id)">
                 <QItemSection avatar>
                   <QIcon color="primary" :name="Icon.INSPECT" />
@@ -154,16 +161,9 @@ async function onParentDelete(type: Type, id: string, name: string) {
 
               <QItem clickable @click="goToEdit(dashboardCard.type, dashboardCard.id)">
                 <QItemSection avatar>
-                  <QIcon color="primary" :name="Icon.EDIT" />
+                  <QIcon color="warning" :name="Icon.EDIT" />
                 </QItemSection>
                 <QItemSection>Edit</QItemSection>
-              </QItem>
-
-              <QItem clickable @click="goToCharts(dashboardCard.type, dashboardCard.id)">
-                <QItemSection avatar>
-                  <QIcon color="primary" :name="Icon.CHARTS" />
-                </QItemSection>
-                <QItemSection>Charts</QItemSection>
               </QItem>
 
               <QSeparator />

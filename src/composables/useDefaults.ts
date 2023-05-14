@@ -5,6 +5,7 @@ import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DataSchema from '@/services/DataSchema'
 import DB from '@/services/Database'
+import { Milliseconds } from '@/types/general'
 
 /**
  * Composable with functions for generating default data for the app.
@@ -63,6 +64,14 @@ export default function useDefaults() {
             return Math.random() >= 0.5
           }
 
+          const randomPercent = () => {
+            return Math.floor(Math.random() * 100)
+          }
+
+          const dateFromThreeMonthsAgo = () => {
+            return Date.now() - Milliseconds.PER_DAY * 90
+          }
+
           const recordTypes: { [key in Type]: Record[] } = Object.values(Type).reduce(
             (acc, type) => {
               acc[type] = []
@@ -96,9 +105,9 @@ export default function useDefaults() {
                 recordTypes[childType as Type].push({
                   id: uid(),
                   parentId,
-                  timestamp: Date.now(),
+                  timestamp: dateFromThreeMonthsAgo() + Milliseconds.PER_DAY * i,
                   note: `Note ${i}`,
-                  percent: type === Type.TEST_PARENT ? 75 : undefined,
+                  percent: type === Type.TEST_PARENT ? randomPercent() : undefined,
                 } as Record)
               }
             }
@@ -108,7 +117,7 @@ export default function useDefaults() {
           createRecords(2, Type.EXAMPLE_PARENT)
           createRecords(0, Type.EXAMPLE_PARENT)
           createRecords(0, Type.EXAMPLE_PARENT)
-          createRecords(1, Type.TEST_PARENT)
+          createRecords(180, Type.TEST_PARENT)
           createRecords(0, Type.TEST_PARENT)
 
           log.silentDebug('recordTypes:', recordTypes)

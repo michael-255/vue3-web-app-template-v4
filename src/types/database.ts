@@ -11,6 +11,7 @@ import type {
   testChildValidator,
   testParentValidator,
 } from '@/services/validators'
+import type { ChartOptions } from 'chart.js'
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -144,7 +145,7 @@ export type FieldProps = {
  */
 export type ChartProps = {
   label: string
-  chartOptions: any // TODO - ChartOptions from chart.js???
+  chartOptions: { [key in string]: any }
   component: ReturnType<typeof defineAsyncComponent>
 }
 

@@ -2,16 +2,11 @@ import { date } from 'quasar'
 import type { ChartProps } from '@/types/database'
 import { defineAsyncComponent } from 'vue'
 
-/*
-This file contains chart objects used to help render chart data.
-Do NOT mutate these objects as they are used by multiple components.
-*/
-
 /**
- * Numbers chart for child records.
+ * Percent chart for child records.
  */
-export const numberChart: ChartProps = {
-  label: 'Numbers',
+export const percentChart: ChartProps = {
+  label: 'Percent',
   chartOptions: {
     reactive: true,
     responsive: true,
@@ -41,5 +36,5 @@ export const numberChart: ChartProps = {
       },
     },
   },
-  component: defineAsyncComponent(() => import('@/components/WelcomeOverlay.vue')), // TODO
+  component: defineAsyncComponent(() => import('@/components/charts/ChartPercent.vue')),
 }

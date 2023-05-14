@@ -254,6 +254,18 @@ class Database extends Dexie {
   }
 
   /**
+   * Get all child records for a parent id.
+   * @param childType
+   * @param parentId
+   */
+  async getParentChildren(childType: Type, parentId: string) {
+    return await this.table(childType)
+      .where(Field.PARENT_ID)
+      .equals(parentId)
+      .sortBy(Field.TIMESTAMP)
+  }
+
+  /**
    * To be used with live dashboard and parent types only.
    * @param type
    */

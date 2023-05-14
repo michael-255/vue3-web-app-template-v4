@@ -5,22 +5,42 @@ developing. Read through this README to have a better understanding of how this 
 
 ## TODO
 
-- Fix build errors for `gh-pages` deployment
-  - `Fix Views`
-  - `Fix Components`
-  - `Fix Composables`
-- `ParentInfoCard` logic should be in database as `getRouteParent(...)`
-- `DashboardListCardProps` updates
+- [ ] Chart related code needs some work
 
 ```typescript
-export type DashboardCardProps = {
-  type: Type
-  parentRecord: ParentRecord && Record
-  previousChildRecord: ChildRecord && Record
+// Create a reserved UID enum that can contain the UIDs used for defaults in the app
+export enum ReservedId {
+  UID_01 = 'uuid-123'
+  UID_02 = 'uuid-456'
+  // ...
 }
-```
 
-- Delete `_NOTES.md` file when done
+// Id lookup and convert to new UIDs?
+function test() {
+  const failedRecords = [
+    'test-123',
+    Infinity,
+    'abc-123',
+    'bad-id-1',
+    NaN,
+    'not-an-id',
+    12345,
+    null,
+    undefined,
+    undefined,
+    null,
+  ]
+  new Error(`The following records could not be imported: ${failedRecords.map(String).join(', ')}`)
+}
+
+const replacementIds = {
+  'my-old-id': uuid(), // 1
+  'another-old-id': uuid(), // 2
+  // ...
+}
+
+const newId = replacementIds['my-old-id'] // 1
+```
 
 ## Post Cloning Steps
 

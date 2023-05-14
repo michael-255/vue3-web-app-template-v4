@@ -1,4 +1,12 @@
-import { type TypeSchema, Action, Field, Group, Type, type FieldProps } from '@/types/database'
+import {
+  type TypeSchema,
+  Action,
+  Field,
+  Group,
+  Type,
+  type FieldProps,
+  type ChartProps,
+} from '@/types/database'
 import { Icon } from '@/types/icons'
 import {
   exampleChildColumns,
@@ -26,6 +34,7 @@ import {
 } from '@/services/validators'
 import type { MixedSchema } from 'yup'
 import type { QTableColumn } from 'quasar'
+import { percentChart } from './chart-props'
 
 export default class DataSchema {
   private static instance: DataSchema | null = null
@@ -101,7 +110,7 @@ export default class DataSchema {
       visibleColumns: [Field.ID, Field.TIMESTAMP, Field.NAME],
       tableColumns: testParentColumns,
       fieldProps: testParentFields,
-      chartProps: [],
+      chartProps: [percentChart],
     },
     {
       type: Type.TEST_CHILD,
@@ -151,6 +160,10 @@ export default class DataSchema {
 
   static getFieldProps(type: Type) {
     return this.dataSchema.find((s) => s.type === type)?.fieldProps as FieldProps[]
+  }
+
+  static getChartProps(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.chartProps as ChartProps[]
   }
 
   static getTypeOptions() {
