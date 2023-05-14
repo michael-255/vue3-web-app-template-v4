@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Record } from '@/types/database'
+import type { Field } from '@/types/database'
 
 const useActionStore = defineStore({
   id: 'action',
@@ -8,7 +8,7 @@ const useActionStore = defineStore({
     /**
      * In progress record for create and update actions
      */
-    record: {} as Partial<Record>,
+    record: {} as Partial<{ [key in Field]: any }>,
   }),
 })
 

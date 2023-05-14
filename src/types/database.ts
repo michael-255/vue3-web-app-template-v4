@@ -139,13 +139,12 @@ export type FieldProps = {
   component?: ReturnType<typeof defineAsyncComponent>
 }
 
-// TODO
 /**
- *
+ * Defines properties for each chart.
  */
 export type ChartProps = {
   label: string
-  chartOptions: any // TODO
+  chartOptions: any // TODO - ChartOptions from chart.js???
   component: ReturnType<typeof defineAsyncComponent>
 }
 

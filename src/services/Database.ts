@@ -273,7 +273,7 @@ class Database extends Dexie {
         r.id
       )) as Record
 
-      const dashboardListCard: DashboardListCardProps = {
+      const dashboardCard: DashboardListCardProps = {
         type,
         id: r.id,
         timestamp: r.timestamp,
@@ -286,9 +286,9 @@ class Database extends Dexie {
 
       // Add to favorites or non-favorites
       if (r.favorited === true) {
-        favorites.push(dashboardListCard)
+        favorites.push(dashboardCard)
       } else {
-        nonFavorites.push(dashboardListCard)
+        nonFavorites.push(dashboardCard)
       }
     }
 
@@ -303,8 +303,9 @@ class Database extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Update exact Record by UID with the properties you want to change.
-   * @param uid
+   * Update exact Record by type and id with the properties you want to change.
+   * @param type
+   * @param id
    * @param changes
    */
   async updateRecord(type: Type, id: string, changes: { [key in Field]?: any }) {
@@ -422,7 +423,7 @@ class Database extends Dexie {
 
     const recordToDelete = await this.getRecord(type, id)
     if (!recordToDelete) {
-      throw new Error(`Record with UID ${id} does not exist.`)
+      throw new Error(`Record with id ${id} does not exist.`)
     } // TODO
 
     // Delete the exact record first

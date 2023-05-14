@@ -30,7 +30,8 @@ async function viewPreviousNote(note: string) {
 
 /**
  * On confirmation, favorite the matching record in the database.
- * @param uid
+ * @param type
+ * @param id
  * @param name
  */
 async function onFavorite(type: Type, id: string, name: string) {
@@ -52,7 +53,8 @@ async function onFavorite(type: Type, id: string, name: string) {
 
 /**
  * On confirmation, unfavorite the matching record in the database.
- * @param uid
+ * @param type
+ * @param id
  * @param name
  */
 async function onUnfavorite(type: Type, id: string, name: string) {
@@ -74,7 +76,8 @@ async function onUnfavorite(type: Type, id: string, name: string) {
 
 /**
  * On confirmation, delete the parent and children records from the database.
- * @param uid
+ * @param type
+ * @param id
  * @param name
  */
 async function onParentDelete(type: Type, id: string, name: string) {

@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import { truncateString } from '@/utils/common'
-import type { Field } from '@/types/database'
+import type { Field, TestParent } from '@/types/database'
+import type { MixedSchema } from 'yup'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
 import useRoutables from '@/composables/useRoutables'
 import DB from '@/services/Database'
-import type { Record } from '@/types/database'
-import type { MixedSchema } from 'yup'
 
 // Props & Emits
 const props = defineProps<{
@@ -32,15 +31,15 @@ onMounted(async () => {
   try {
     actionStore.record[props.field] = actionStore.record[props.field] ?? props.getDefault()
 
-    const records = (await DB.getAllParentTypes(routeType)) as Record[]
+    const records = (await DB.getAll(routeType)) as TestParent[]
 
     // Build select box options
-    options.value = records.map((r: Record) => ({
-      value: r.uid,
-      label: `${r.name} (${truncateString(r.uid, 4, '*')})`, // Truncate UID for readability
+    options.value = records.map((r: TestParent) => ({
+      value: r.id,
+      label: `${r.name} (${truncateString(r.id, 4, '*')})`, // Truncate id for readability
     }))
   } catch (error) {
-    log.error('Error with test uids input', error)
+    log.error('Error with test ids input', error)
   }
 })
 

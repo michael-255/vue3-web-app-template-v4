@@ -86,11 +86,23 @@ function onImportFile() {
         log.silentDebug('backupData:', backupData)
 
         // Do NOT allow importing data from another app
-        if (backupData.appName !== AppName)
+        if (backupData.appName !== AppName) {
           throw new Error(`Cannot import data from this app: ${backupData.appName} `)
+        }
 
-        const types = Object.values(Type).filter((type) => type !== Type.LOG) // Not importing logs
+        // Never import logs, settings is handled below if included
+        const types = Object.values(Type).filter(
+          (type) => type !== Type.LOG && type !== Type.SETTING
+        )
+
         await Promise.all(types.map((type) => DB.importRecords(type, backupData[type])))
+
+        if (backupData[Type.SETTING].length > 0) {
+          // Settings must be explicitly set to be updated
+          await Promise.all(
+            backupData[Type.SETTING].map(async (s) => await DB.setSetting(s.key as Key, s.value))
+          )
+        }
 
         importFile.value = null // Clear input
         log.info('Successfully imported available data')

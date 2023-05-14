@@ -54,6 +54,11 @@ export default function useDefaults() {
             return greekLetters[Math.floor(Math.random() * greekLetters.length)]
           }
 
+          const randomEnglishAlpha = () => {
+            const englishLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+            return englishLetters[Math.floor(Math.random() * englishLetters.length)]
+          }
+
           const randomBoolean = () => {
             return Math.random() >= 0.5
           }
@@ -71,7 +76,7 @@ export default function useDefaults() {
             type: Type.EXAMPLE_PARENT | Type.TEST_PARENT
           ) => {
             const parentId = uid()
-            const name = randomGreekAlpha()
+            const name = `${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
             // Create Parent (1)
             recordTypes[type].push({
