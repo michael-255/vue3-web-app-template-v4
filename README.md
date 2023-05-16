@@ -5,7 +5,8 @@ developing. Read through this README to have a better understanding of how this 
 
 ## TODO
 
-- [ ] Chart related code needs some work
+- [ ] `Chart` related code needs some work
+- [ ] Review all app actions & operations
 
 ```typescript
 // Create a reserved UID enum that can contain the UIDs used for defaults in the app

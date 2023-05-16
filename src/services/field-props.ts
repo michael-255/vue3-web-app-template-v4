@@ -239,7 +239,7 @@ const testIdsField: Readonly<FieldProps> = {
   getDefault: () => [],
   validator: testIdsValidator,
   validationMessage: '* Required',
-  inspectFormat: (val: string[]) => `${val || '-'}`,
+  inspectFormat: (val: string[]) => val?.join(', ') || '-',
   component: defineAsyncComponent(() => import('@/components/inputs/TestIdsInput.vue')),
 }
 
@@ -264,7 +264,7 @@ const coreFields: FieldProps[] = [idField, timestampField]
 
 const parentFields: FieldProps[] = [nameField, descField, enabledField, favoritedField]
 
-const childFields: FieldProps[] = [parentIdField, noteField] // TODO - Add ParentInfoField component???
+const childFields: FieldProps[] = [parentIdField, noteField]
 
 export const logFields: FieldProps[] = [
   autoIdField,

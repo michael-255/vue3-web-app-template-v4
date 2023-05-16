@@ -126,18 +126,18 @@ class Database extends Dexie {
    */
   async addRecord(type: Type, record: Record) {
     if (!(await typeValidator.isValid(type))) {
-      throw new Error('Invalid type error')
-    } // TODO
+      throw new Error(`Add record type ${type} is invalid`)
+    }
 
     // Find record specific validator
     const recordValidator = DataSchema.getValidator(type)
 
     if (!recordValidator) {
-      throw new Error('Record validator not found')
-    } // TODO
+      throw new Error('Add record validator not found')
+    }
     if (!(await recordValidator.isValid(record))) {
-      throw new Error('Invalid record error')
-    } // TODO
+      throw new Error(`Add record attempted to add invalid record with id ${record.id}`)
+    }
 
     // Validate cleans record of unknown properties
     return await this.table(type).add(await recordValidator.validate(record))
@@ -150,14 +150,14 @@ class Database extends Dexie {
    */
   async importRecords(type: Type, records: Record[]) {
     if (!(await typeValidator.isValid(type))) {
-      throw new Error('Invalid type error')
-    } // TODO
+      throw new Error(`Import records type ${type} is invalid`)
+    }
 
     // Find record specific validator
     const recordValidator = DataSchema.getValidator(type)
     if (!recordValidator) {
-      throw new Error('Record validator not found')
-    } // TODO
+      throw new Error('Import records validator not found')
+    }
 
     const validRecords: Record[] = []
     const skippedRecords: Record[] = []
@@ -323,17 +323,17 @@ class Database extends Dexie {
   async updateRecord(type: Type, id: string, changes: { [key in Field]?: any }) {
     console.log('updateRecord', type, id, changes)
     if (!(await idValidator.isValid(id))) {
-      throw new Error('Invalid id error')
-    } // TODO
+      throw new Error(`Update record id ${id} is invalid`)
+    }
     if (!(await typeValidator.isValid(type))) {
-      throw new Error('Invalid type error')
-    } // TODO
+      throw new Error(`Update record type ${type} is invalid`)
+    }
 
     // Get the original record
     const record = await this.table(type).get(id)
     if (!record) {
-      throw new Error('No record exists to update')
-    } // TODO
+      throw new Error('Update record cannot update non-existent record')
+    }
 
     // Overwrite original fields with changes
     Object.keys(changes).forEach((k) => {
@@ -343,11 +343,11 @@ class Database extends Dexie {
     // Find record specific validator
     const recordValidator = DataSchema.getValidator(type)
     if (!recordValidator) {
-      throw new Error('Record validator not found')
-    } // TODO
+      throw new Error('Update record validator not found')
+    }
 
     if (!(await recordValidator.isValid(record))) {
-      throw new Error('May have invalid record changes') // TODO
+      throw new Error('Update record found invalid record changes')
     }
 
     // Validate cleans record of unknown properties
@@ -427,16 +427,16 @@ class Database extends Dexie {
    */
   async deleteRecord(type: Type, id: string) {
     if (!(await idValidator.isValid(id))) {
-      throw new Error('Invalid id error')
-    } // TODO
+      throw new Error(`Delete record id ${id} is invalid`)
+    }
     if (!(await typeValidator.isValid(type))) {
-      throw new Error('Invalid type error')
-    } // TODO
+      throw new Error(`Delete record type ${type} is invalid`)
+    }
 
     const recordToDelete = await this.getRecord(type, id)
     if (!recordToDelete) {
-      throw new Error(`Record with id ${id} does not exist.`)
-    } // TODO
+      throw new Error(`Delete record with id ${id} does not exist`)
+    }
 
     // Delete the exact record first
     await this.table(type).delete(id)
