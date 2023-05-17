@@ -41,6 +41,15 @@ function makeHiddenColumn(field: any, name: string) {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Hidden Auto Id column required for some table actions. Hiding saves horizontal space on the data table.
+ * @example
+ * action(props.cols[0]) // <-- index!
+ */
+const hiddenAutoIdColumn: Readonly<QTableColumn> = {
+  ...makeHiddenColumn(Field.AUTO_ID, 'hiddenAutoId'),
+}
+
 const autoIdColumn: Readonly<QTableColumn> = {
   ...makeStandardColumn(Field.AUTO_ID),
   label: 'Auto Id',
@@ -82,6 +91,15 @@ const stackColumn: Readonly<QTableColumn> = {
 //     SETTING                                                               //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Hidden Auto Id column required for some table actions. Hiding saves horizontal space on the data table.
+ * @example
+ * action(props.cols[0]) // <-- index!
+ */
+const hiddenKeyColumn: Readonly<QTableColumn> = {
+  ...makeHiddenColumn(Field.KEY, 'hiddenKey'),
+}
 
 const keyColumn: Readonly<QTableColumn> = {
   ...makeStandardColumn(Field.KEY),
@@ -194,9 +212,9 @@ const percentColumn: Readonly<QTableColumn> = {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-const hiddenColumns: Readonly<QTableColumn[]> = [hiddenIdColumn]
-
-export const hiddenColumnNames: Readonly<string[]> = hiddenColumns.map((c) => c.name)
+export const hiddenColumnNames: Readonly<string[]> = [hiddenIdColumn, hiddenAutoIdColumn].map(
+  (c) => c.name
+)
 
 const coreColumns: Readonly<QTableColumn[]> = [idColumn, timestampColumn]
 
@@ -210,6 +228,7 @@ const parentColumns: Readonly<QTableColumn[]> = [
 const childColumns: Readonly<QTableColumn[]> = [parentIdColumn, noteColumn]
 
 export const logColumns: QTableColumn[] = [
+  hiddenAutoIdColumn,
   autoIdColumn,
   timestampColumn,
   severityColumn,
@@ -222,26 +241,18 @@ export const logColumns: QTableColumn[] = [
 export const settingColumns: QTableColumn[] = [keyColumn, valueColumn]
 
 export const exampleParentColumns: QTableColumn[] = [
-  ...hiddenColumns,
+  hiddenIdColumn,
   ...coreColumns,
   ...parentColumns,
   testIdsColumn,
 ]
 
-export const exampleChildColumns: QTableColumn[] = [
-  ...hiddenColumns,
-  ...coreColumns,
-  ...childColumns,
-]
+export const exampleChildColumns: QTableColumn[] = [hiddenIdColumn, ...coreColumns, ...childColumns]
 
-export const testParentColumns: QTableColumn[] = [
-  ...hiddenColumns,
-  ...coreColumns,
-  ...parentColumns,
-]
+export const testParentColumns: QTableColumn[] = [hiddenIdColumn, ...coreColumns, ...parentColumns]
 
 export const testChildColumns: QTableColumn[] = [
-  ...hiddenColumns,
+  hiddenIdColumn,
   ...coreColumns,
   ...childColumns,
   percentColumn,

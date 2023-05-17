@@ -225,6 +225,9 @@ class Database extends Dexie {
    * @param type
    */
   async getRecord(type: Type, id: string): Promise<Record | undefined> {
+    if (type === Type.LOG) {
+      return await this.table(type).get(Number(id))
+    }
     return await this.table(type).get(id)
   }
 

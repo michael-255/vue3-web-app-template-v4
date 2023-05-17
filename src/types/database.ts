@@ -150,7 +150,7 @@ export type ChartProps = {
 }
 
 /**
- * Defines actions that a database type can perform.
+ * Defines actions that a database type can perform on the data view.
  */
 export enum Action {
   INSPECT = 'Inspect',

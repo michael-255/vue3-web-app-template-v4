@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import { truncateString } from '@/utils/common'
-import type { Field, TestParent } from '@/types/database'
+import { Type, type Field, type TestParent } from '@/types/database'
 import type { MixedSchema } from 'yup'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
-import useRoutables from '@/composables/useRoutables'
 import DB from '@/services/Database'
 
 // Props & Emits
@@ -19,7 +18,6 @@ const props = defineProps<{
 }>()
 
 // Composables & Stores
-const { routeType } = useRoutables()
 const { log } = useLogger()
 const actionStore = useActionStore()
 
@@ -31,7 +29,7 @@ onMounted(async () => {
   try {
     actionStore.record[props.field] = actionStore.record[props.field] ?? props.getDefault()
 
-    const records = (await DB.getAll(routeType)) as TestParent[]
+    const records = (await DB.getAll(Type.TEST_PARENT)) as TestParent[]
 
     // Build select box options
     options.value = records.map((r: TestParent) => ({

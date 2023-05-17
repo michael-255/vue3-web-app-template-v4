@@ -144,7 +144,7 @@ const timestampField: Readonly<FieldProps> = {
   getDefault: () => Date.now(),
   validator: timestampValidator,
   validationMessage: 'Must be a valid number',
-  inspectFormat: (val: number) => getDisplayDate(val),
+  inspectFormat: (val: number) => getDisplayDate(val) || '-',
   component: defineAsyncComponent(() => import('@/components/inputs/TimestampInput.vue')),
 }
 

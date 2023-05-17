@@ -13,7 +13,7 @@ useMeta({ title: `${AppName} - Charts` })
 const { routeType } = useRoutables()
 
 // Data
-const title = DataSchema.getLabelPlural(routeType)
+const title = DataSchema.getLabelSingular(routeType)
 const chartProps = DataSchema.getChartProps(routeType)
 </script>
 

@@ -6,6 +6,7 @@ import { type Ref, ref, onUnmounted } from 'vue'
 import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
 import { getRecordsCountDisplay } from '@/utils/common'
+import { hiddenColumnNames } from '@/services/table-columns'
 import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
@@ -84,7 +85,7 @@ async function onDelete(id: string) {
         <!-- Do not show hidden columns -->
         <QTh
           v-for="col in (props.cols as any[])"
-          v-show="col.name !== 'hiddenId'"
+          v-show="!hiddenColumnNames.includes(col.name)"
           :key="col.name"
           :props="props"
         >
@@ -184,7 +185,7 @@ async function onDelete(id: string) {
                 :icon="Icon.ADD"
                 @click="goToCreate(routeType)"
               />
-              <!-- OPTIONS (Visible Columns) -->
+              <!-- COLUMN OPTIONS (Visible Columns) -->
               <QSelect
                 v-model="visibleColumns"
                 :options="columnOptions"

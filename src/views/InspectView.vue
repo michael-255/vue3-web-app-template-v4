@@ -44,7 +44,7 @@ onMounted(async () => {
     <QCard v-for="(fieldProp, i) in fieldProps" :key="i" class="q-mb-md">
       <QCardSection>
         <p class="text-h6">{{ fieldProp.label }}</p>
-        <div>{{ fieldProp.inspectFormat(inspectRecord?.[fieldProp.field]) }}</div>
+        <div>{{ fieldProp.inspectFormat(inspectRecord?.[fieldProp?.field]) }}</div>
       </QCardSection>
     </QCard>
   </ResponsivePage>

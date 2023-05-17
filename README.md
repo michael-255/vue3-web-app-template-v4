@@ -5,8 +5,12 @@ developing. Read through this README to have a better understanding of how this 
 
 ## TODO
 
+- [ ] Better way to display data details on inspect
+- [ ] `ParentId` component to support child creates on data view
+- [ ] Have responsive page split inner content on larger screens
 - [ ] `Chart` related code needs some work
 - [ ] Review all app actions & operations
+- [ ] Script for updating certain code files (app name, repo name, etc.)
 
 ```typescript
 // Create a reserved UID enum that can contain the UIDs used for defaults in the app
