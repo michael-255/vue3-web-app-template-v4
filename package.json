@@ -2,7 +2,7 @@
   "name": "vue3-web-app-template-v4",
   "description": "Vue 3 Typescript Web App Template to jump start development.",
   "author": "Michael Joy",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
