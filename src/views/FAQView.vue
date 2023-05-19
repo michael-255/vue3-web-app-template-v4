@@ -13,10 +13,7 @@ useMeta({ title: `${AppName} - FAQ` })
       <QExpansionItem label="What is this application?" header-class="text-weight-bold">
         <QCard>
           <QCardSection>
-            <p>
-              This application is called {{ AppName }}. It is a web template application that
-              demostrates the features built into it.
-            </p>
+            <p>This application is called {{ AppName }}. It is a Vue 3 Typescript project.</p>
 
             <p>
               It is available for free to use and modify under the MIT license. You can learn more
@@ -54,12 +51,12 @@ useMeta({ title: `${AppName} - FAQ` })
           <QCardSection>
             <p>
               Use the export feature in Settings to download your data. You can email the exported
-              data file to yourself so you can access it on the other device.
+              data file to yourself so you can access it on your other device.
             </p>
 
             <p>
               Use the import feature in Settings once you are on your other device. This feature
-              allows you to select and load yyour exported data to this device.
+              allows you to select and load your exported data to this device.
             </p>
           </QCardSection>
         </QCard>
@@ -74,8 +71,8 @@ useMeta({ title: `${AppName} - FAQ` })
         <QCard>
           <QCardSection>
             <p>
-              Your best bet is to go to the Settings page and access the Logs data. You can view
-              most errors and other events that occur in the application from there.
+              Your best bet is to go to the Settings page and access the Logs. You can view most
+              errors and other events that occur in the application from there.
             </p>
           </QCardSection>
         </QCard>
