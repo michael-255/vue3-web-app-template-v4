@@ -68,8 +68,8 @@ export default function useDefaults() {
             return Math.floor(Math.random() * 100)
           }
 
-          const dateFromThreeMonthsAgo = () => {
-            return Date.now() - Milliseconds.PER_DAY * 90
+          const previousDateMilliseconds = () => {
+            return Date.now() - Milliseconds.PER_YEAR
           }
 
           const recordTypes: { [key in Type]: Record[] } = Object.values(Type).reduce(
@@ -105,7 +105,7 @@ export default function useDefaults() {
                 recordTypes[childType as Type].push({
                   id: uid(),
                   parentId,
-                  timestamp: dateFromThreeMonthsAgo() + Milliseconds.PER_DAY * i,
+                  timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
                   note: `Note ${i}`,
                   percent: type === Type.TEST_PARENT ? randomPercent() : undefined,
                 } as Record)
@@ -117,7 +117,7 @@ export default function useDefaults() {
           createRecords(2, Type.EXAMPLE_PARENT)
           createRecords(0, Type.EXAMPLE_PARENT)
           createRecords(0, Type.EXAMPLE_PARENT)
-          createRecords(180, Type.TEST_PARENT)
+          createRecords(360, Type.TEST_PARENT)
           createRecords(0, Type.TEST_PARENT)
 
           log.silentDebug('recordTypes:', recordTypes)

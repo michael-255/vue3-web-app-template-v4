@@ -90,24 +90,27 @@ function onImportFile() {
           throw new Error(`Cannot import data from this app: ${backupData.appName} `)
         }
 
-        // Never import logs, settings is handled below if included
+        // Never import logs, settings is handled next if included
         const types = Object.values(Type).filter(
           (type) => type !== Type.LOG && type !== Type.SETTING
         )
 
-        await Promise.all(types.map((type) => DB.importRecords(type, backupData[type])))
-
+        // Import settings first in case errors stop type importing below
         if (backupData[Type.SETTING].length > 0) {
           // Settings must be explicitly set to be updated
           await Promise.all(
-            backupData[Type.SETTING].map(async (s) => await DB.setSetting(s.key as Key, s.value))
+            backupData[Type.SETTING]
+              .filter((s) => Object.values(Key).includes(s.key as Key))
+              .map(async (s) => await DB.setSetting(s.key as Key, s.value))
           )
         }
+
+        await Promise.all(types.map((type) => DB.importRecords(type, backupData[type])))
 
         importFile.value = null // Clear input
         log.info('Successfully imported available data')
       } catch (error) {
-        log.error('Import failed', error)
+        log.error('Error during import', error)
       }
     }
   )

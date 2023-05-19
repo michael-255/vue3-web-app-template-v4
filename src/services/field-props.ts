@@ -66,7 +66,12 @@ const detailsField: Readonly<FieldProps> = {
   getDefault: () => undefined,
   validator: anyValidator,
   validationMessage: 'Invalid',
-  inspectFormat: (val: any) => (val ? JSON.stringify(val) : '-'),
+  inspectFormat: (val: any) =>
+    val
+      ? Object.entries(val)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ')
+      : '-',
   // Not rendered
 }
 

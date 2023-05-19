@@ -33,12 +33,6 @@ ChartJS.register(
   LineElement
 )
 
-// Props & Emits
-defineProps<{
-  label: string
-  chartOptions: { [key in string]: any }
-}>()
-
 // Composables & Stores
 const uiStore = useUIStore()
 const { getPaletteColor } = colors
@@ -47,6 +41,36 @@ const { routeType, routeId } = useRoutables()
 useChartTimeWatcher(recalculateChart)
 
 // Data
+const chartLabel = 'Percentages'
+const chartOptions = {
+  reactive: true,
+  responsive: true,
+  radius: 2,
+  plugins: {
+    legend: {
+      display: false,
+    },
+    tooltip: {
+      callbacks: {
+        title: (tooltipItem: any) => {
+          return date.formatDate(tooltipItem?.[0]?.label, 'ddd, YYYY MMM D, h:mm a')
+        },
+      },
+    },
+  },
+  interaction: {
+    intersect: false,
+  },
+  scales: {
+    x: {
+      ticks: {
+        autoSkip: true,
+        maxRotation: 70,
+        minRotation: 70,
+      },
+    },
+  },
+}
 const recordCount: Ref<number> = ref(0)
 const chartData: Ref<{
   labels: any[]
@@ -82,7 +106,6 @@ async function recalculateChart() {
       const childType = DataSchema.getChildType(routeType)
       const chartingRecords = await DB.getParentChildren(childType as Type, routeId as string)
 
-      console.log('chartingRecords', chartingRecords)
       // Continue if there are records
       if (chartingRecords.length > 0) {
         const chartMilliseconds = uiStore.getChartTimeMilliseconds
@@ -130,9 +153,7 @@ async function recalculateChart() {
 <template>
   <QCard class="q-mb-md">
     <QCardSection>
-      <div class="text-h6">{{ label }}</div>
-
-      <div>Displays all numbers recorded over time.</div>
+      <div class="text-h6">{{ chartLabel }}</div>
 
       <!-- Chart -->
       <Line v-if="recordCount && recordCount > 0" :options="chartOptions" :data="chartData" />
@@ -146,7 +167,10 @@ async function recalculateChart() {
       </QBadge>
 
       <!-- No Data -->
-      <div v-else>No records found</div>
+      <div v-else>
+        <div class="text-bold q-my-md">No Records Found</div>
+        <div>This item may not have any records created for it yet.</div>
+      </div>
     </QCardSection>
   </QCard>
 </template>

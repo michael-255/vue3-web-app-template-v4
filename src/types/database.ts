@@ -144,8 +144,6 @@ export type FieldProps = {
  * Defines properties for each chart.
  */
 export type ChartProps = {
-  label: string
-  chartOptions: { [key in string]: any }
   component: ReturnType<typeof defineAsyncComponent>
 }
 

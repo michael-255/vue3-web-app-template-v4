@@ -27,11 +27,7 @@ const chartProps = DataSchema.getChartProps(routeType)
 
     <div v-for="(chartProp, i) in chartProps" :key="i" class="q-mb-md">
       <!-- Dynamic Async Components -->
-      <component
-        :is="chartProp.component"
-        :label="chartProp.label"
-        :chartOptions="chartProp.chartOptions"
-      />
+      <component :is="chartProp.component" />
     </div>
   </ResponsivePage>
 </template>

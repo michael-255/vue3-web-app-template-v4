@@ -26,7 +26,7 @@ defineProps<{
         <!-- Use as a catch-all for errors at the View level -->
         <QCard v-if="showPageError">
           <QCardSection>
-            <div class="text-h6 q-mb-md">Something went wrong...</div>
+            <div class="text-h6 q-mb-md">Page Error</div>
             <div>
               The page was unable to load due to an error. Troubleshoot using the application Logs
               if the problem persists.
@@ -39,11 +39,8 @@ defineProps<{
         <div v-else-if="showPageNoData">
           <QCard class="q-mb-md">
             <QCardSection>
-              <div class="text-h6 q-mb-md">No data available...</div>
-              <div>
-                There doesn't appear to be any data to display. If this is an error, troubleshoot
-                using the application Logs if the problem persists.
-              </div>
+              <div class="text-h6 q-mb-md">No Data Available</div>
+              <div>This item may not have any data to display on the this page.</div>
             </QCardSection>
           </QCard>
         </div>

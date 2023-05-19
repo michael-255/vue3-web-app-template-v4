@@ -205,8 +205,8 @@ class Database extends Dexie {
         log.message = details?.message
         log.stack = details?.stack
       } else {
-        // Should be safe to stringify most other objects into the details property
-        log.details = JSON.stringify(details)
+        // Should be safe to store most other objects into the details property
+        log.details = details
       }
     }
 

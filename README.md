@@ -3,50 +3,6 @@
 This Vue 3 Typescript project can be used as a web application template to help you get started
 developing. Read through this README to have a better understanding of how this project is setup.
 
-## TODO
-
-- [ ] Better way to display data details on inspect
-- [ ] `ParentId` component to support child creates on data view
-- [ ] Have responsive page split inner content on larger screens
-- [ ] `Chart` related code needs some work
-- [ ] Review all app actions & operations
-- [ ] Script for updating certain code files (app name, repo name, etc.)
-
-```typescript
-// Create a reserved UID enum that can contain the UIDs used for defaults in the app
-export enum ReservedId {
-  UID_01 = 'uuid-123'
-  UID_02 = 'uuid-456'
-  // ...
-}
-
-// Id lookup and convert to new UIDs?
-function test() {
-  const failedRecords = [
-    'test-123',
-    Infinity,
-    'abc-123',
-    'bad-id-1',
-    NaN,
-    'not-an-id',
-    12345,
-    null,
-    undefined,
-    undefined,
-    null,
-  ]
-  new Error(`The following records could not be imported: ${failedRecords.map(String).join(', ')}`)
-}
-
-const replacementIds = {
-  'my-old-id': uuid(), // 1
-  'another-old-id': uuid(), // 2
-  // ...
-}
-
-const newId = replacementIds['my-old-id'] // 1
-```
-
 ## Post Cloning Steps
 
 - [ ] Update `package.json`
