@@ -17,7 +17,7 @@ developing. Read through this README to have a better understanding of how this 
 - [ ] Update certain code files
 
   - [ ] Update `base` in `~/vite.config.ts` to your repository name for deployments to work
-  - [ ] Update `AppName` and `AppDescription` in `~/src/types/misc.ts` to represent your app
+  - [ ] Update `AppName` and `AppDescription` in `~/src/types/general.ts` to represent your app
   - [ ] Update `name` and `short_name` in `~/public/manifest.json` to the app name
   - [ ] Update `start_url` in `~/public/manifest.json` to deployed website address
 
