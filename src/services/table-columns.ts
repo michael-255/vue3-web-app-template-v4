@@ -208,14 +208,12 @@ export const hiddenColumnNames: Readonly<string[]> = [hiddenIdColumn, hiddenAuto
 )
 
 const coreColumns: Readonly<QTableColumn[]> = [idColumn, timestampColumn]
-
 const parentColumns: Readonly<QTableColumn[]> = [
   nameColumn,
   descColumn,
   enabledColumn,
   favoritedColumn,
 ]
-
 const childColumns: Readonly<QTableColumn[]> = [parentIdColumn, noteColumn]
 
 export const logColumns: QTableColumn[] = [
@@ -228,7 +226,6 @@ export const logColumns: QTableColumn[] = [
   messageColumn,
   stackColumn,
 ]
-
 export const settingColumns: QTableColumn[] = [keyColumn, valueColumn]
 
 export const exampleParentColumns: QTableColumn[] = [
@@ -237,11 +234,9 @@ export const exampleParentColumns: QTableColumn[] = [
   ...parentColumns,
   testIdsColumn,
 ]
-
-export const exampleChildColumns: QTableColumn[] = [hiddenIdColumn, ...coreColumns, ...childColumns]
-
 export const testParentColumns: QTableColumn[] = [hiddenIdColumn, ...coreColumns, ...parentColumns]
 
+export const exampleChildColumns: QTableColumn[] = [hiddenIdColumn, ...coreColumns, ...childColumns]
 export const testChildColumns: QTableColumn[] = [
   hiddenIdColumn,
   ...coreColumns,

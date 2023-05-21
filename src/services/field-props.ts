@@ -252,9 +252,7 @@ const percentField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const coreFields: FieldProps[] = [idField, timestampField]
-
 const parentFields: FieldProps[] = [nameField, descField, enabledField, favoritedField]
-
 const childFields: FieldProps[] = [parentIdField, noteField]
 
 export const logFields: FieldProps[] = [
@@ -266,13 +264,10 @@ export const logFields: FieldProps[] = [
   messageField,
   stackField,
 ]
-
 export const settingFields: FieldProps[] = [keyField, valueField]
 
 export const exampleParentFields: FieldProps[] = [...coreFields, ...parentFields, testIdsField]
-
-export const exampleChildFields: FieldProps[] = [...coreFields, ...childFields]
-
 export const testParentFields: FieldProps[] = [...coreFields, ...parentFields]
 
+export const exampleChildFields: FieldProps[] = [...coreFields, ...childFields]
 export const testChildFields: FieldProps[] = [...coreFields, ...childFields, percentField]
