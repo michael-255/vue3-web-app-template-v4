@@ -1,0 +1,1 @@
+import{bV as E,D as T,aN as e,bf as a}from"./index-2ed2ead9.js";const s=E({id:"ui",state:()=>({drawer:!1,dashboardType:T.getParentTypes()[0],chartTime:e.THREE_MONTHS}),getters:{getChartTimeMilliseconds:t=>({[e.ONE_MONTH]:a.PER_MONTH,[e.THREE_MONTHS]:a.PER_THREE_MONTHS,[e.SIX_MONTHS]:a.PER_SIX_MONTHS,[e.ONE_YEAR]:a.PER_YEAR,[e.ALL_TIME]:a.FOREVER})[t.chartTime]}});export{s as u};
