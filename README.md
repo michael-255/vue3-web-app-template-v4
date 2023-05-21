@@ -1,7 +1,8 @@
 # Web App Template
 
 This Vue 3 Typescript project can be used as a web application template to help you get started
-developing. Read through this README to have a better understanding of how this project is setup.
+developing. Read through this README to have a better understanding of how this project is
+structured.
 
 ## Post Cloning Steps
 
