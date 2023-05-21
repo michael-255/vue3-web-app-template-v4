@@ -153,7 +153,7 @@ async function recalculateChart() {
 <template>
   <QCard class="q-mb-md">
     <QCardSection>
-      <div class="text-h6">{{ chartLabel }}</div>
+      <p class="text-h6">{{ chartLabel }}</p>
 
       <!-- Chart -->
       <Line v-if="recordCount && recordCount > 0" :options="chartOptions" :data="chartData" />

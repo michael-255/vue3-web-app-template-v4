@@ -53,9 +53,9 @@ function validationRule() {
   <!-- Always shown so the user knows what Parent record they a making a Child record for -->
   <QCard>
     <QCardSection>
-      <p class="text-h6 q-mb-md">{{ label }}</p>
+      <p class="text-h6">{{ label }}</p>
 
-      <p class="q-mb-md">{{ desc }}</p>
+      <p>{{ desc }}</p>
 
       <QSelect
         v-model="actionStore.record[field]"

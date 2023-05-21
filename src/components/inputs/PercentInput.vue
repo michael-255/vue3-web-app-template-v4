@@ -35,7 +35,7 @@ function validationRule() {
 <template>
   <QCard>
     <QCardSection>
-      <p class="text-h6 q-mb-md">{{ label }}</p>
+      <p class="text-h6">{{ label }}</p>
 
       <QInput
         v-model="actionStore.record[field]"
