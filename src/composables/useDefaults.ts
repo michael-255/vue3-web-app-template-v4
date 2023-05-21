@@ -1,11 +1,11 @@
 import { Icon } from '@/types/icons'
 import { uid } from 'quasar'
 import { type Record, Type } from '@/types/database'
+import { Milliseconds } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DataSchema from '@/services/DataSchema'
 import DB from '@/services/Database'
-import { Milliseconds } from '@/types/general'
 
 /**
  * Composable with functions for generating default data for the app.

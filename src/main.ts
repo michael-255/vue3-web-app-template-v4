@@ -17,7 +17,7 @@ app.use(Quasar, {
   plugins: {
     Meta,
     Dialog, // Uses a custom component (SimpleDialog.vue)
-    Notify
+    Notify,
   },
   config: {
     dark: true,
@@ -35,7 +35,7 @@ app.use(Quasar, {
       negative: '#C10015', // negative (ERROR)
       positive: '#4caf50', // green
       dark: '#1d1d1d',
-      'dark-page': '#121212'
+      'dark-page': '#121212',
     },
     notify: {
       textColor: 'white',
@@ -45,14 +45,14 @@ app.use(Quasar, {
       actions: [
         {
           label: 'Dismiss',
-          color: 'white'
-        }
-      ]
-    }
+          color: 'white',
+        },
+      ],
+    },
     // loading: {...}, // default set of options for Loading Quasar plugin
     // loadingBar: { ... }, // settings for LoadingBar Quasar plugin
     // // ..and many more (check Installation card on each Quasar component/directive/plugin)
-  }
+  },
 })
 
 // Assumes you have a <div id="app"></div> in your index.html

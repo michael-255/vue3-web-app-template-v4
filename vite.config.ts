@@ -7,12 +7,12 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [
     vue({ template: { transformAssetUrls } }),
-    quasar({ autoImportComponentCase: 'pascal' })
+    quasar({ autoImportComponentCase: 'pascal' }),
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
   },
   /**
    * This should be your GitHub repo name. You can find it on the GitHub URL.
@@ -20,5 +20,5 @@ export default defineConfig({
    * https://github.com/my-username/my-app-repo
    * my-app-repo
    */
-  base: '/vue3-web-app-template-v4/'
+  base: '/vue3-web-app-template-v4/',
 })
