@@ -134,24 +134,20 @@ function onExportRecords() {
       try {
         const types = exportModel.value
 
+        const getTypeData = async (type: Type) => {
+          return types.includes(type) ? await DB.getAll(type) : []
+        }
+
         // Build backup data
         const backupData = {
           appName: AppName,
           backupTimestamp: Date.now(),
-          [Type.LOG]: types.includes(Type.LOG) ? await DB.getAll(Type.LOG) : [],
-          [Type.SETTING]: types.includes(Type.SETTING) ? await DB.getAll(Type.SETTING) : [],
-          [Type.EXAMPLE_PARENT]: types.includes(Type.EXAMPLE_PARENT)
-            ? await DB.getAll(Type.EXAMPLE_PARENT)
-            : [],
-          [Type.EXAMPLE_CHILD]: types.includes(Type.EXAMPLE_CHILD)
-            ? await DB.getAll(Type.EXAMPLE_CHILD)
-            : [],
-          [Type.TEST_PARENT]: types.includes(Type.TEST_PARENT)
-            ? await DB.getAll(Type.TEST_PARENT)
-            : [],
-          [Type.TEST_CHILD]: types.includes(Type.TEST_CHILD)
-            ? await DB.getAll(Type.TEST_CHILD)
-            : [],
+          [Type.LOG]: await getTypeData(Type.LOG),
+          [Type.SETTING]: await getTypeData(Type.SETTING),
+          [Type.EXAMPLE_PARENT]: await getTypeData(Type.EXAMPLE_PARENT),
+          [Type.EXAMPLE_CHILD]: await getTypeData(Type.EXAMPLE_CHILD),
+          [Type.TEST_PARENT]: await getTypeData(Type.TEST_PARENT),
+          [Type.TEST_CHILD]: await getTypeData(Type.TEST_CHILD),
         } as BackupData
 
         log.silentDebug('backupData:', backupData)
