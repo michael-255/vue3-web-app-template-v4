@@ -105,10 +105,13 @@ const testChild = object({
 
 export const logValidator = mixed().concat(log)
 export const settingValidator = mixed().concat(setting)
+
 export const exampleParentValidator = mixed().concat(core).concat(parent).concat(exampleParent)
-export const exampleChildValidator = mixed().concat(core).concat(child)
 export const testParentValidator = mixed().concat(core).concat(parent)
+
+export const exampleChildValidator = mixed().concat(core).concat(child)
 export const testChildValidator = mixed().concat(core).concat(child).concat(testChild)
+
 export const recordValidator = mixed()
   .concat(log)
   .concat(setting)

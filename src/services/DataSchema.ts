@@ -34,7 +34,7 @@ import {
 } from '@/services/validators'
 import type { MixedSchema } from 'yup'
 import type { QTableColumn } from 'quasar'
-import { percentChart } from './chart-props'
+import { percentChart } from '@/services/chart-props'
 
 export default class DataSchema {
   private static instance: DataSchema | null = null
@@ -83,21 +83,6 @@ export default class DataSchema {
       chartProps: [],
     },
     {
-      type: Type.EXAMPLE_CHILD,
-      parentType: Type.EXAMPLE_PARENT,
-      databaseIndices: `&${Field.ID}, ${Field.PARENT_ID}`,
-      group: Group.CHILD,
-      icon: Icon.EXAMPLES,
-      labelSingular: 'Example Child',
-      labelPlural: 'Example Children',
-      validator: exampleChildValidator,
-      supportedActions: [Action.INSPECT, Action.EDIT, Action.DELETE],
-      visibleColumns: [Field.ID, Field.TIMESTAMP],
-      tableColumns: exampleChildColumns,
-      fieldProps: exampleChildFields,
-      chartProps: [],
-    },
-    {
       type: Type.TEST_PARENT,
       childType: Type.TEST_CHILD,
       databaseIndices: `&${Field.ID}`,
@@ -111,6 +96,21 @@ export default class DataSchema {
       tableColumns: testParentColumns,
       fieldProps: testParentFields,
       chartProps: [percentChart],
+    },
+    {
+      type: Type.EXAMPLE_CHILD,
+      parentType: Type.EXAMPLE_PARENT,
+      databaseIndices: `&${Field.ID}, ${Field.PARENT_ID}`,
+      group: Group.CHILD,
+      icon: Icon.EXAMPLES,
+      labelSingular: 'Example Child',
+      labelPlural: 'Example Children',
+      validator: exampleChildValidator,
+      supportedActions: [Action.INSPECT, Action.EDIT, Action.DELETE],
+      visibleColumns: [Field.ID, Field.TIMESTAMP],
+      tableColumns: exampleChildColumns,
+      fieldProps: exampleChildFields,
+      chartProps: [],
     },
     {
       type: Type.TEST_CHILD,
