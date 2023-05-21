@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar'
 import { Icon } from '@/types/icons'
-import { Action, Field } from '@/types/database'
+import { Action, Field, Type } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
 import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
@@ -47,24 +47,26 @@ onUnmounted(() => {
 })
 
 /**
- * On confirmation, delete the matching record from the database.
+ * On confirmation, delete the matching record and child records if any from the database.
  * @param id
  */
-async function onDelete(id: string) {
-  confirmDialog(
-    'Delete',
-    `Permanently delete this record? This will also delete any underlying child records if this record is a parent record.`,
-    Icon.DELETE,
-    'negative',
-    async () => {
-      try {
-        await DB.deleteRecord(routeType, id)
-        log.info('Successfully deleted grouped records', { type: routeType, id })
-      } catch (error) {
-        log.error('Delete failed', error)
-      }
+async function onDelete(type: Type, id: string) {
+  let dialogMessage = `Permanently delete ${DataSchema.getLabelSingular(type)} with id ${id}?`
+
+  if (DataSchema.getChildType(type)) {
+    // Child type exists, so provide additional warning about child record deletions
+    dialogMessage +=
+      ' This will also delete any underlying child records associated with this record.'
+  }
+
+  confirmDialog('Delete', dialogMessage, Icon.DELETE, 'negative', async () => {
+    try {
+      await DB.deleteRecord(routeType, id)
+      log.info('Successfully deleted record', { type: routeType, id })
+    } catch (error) {
+      log.error('Delete failed', error)
     }
-  )
+  })
 }
 </script>
 
@@ -143,7 +145,7 @@ async function onDelete(id: string) {
             dense
             class="q-ml-xs"
             color="negative"
-            @click="onDelete(props.cols[0].value)"
+            @click="onDelete(routeType, props.cols[0].value)"
             :icon="Icon.DELETE"
           />
         </QTd>

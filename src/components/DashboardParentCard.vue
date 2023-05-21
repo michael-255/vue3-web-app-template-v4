@@ -73,29 +73,6 @@ async function onUnfavorite(type: Type, id: string, name: string) {
     }
   )
 }
-
-/**
- * On confirmation, delete the parent and children records from the database.
- * @param type
- * @param id
- * @param name
- */
-async function onParentDelete(type: Type, id: string, name: string) {
-  confirmDialog(
-    'Delete',
-    `Permanently delete ${name}? This will also delete any underlying child records.`,
-    Icon.DELETE,
-    'negative',
-    async () => {
-      try {
-        await DB.deleteRecord(type, id)
-        log.info(`${name} and grouped records deleted`, { type, id, name })
-      } catch (error) {
-        log.error('Delete failed', error)
-      }
-    }
-  )
-}
 </script>
 
 <template>
@@ -164,18 +141,6 @@ async function onParentDelete(type: Type, id: string, name: string) {
                   <QIcon color="warning" :name="Icon.EDIT" />
                 </QItemSection>
                 <QItemSection>Edit</QItemSection>
-              </QItem>
-
-              <QSeparator />
-
-              <QItem
-                clickable
-                @click="onParentDelete(dashboardCard.type, dashboardCard.id, dashboardCard.name)"
-              >
-                <QItemSection avatar>
-                  <QIcon color="negative" :name="Icon.DELETE" />
-                </QItemSection>
-                <QItemSection>Delete</QItemSection>
               </QItem>
             </QList>
           </QMenu>
