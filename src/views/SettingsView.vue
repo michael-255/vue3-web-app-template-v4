@@ -194,7 +194,7 @@ async function onChangeLogRetention(logRetentionIndex: number) {
 async function onResetSettings() {
   confirmDialog(
     'Reset Settings',
-    'Would you like to reset your app Settings to the defaults? This does not change your records.',
+    'Would you like to reset your app Settings to the defaults? This does not impact your data.',
     Icon.REFRESH,
     'primary',
     async () => {
@@ -286,7 +286,7 @@ function getSettingValue(key: Key) {
         <p class="text-h6">Options</p>
 
         <div class="q-mb-md">
-          <p>Reset your app Settings to the defaults without changing any of your data.</p>
+          <p>Reset your app Settings to the defaults without impacting any of your data.</p>
           <QBtn label="Reset Settings" color="primary" @click="onResetSettings()" />
         </div>
 

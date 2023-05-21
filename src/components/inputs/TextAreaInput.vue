@@ -9,7 +9,7 @@ import type { MixedSchema } from 'yup'
 const props = defineProps<{
   field: Field
   label: string
-  desc: string
+  desc?: string
   getDefault: () => any
   validator: MixedSchema<any, any, any>
   validationMessage: string

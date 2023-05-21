@@ -11,7 +11,6 @@ import type {
   testChildValidator,
   testParentValidator,
 } from '@/services/validators'
-import type { ChartOptions } from 'chart.js'
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -127,12 +126,13 @@ export type TypeSchema = {
 
 /**
  * Defined properties for each field.
+ * - Description is optional
  * - Component can be omitted for non-rendered fields
  */
 export type FieldProps = {
   field: Field
   label: string
-  desc: string
+  desc?: string // Optional
   getDefault: () => any
   validator: MixedSchema<any, any, any>
   validationMessage: string

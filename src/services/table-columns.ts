@@ -92,15 +92,6 @@ const stackColumn: Readonly<QTableColumn> = {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * Hidden Auto Id column required for some table actions. Hiding saves horizontal space on the data table.
- * @example
- * action(props.cols[0]) // <-- index!
- */
-const hiddenKeyColumn: Readonly<QTableColumn> = {
-  ...makeHiddenColumn(Field.KEY, 'hiddenKey'),
-}
-
 const keyColumn: Readonly<QTableColumn> = {
   ...makeStandardColumn(Field.KEY),
   label: 'Key',
@@ -202,7 +193,7 @@ const testIdsColumn: Readonly<QTableColumn> = {
 
 const percentColumn: Readonly<QTableColumn> = {
   ...makeStandardColumn(Field.PERCENT),
-  label: 'Percent',
+  label: 'Percentage',
   format: (val: number) => `${val}%`,
 }
 

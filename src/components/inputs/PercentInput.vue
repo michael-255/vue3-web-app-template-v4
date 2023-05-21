@@ -9,7 +9,6 @@ import type { MixedSchema } from 'yup'
 const props = defineProps<{
   field: Field
   label: string
-  desc: string
   getDefault: () => any
   validator: MixedSchema<any, any, any>
   validationMessage: string
@@ -37,8 +36,6 @@ function validationRule() {
   <QCard>
     <QCardSection>
       <p class="text-h6 q-mb-md">{{ label }}</p>
-
-      <p class="q-mb-md">{{ desc }}</p>
 
       <QInput
         v-model="actionStore.record[field]"

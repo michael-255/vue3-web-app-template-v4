@@ -29,7 +29,6 @@ import { uid } from 'quasar'
 const autoIdField: Readonly<FieldProps> = {
   field: Field.AUTO_ID,
   label: 'Auto Id',
-  desc: 'Auto generated id.',
   getDefault: () => undefined,
   validator: autoIdValidator,
   validationMessage: 'Invalid',
@@ -40,7 +39,6 @@ const autoIdField: Readonly<FieldProps> = {
 const severityField: Readonly<FieldProps> = {
   field: Field.SEVERITY,
   label: 'Severity',
-  desc: 'Severity of the log.',
   getDefault: () => undefined,
   validator: severityValidator,
   validationMessage: 'Invalid',
@@ -51,7 +49,6 @@ const severityField: Readonly<FieldProps> = {
 const labelField: Readonly<FieldProps> = {
   field: Field.LABEL,
   label: 'Label',
-  desc: 'Label of the log.',
   getDefault: () => undefined,
   validator: labelValidator,
   validationMessage: 'Invalid',
@@ -62,7 +59,6 @@ const labelField: Readonly<FieldProps> = {
 const detailsField: Readonly<FieldProps> = {
   field: Field.DETAILS,
   label: 'Details',
-  desc: 'Details of the log.',
   getDefault: () => undefined,
   validator: anyValidator,
   validationMessage: 'Invalid',
@@ -78,7 +74,6 @@ const detailsField: Readonly<FieldProps> = {
 const messageField: Readonly<FieldProps> = {
   field: Field.MESSAGE,
   label: 'Message',
-  desc: 'Message of the log.',
   getDefault: () => undefined,
   validator: textValidator,
   validationMessage: 'Invalid',
@@ -89,7 +84,6 @@ const messageField: Readonly<FieldProps> = {
 const stackField: Readonly<FieldProps> = {
   field: Field.STACK,
   label: 'Stack',
-  desc: 'Stack trace of the log.',
   getDefault: () => undefined,
   validator: textValidator,
   validationMessage: 'Invalid',
@@ -106,7 +100,6 @@ const stackField: Readonly<FieldProps> = {
 const keyField: Readonly<FieldProps> = {
   field: Field.KEY,
   label: 'Key',
-  desc: 'Setting key identifies a valid setting.',
   getDefault: () => undefined,
   validator: keyValidator,
   validationMessage: 'Invalid',
@@ -117,11 +110,10 @@ const keyField: Readonly<FieldProps> = {
 const valueField: Readonly<FieldProps> = {
   field: Field.VALUE,
   label: 'Value',
-  desc: 'Value assoicated with the setting key.',
   getDefault: () => undefined,
   validator: valueValidator,
   validationMessage: 'Invalid',
-  inspectFormat: (val: any) => `${val || '-'}`,
+  inspectFormat: (val: any) => `${val ?? '-'}`, // ?? so booleans won't be '-' when false
   // Not rendered
 }
 
@@ -134,7 +126,6 @@ const valueField: Readonly<FieldProps> = {
 const idField: Readonly<FieldProps> = {
   field: Field.ID,
   label: 'Id',
-  desc: 'Unique id for the record.',
   getDefault: () => uid(),
   validator: idValidator,
   validationMessage: 'Invalid',
@@ -145,7 +136,6 @@ const idField: Readonly<FieldProps> = {
 const timestampField: Readonly<FieldProps> = {
   field: Field.TIMESTAMP,
   label: 'Created Date',
-  desc: 'Date the record was created.',
   getDefault: () => Date.now(),
   validator: timestampValidator,
   validationMessage: 'Must be a valid number',
@@ -162,7 +152,6 @@ const timestampField: Readonly<FieldProps> = {
 const nameField: Readonly<FieldProps> = {
   field: Field.NAME,
   label: 'Name',
-  desc: 'Name of the record.',
   getDefault: () => '',
   validator: nameValidator,
   validationMessage: `Name must be between ${Limit.MIN_NAME_LENGTH} and ${Limit.MAX_NAME_LENGTH} characters`,
@@ -173,7 +162,6 @@ const nameField: Readonly<FieldProps> = {
 const descField: Readonly<FieldProps> = {
   field: Field.DESC,
   label: 'Description',
-  desc: 'Description of the record.',
   getDefault: () => '',
   validator: textAreaValidator,
   validationMessage: `Description cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
@@ -184,7 +172,7 @@ const descField: Readonly<FieldProps> = {
 const enabledField: Readonly<FieldProps> = {
   field: Field.ENABLED,
   label: 'Enabled',
-  desc: 'Whether the record is enabled and shows up on the Dashboard.',
+  desc: 'Whether the record is enabled and shows up on the Dashboard and in other lists.',
   getDefault: () => true,
   validator: booleanValidator,
   validationMessage: '* Required',
@@ -212,7 +200,6 @@ const favoritedField: Readonly<FieldProps> = {
 const parentIdField: Readonly<FieldProps> = {
   field: Field.PARENT_ID,
   label: 'Parent Id',
-  desc: 'Parent this child record is associated with.',
   getDefault: () => undefined,
   validator: idValidator,
   validationMessage: `Invalid`,
@@ -223,7 +210,7 @@ const parentIdField: Readonly<FieldProps> = {
 const noteField: Readonly<FieldProps> = {
   field: Field.NOTE,
   label: 'Note',
-  desc: 'Customizable note about the child record.',
+  desc: 'Text note about the record that can be viewed on the Dashboard.',
   getDefault: () => '',
   validator: textAreaValidator,
   validationMessage: `Note cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
@@ -240,7 +227,7 @@ const noteField: Readonly<FieldProps> = {
 const testIdsField: Readonly<FieldProps> = {
   field: Field.TEST_IDS,
   label: 'Tests',
-  desc: 'Tests that are associated with the record.',
+  desc: 'Tests that are associated with the Example record.',
   getDefault: () => [],
   validator: testIdsValidator,
   validationMessage: '* Required',
@@ -250,8 +237,7 @@ const testIdsField: Readonly<FieldProps> = {
 
 const percentField: Readonly<FieldProps> = {
   field: Field.PERCENT,
-  label: 'Percent',
-  desc: 'Percentage value.',
+  label: 'Percentage',
   getDefault: () => 0,
   validator: percentValidator,
   validationMessage: 'Percent must be between 0 and 100',

@@ -15,18 +15,20 @@ structured.
   - [ ] `bugs`
   - [ ] `homepage`
 
-- [ ] Update certain code files
+- [ ] Update specific files
 
-  - [ ] Update `base` in `~/vite.config.ts` to your repository name for deployments to work
-  - [ ] Update `AppName` and `AppDescription` in `~/src/types/general.ts` to represent your app
-  - [ ] Update `name` and `short_name` in `~/public/manifest.json` to the app name
-  - [ ] Update `start_url` in `~/public/manifest.json` to deployed website address
+  - [ ] `base` in `~/vite.config.ts` to your repository name for deployments to work
+  - [ ] `AppName` and `AppDescription` in `~/src/types/general.ts`
+  - [ ] `name` and `short_name` in `~/public/manifest.json`
+  - [ ] `start_url` in `~/public/manifest.json` to deployed website address
+  - [ ] `menu-avatar` in `~/src/assets/menu-avatar.png` to new 96x96 png (+50% canvas for cropping)
+  - [ ] App welcome in `~/src/components/WelcomeOverlay.vue` to reflect your app
 
 - [ ] Update `GitHub` repository settings
 
-  - [ ] Add a Description
-  - [ ] Add the Website
-  - [ ] Add Topics
+  - [ ] Description
+  - [ ] Website
+  - [ ] Topic keywords
   - [ ] Update the `Include in the home page` section
 
     - [ ] Uncheck `Releases`

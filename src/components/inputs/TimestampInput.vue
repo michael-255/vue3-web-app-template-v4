@@ -9,7 +9,6 @@ import useActionStore from '@/stores/action'
 const props = defineProps<{
   field: Field
   label: string
-  desc: string
   getDefault: () => any
 }>()
 
@@ -53,8 +52,6 @@ function onPickerUpdate() {
   <QCard>
     <QCardSection>
       <p class="text-h6">{{ label }}</p>
-
-      <p>{{ desc }}</p>
 
       <QInput
         v-model="displayDate"
