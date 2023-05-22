@@ -16,7 +16,6 @@ const props = defineProps<{
 const actionStore = useActionStore()
 
 // Data
-const inputRef: Ref<any> = ref(null)
 const displayDate: Ref<string> = ref('')
 const datePicker: Ref<string> = ref('')
 const timePicker: Ref<string> = ref('')
@@ -53,15 +52,7 @@ function onPickerUpdate() {
     <QCardSection>
       <p class="text-h6">{{ label }}</p>
 
-      <QInput
-        v-model="displayDate"
-        ref="inputRef"
-        dense
-        outlined
-        disable
-        color="primary"
-        hint="Auto formatted"
-      >
+      <QInput v-model="displayDate" dense outlined disable color="primary" hint="Auto formatted">
         <template v-slot:after>
           <!-- Date Picker -->
           <QBtn :icon="Icon.CALENDAR_DATE" color="primary" class="q-px-sm">

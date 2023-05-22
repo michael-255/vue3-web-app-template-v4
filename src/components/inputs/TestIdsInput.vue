@@ -22,7 +22,6 @@ const { log } = useLogger()
 const actionStore = useActionStore()
 
 // Data
-const inputRef: Ref<any> = ref(null)
 const options: Ref<any[]> = ref([])
 
 onMounted(async () => {
@@ -59,7 +58,6 @@ function validationRule() {
 
       <QSelect
         v-model="actionStore.record[field]"
-        ref="inputRef"
         :rules="[validationRule()]"
         :options="options"
         counter

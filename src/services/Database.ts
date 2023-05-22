@@ -34,6 +34,7 @@ class Database extends Dexie {
     const defaultSettings: Readonly<{
       [key in Key]: any
     }> = {
+      // Can't use undefined or null as default values for settings
       [Key.SHOW_WELCOME]: true,
       [Key.SHOW_DESCRIPTIONS]: true,
       [Key.DARK_MODE]: true,
@@ -136,7 +137,7 @@ class Database extends Dexie {
       throw new Error('Add record validator not found')
     }
     if (!(await recordValidator.isValid(record))) {
-      throw new Error(`Add record attempted to add invalid record with id ${record.id}`)
+      throw new Error(`Add record attempted to add invalid record: ${JSON.stringify(record)}`)
     }
 
     // Validate cleans record of unknown properties
@@ -369,8 +370,9 @@ class Database extends Dexie {
     }
 
     const setting: Setting = { key, value }
+    const settingValue = await this.table(Type.SETTING).get(setting.key)
 
-    if (!(await this.table(Type.SETTING).get(setting.key))) {
+    if (!settingValue) {
       // Add Setting if it doesn't exist
       return await this.addRecord(Type.SETTING, setting)
     } else {

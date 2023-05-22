@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref, type Ref } from 'vue'
+import { onMounted } from 'vue'
 import type { Field } from '@/types/database'
 import { Limit } from '@/types/general'
-import useActionStore from '@/stores/action'
 import type { MixedSchema } from 'yup'
+import useActionStore from '@/stores/action'
 
 // Props & Emits
 const props = defineProps<{
@@ -17,9 +17,6 @@ const props = defineProps<{
 
 // Composables & Stores
 const actionStore = useActionStore()
-
-// Data
-const inputRef: Ref<any> = ref(null)
 
 onMounted(() => {
   actionStore.record[props.field] = actionStore.record[props.field] ?? props.getDefault()
@@ -42,7 +39,6 @@ function validationRule() {
 
       <QInput
         v-model="actionStore.record[field]"
-        ref="inputRef"
         :rules="[validationRule()]"
         :maxlength="Limit.MAX_TEXT_AREA_LENGTH"
         type="textarea"
