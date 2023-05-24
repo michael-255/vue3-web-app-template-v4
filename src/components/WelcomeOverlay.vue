@@ -2,7 +2,7 @@
 import { Icon } from '@/types/icons'
 import { type Ref, ref, onUnmounted } from 'vue'
 import { RouteName } from '@/router/route-names'
-import { AppName } from '@/types/general'
+import { AppDescription, AppName } from '@/types/general'
 import { Key } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDefaults from '@/composables/useDefaults'
@@ -45,7 +45,12 @@ async function onCloseWelcomeOverlay() {
         <p class="text-h6">Welcome to {{ AppName }}</p>
 
         <!-- Information -->
-        <p>This app provides a foundation to build your own web apps.</p>
+        <p>{{ AppDescription }}</p>
+
+        <p>
+          Continue reading to learn more, or scroll to the bottom and click the "Start Using App"
+          button to jump right in.
+        </p>
 
         <!-- Favorites -->
         <div class="q-mb-md">
