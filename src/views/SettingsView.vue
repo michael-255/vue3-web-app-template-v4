@@ -452,7 +452,6 @@ function getSettingValue(key: Key) {
             switch-label-side
             :min="0"
             :max="Object.values(LogRetention).length - 1"
-            :step="1"
             @change="(index) => onChangeLogRetention(index)"
           />
         </div>

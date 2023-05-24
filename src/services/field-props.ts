@@ -140,7 +140,7 @@ const timestampField: Readonly<FieldProps> = {
   validator: timestampValidator,
   validationMessage: 'Must be a valid number',
   inspectFormat: (val: number) => getDisplayDate(val) || '-',
-  component: defineAsyncComponent(() => import('@/components/inputs/TimestampInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/InputTimestamp.vue')),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ const nameField: Readonly<FieldProps> = {
   validator: nameValidator,
   validationMessage: `Name must be between ${Limit.MIN_NAME_LENGTH} and ${Limit.MAX_NAME_LENGTH} characters`,
   inspectFormat: (val: string) => `${val || '-'}`,
-  component: defineAsyncComponent(() => import('@/components/inputs/NameInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/InputName.vue')),
 }
 
 const descField: Readonly<FieldProps> = {
@@ -166,7 +166,7 @@ const descField: Readonly<FieldProps> = {
   validator: textAreaValidator,
   validationMessage: `Description cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   inspectFormat: (val: string) => `${val || '-'}`,
-  component: defineAsyncComponent(() => import('@/components/inputs/TextAreaInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/InputTextArea.vue')),
 }
 
 const enabledField: Readonly<FieldProps> = {
@@ -177,7 +177,7 @@ const enabledField: Readonly<FieldProps> = {
   validator: booleanValidator,
   validationMessage: '* Required',
   inspectFormat: (val: boolean) => (val ? 'Yes' : 'No'),
-  component: defineAsyncComponent(() => import('@/components/inputs/ToggleInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/InputToggle.vue')),
 }
 
 const favoritedField: Readonly<FieldProps> = {
@@ -188,7 +188,7 @@ const favoritedField: Readonly<FieldProps> = {
   validator: booleanValidator,
   validationMessage: '* Required',
   inspectFormat: (val: boolean) => (val ? 'Yes' : 'No'),
-  component: defineAsyncComponent(() => import('@/components/inputs/ToggleInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/InputToggle.vue')),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -215,7 +215,7 @@ const noteField: Readonly<FieldProps> = {
   validator: textAreaValidator,
   validationMessage: `Note cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   inspectFormat: (val: string) => `${val || '-'}`,
-  component: defineAsyncComponent(() => import('@/components/inputs/TextAreaInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/InputTextArea.vue')),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -232,7 +232,7 @@ const testIdsField: Readonly<FieldProps> = {
   validator: testIdsValidator,
   validationMessage: '* Required',
   inspectFormat: (val: string[]) => val?.join(', ') || '-',
-  component: defineAsyncComponent(() => import('@/components/inputs/TestIdsInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/InputTestIds.vue')),
 }
 
 const percentField: Readonly<FieldProps> = {
@@ -242,7 +242,7 @@ const percentField: Readonly<FieldProps> = {
   validator: percentValidator,
   validationMessage: 'Percent must be between 0 and 100',
   inspectFormat: (val: number) => `${val}%`,
-  component: defineAsyncComponent(() => import('@/components/inputs/PercentInput.vue')),
+  component: defineAsyncComponent(() => import('@/components/inputs/InputPercent.vue')),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
