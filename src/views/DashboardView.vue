@@ -17,22 +17,19 @@ import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Dashboard` })
 
-// Composables & Stores
 const uiStore = useUIStore()
 const { log } = useLogger()
 const { goToCreate } = useRoutables()
 
-// Data
 const showDescription: Ref<boolean> = ref(false)
+const dashboardOptions = DataSchema.getParentTypeOptions()
 const dashboardCards: Ref<{ [key in Type]: DashboardListCardProps[] }> = ref(
   Object.values(Type).reduce((acc, type) => {
     acc[type] = []
     return acc
   }, {} as { [key in Type]: DashboardListCardProps[] })
 )
-const dashboardOptions = DataSchema.getParentTypeOptions()
 
-// Subscriptions
 const settingsSubscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     showDescription.value = !!liveSettings.find((s) => s.key === Key.SHOW_DESCRIPTIONS)?.value
@@ -55,50 +52,25 @@ onUnmounted(() => {
   settingsSubscription.unsubscribe()
   dashboardSubscription.unsubscribe()
 })
-
-/**
- * Returns dashboard cards for current dashboard selection.
- */
-function currentDashboardCards() {
-  return dashboardCards.value[uiStore.dashboardType]
-}
-
-/**
- * Returns display string with record count for bottom of dashboard page.
- */
-function getCountDisplay() {
-  return getRecordsCountDisplay(dashboardCards.value[uiStore.dashboardType])
-}
-
-/**
- * Returns label text for create button on bottom of dashboard page.
- */
-function getCreateLabel() {
-  const labelSingular = DataSchema.getLabelSingular(uiStore.dashboardType)
-  return `Create ${labelSingular}`
-}
 </script>
 
 <template>
   <ResponsivePage :bannerIcon="Icon.DASHBOARD" bannerTitle="Dashboard">
     <WelcomeOverlay />
 
-    <!-- Dashboard Selection -->
-    <QCard class="q-mb-md">
-      <QCardSection>
-        <p class="text-h6">What would you like to work on?</p>
+    <section class="q-mb-lg">
+      <p class="text-h6 q-mb-sm">What would you like to work on?</p>
 
-        <QOptionGroup
-          color="primary"
-          :options="dashboardOptions"
-          :model-value="uiStore.dashboardType"
-          @update:model-value="uiStore.dashboardType = $event"
-        />
-      </QCardSection>
-    </QCard>
+      <QOptionGroup
+        color="primary"
+        :options="dashboardOptions"
+        :model-value="uiStore.dashboardType"
+        @update:model-value="uiStore.dashboardType = $event"
+      />
+    </section>
 
     <!-- Dashboard Cards -->
-    <div v-for="(dashboardCard, i) in currentDashboardCards()" :key="i">
+    <div v-for="(dashboardCard, i) in dashboardCards[uiStore.dashboardType]" :key="i">
       <DashboardParentCard
         class="q-mb-md"
         :showDescription="showDescription"
@@ -119,12 +91,14 @@ function getCreateLabel() {
         <QIcon name="menu_open" size="80px" color="grey" />
       </div>
 
-      <p class="col-12 text-grey text-center">{{ getCountDisplay() }}</p>
+      <p class="col-12 text-grey text-center">
+        {{ getRecordsCountDisplay(dashboardCards[uiStore.dashboardType]) }}
+      </p>
 
       <QBtn
         color="positive"
         :icon="Icon.CREATE"
-        :label="`${getCreateLabel()}`"
+        :label="`Create ${DataSchema.getLabelSingular(uiStore.dashboardType)}`"
         @click="goToCreate(uiStore.dashboardType)"
       />
     </div>

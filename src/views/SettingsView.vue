@@ -16,14 +16,12 @@ import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Settings` })
 
-// Composables & Stores
 const { log } = useLogger()
 const { notify } = useNotifications()
 const { confirmDialog } = useDialogs()
 const { onDefaults } = useDefaults()
 const { goToData } = useRoutables()
 
-// Data
 const typeOptions = DataSchema.getTypeOptions()
 const settings: Ref<Setting[]> = ref([])
 const logRetentionIndex: Ref<number> = ref(0)
@@ -35,7 +33,6 @@ const accessModel = ref(accessOptions.value[0])
 const deleteOptions = ref([...typeOptions])
 const deleteModel = ref(deleteOptions.value[0])
 
-// Subscriptions
 const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     settings.value = liveSettings
@@ -51,9 +48,6 @@ onUnmounted(() => {
   subscription.unsubscribe()
 })
 
-/**
- * Generates example logs that can be examined in the database and console.
- */
 function onTestLogger() {
   log.debug('This is a Debug Log', { name: 'Debug' })
   log.info('This is an Info Log', { name: 'Info' })
@@ -61,18 +55,12 @@ function onTestLogger() {
   log.error('This is an Error Log', { name: 'Error' })
 }
 
-/**
- * Called when a file has been rejected by the input.
- * @param entries
- */
+// Called when a file has been rejected by the input
 function onRejectedFile(entries: any) {
   const fileName = entries[0]?.importFile?.name || undefined
   log.warn(`Cannot import"${fileName}`, entries)
 }
 
-/**
- * On confirmation, imports your data from a JSON file.
- */
 function onImportFile() {
   confirmDialog(
     'Import',
@@ -116,9 +104,6 @@ function onImportFile() {
   )
 }
 
-/**
- * On confirmation, exports your records as a JSON file.
- */
 function onExportRecords() {
   // Build export file name
   const appNameSlug = AppName.toLowerCase().split(' ').join('-')
@@ -170,10 +155,6 @@ function onExportRecords() {
   )
 }
 
-/**
- * Updates the log retention time in the database.
- * @param logRetentionIndex
- */
 async function onChangeLogRetention(logRetentionIndex: number) {
   try {
     const logRetentionTime = Object.values(LogRetention)[logRetentionIndex]
@@ -184,9 +165,6 @@ async function onChangeLogRetention(logRetentionIndex: number) {
   }
 }
 
-/**
- * On confirmation, reset all your app Settings.
- */
 async function onResetSettings() {
   confirmDialog(
     'Reset Settings',
@@ -204,10 +182,6 @@ async function onResetSettings() {
   )
 }
 
-/**
- * On confirmation, deletes all records of a specified type.
- * @param type
- */
 async function onDeleteBy(label: string, type: Type) {
   confirmDialog(
     `Delete ${label}`,
@@ -225,9 +199,6 @@ async function onDeleteBy(label: string, type: Type) {
   )
 }
 
-/**
- * On confirmation, deletes all records of any type from the database. Re-initializes the settings.
- */
 async function onDeleteAll() {
   confirmDialog(
     'Delete All',
@@ -245,9 +216,6 @@ async function onDeleteAll() {
   )
 }
 
-/**
- * On confirmation, completely deletes the database and all of its data (must reload the app after).
- */
 async function onDeleteDatabase() {
   confirmDialog(
     'Delete Database',
@@ -265,10 +233,6 @@ async function onDeleteDatabase() {
   )
 }
 
-/**
- * Returns value of setting from the live ref.
- * @param key
- */
 function getSettingValue(key: Key) {
   return settings.value.find((s) => s.key === key)?.value
 }
@@ -276,7 +240,6 @@ function getSettingValue(key: Key) {
 
 <template>
   <ResponsivePage :bannerIcon="Icon.SETTINGS" bannerTitle="Settings">
-    <!-- Options -->
     <QCard class="q-mb-md">
       <QCardSection>
         <p class="text-h6">Options</p>
@@ -317,7 +280,6 @@ function getSettingValue(key: Key) {
       </QCardSection>
     </QCard>
 
-    <!-- Defaults -->
     <QCard class="q-mb-md">
       <QCardSection>
         <p class="text-h6">Defaults</p>
@@ -329,7 +291,6 @@ function getSettingValue(key: Key) {
       </QCardSection>
     </QCard>
 
-    <!-- Data Management -->
     <QCard class="q-mb-md">
       <QCardSection>
         <p class="text-h6">Data Management</p>
@@ -406,7 +367,6 @@ function getSettingValue(key: Key) {
       </QCardSection>
     </QCard>
 
-    <!-- Logging -->
     <QCard class="q-mb-md">
       <QCardSection>
         <p class="text-h6">Logging</p>
@@ -443,22 +403,24 @@ function getSettingValue(key: Key) {
             functions retroactivley, so if you change the time to 3 months, all logs older than 3
             months will be deleted. Expired log processing occurs every time the app is loaded.
           </p>
-          <QSlider
-            v-model="logRetentionIndex"
-            :label-value="Object.values(LogRetention)[logRetentionIndex]"
-            color="primary"
-            markers
-            label-always
-            switch-label-side
-            :min="0"
-            :max="Object.values(LogRetention).length - 1"
-            @change="(index) => onChangeLogRetention(index)"
-          />
+
+          <div class="q-mx-lg">
+            <QSlider
+              v-model="logRetentionIndex"
+              :label-value="Object.values(LogRetention)[logRetentionIndex]"
+              color="primary"
+              markers
+              label-always
+              switch-label-side
+              :min="0"
+              :max="Object.values(LogRetention).length - 1"
+              @change="(index) => onChangeLogRetention(index)"
+            />
+          </div>
         </div>
       </QCardSection>
     </QCard>
 
-    <!-- DANGER ZONE -->
     <QCard class="q-mb-md">
       <QCardSection>
         <p class="text-h6 text-negative">DANGER ZONE</p>
