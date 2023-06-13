@@ -4,6 +4,24 @@ This Vue 3 Typescript project can be used as a web application template to help 
 developing. Read through this README to have a better understanding of how this project is
 structured.
 
+## TODO
+
+Do this first:
+
+- Move core tables and their functionality separate from app specific record functionality
+- Have inspect be a full screen dialog?
+
+Make NEW components that separate core functionality from app specific functionality:
+
+- `CreateParentView.vue`
+- `EditParentView.vue`
+- `CreateChildView.vue`
+- `EditChildView.vue`
+- `DataParentView.vue`
+- `DataChildView.vue`
+- `DataLogsView.vue`
+- `DataSettingsView.vue`
+
 ## Post Cloning Steps
 
 - [ ] Update `package.json`

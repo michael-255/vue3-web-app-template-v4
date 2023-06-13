@@ -11,6 +11,18 @@ const router = createRouter({
       component: () => import('../views/DashboardView.vue'),
     },
     {
+      path: '/logs-data',
+      name: RouteName.DATA_LOGS,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/DataLogsView.vue'),
+    },
+    {
+      path: '/settings-data',
+      name: RouteName.DATA_SETTINGS,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/DataSettingsView.vue'),
+    },
+    {
       path: '/data/:type',
       name: RouteName.DATA,
       meta: { layout: 'MenuLayout' },

@@ -57,7 +57,7 @@ onMounted(async () => {
 
       <p>{{ parent.desc }}</p>
 
-      <p class="q-my-none q-py-none text-grey text-caption">Id: {{ parent.id }}</p>
+      <p class="q-my-none q-py-none text-grey text-caption">{{ parent.id }}</p>
     </QCardSection>
   </QCard>
 </template>

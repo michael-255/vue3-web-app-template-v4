@@ -59,6 +59,8 @@ export default function useRoutables() {
    * @param id
    */
   function goToInspect(type: Type, id: string) {
+    console.log(id)
+
     try {
       router.push({
         name: RouteName.INSPECT,

@@ -27,9 +27,6 @@ class Database extends Dexie {
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
-  /**
-   * Initializes all settings with existing or default values.
-   */
   async initSettings() {
     const defaultSettings: Readonly<{
       [key in Key]: any
@@ -53,7 +50,6 @@ class Database extends Dexie {
       }))
     )
 
-    // Set Quasar dark mode - Casting to a boolean just in case
     Dark.set(!!settings.find((s) => s.key === Key.DARK_MODE)?.value)
 
     // Set all Settings in the database
@@ -66,16 +62,10 @@ class Database extends Dexie {
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
-  /**
-   * Observable of settings table. Used by pages that need to react to changes in settings.
-   */
   liveSettings() {
     return liveQuery(() => this.table(Type.SETTING).toArray())
   }
 
-  /**
-   * Observable of logs table. Used for the logs specific data table page.
-   */
   liveLogs() {
     return liveQuery(() => this.table(Type.LOG).orderBy(Field.AUTO_ID).reverse().toArray())
   }
@@ -298,6 +288,9 @@ class Database extends Dexie {
         favorited: r.favorited,
         previousNote: previous?.note,
         previousTimestamp: previous?.timestamp,
+        // TODO - Just put the whole parent and previous child record in here
+        // parent: r,
+        // previousChild: previous,
       }
 
       // Add to favorites or non-favorites

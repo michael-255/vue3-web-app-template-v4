@@ -89,7 +89,7 @@ export enum Key {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-// Infering user record types from the validators
+// Infering data record types from the validators
 export type Log = InferType<typeof logValidator>
 export type Setting = InferType<typeof settingValidator>
 export type ExampleParent = InferType<typeof exampleParentValidator>

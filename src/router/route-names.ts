@@ -3,6 +3,10 @@
  */
 export enum RouteName {
   DASHBOARD = 'Dashboard',
+  DATA_LOGS = 'DataLogs',
+  DATA_SETTINGS = 'DataSettings',
+  DATA_PARENTS = 'DataParents',
+  DATA_CHILDREN = 'DataChildren',
   DATA = 'Data',
   INSPECT = 'Inspect',
   CREATE = 'Create',
