@@ -8,8 +8,13 @@ structured.
 
 Do this first:
 
+- Don't think you'll need `Actions` anymore
 - Move core tables and their functionality separate from app specific record functionality
-- Have inspect be a full screen dialog?
+  - `Logs` table
+  - `Settings` table
+  - `Parents` table
+  - `Children` table
+- Have inspect be a dialog (maybe fullscreen)
 
 Make NEW components that separate core functionality from app specific functionality:
 
@@ -21,6 +26,18 @@ Make NEW components that separate core functionality from app specific functiona
 - `DataChildView.vue`
 - `DataLogsView.vue`
 - `DataSettingsView.vue`
+
+```typescript
+// Future note?
+
+/**
+ * Defines unique ids that are reserved for specific records.
+ * - Mainly used for cross referencing when doing imports
+ */
+export enum ReservedId {
+  UID_01 = '00000000-0000-0000-0000-000000000001',
+}
+```
 
 ## Post Cloning Steps
 

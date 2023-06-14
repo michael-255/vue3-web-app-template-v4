@@ -1,12 +1,13 @@
-import type { InferType, MixedSchema } from 'yup'
+import type { InferType, ObjectSchema } from 'yup'
 import type { Icon } from '@/types/icons'
 import type { QTableColumn } from 'quasar'
 import type { defineAsyncComponent } from 'vue'
 import type {
+  anyChildValidator,
   exampleChildValidator,
   exampleParentValidator,
   logValidator,
-  recordValidator,
+  anyParentValidator,
   settingValidator,
   testChildValidator,
   testParentValidator,
@@ -18,36 +19,32 @@ import type {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * Defines both the Dexie table and record type.
- * - Must be a URL friendly slug
- */
+// Must be a URL friendly slug
 export enum Type {
-  LOG = 'log',
-  SETTING = 'setting',
-  EXAMPLE_PARENT = 'example-parent',
-  EXAMPLE_CHILD = 'example-child',
-  TEST_PARENT = 'test-parent',
-  TEST_CHILD = 'test-child',
+  EXAMPLE = 'example',
+  TEST = 'test',
 }
 
-/**
- * Defines all potential record fields used by all types.
- */
-export enum Field {
-  // SHARED
-  ID = 'id', // Parent, Child
-  TIMESTAMP = 'timestamp', // Parent, Child, Log
-  // LOG
+export enum LogField {
   AUTO_ID = 'autoId',
+  TIMESTAMP = 'timestamp',
   SEVERITY = 'severity',
   LABEL = 'label',
   DETAILS = 'details',
   MESSAGE = 'message',
   STACK = 'stack',
-  // SETTING
+}
+
+export enum SettingField {
   KEY = 'key',
   VALUE = 'value',
+}
+
+export enum RecordField {
+  // CORE
+  ID = 'id',
+  TIMESTAMP = 'timestamp',
+  TYPE = 'type',
   // PARENT
   NAME = 'name',
   DESC = 'desc',
@@ -61,9 +58,6 @@ export enum Field {
   PERCENT = 'percent',
 }
 
-/**
- * Defines log severity levels.
- */
 export enum Severity {
   DEBUG = 'DEBUG',
   INFO = 'INFO',
@@ -71,10 +65,7 @@ export enum Severity {
   ERROR = 'ERROR',
 }
 
-/**
- * Defines key strings for all valid settings the app supports.
- */
-export enum Key {
+export enum SettingKey {
   SHOW_WELCOME = 'show-welcome-overlay',
   SHOW_DESCRIPTIONS = 'show-dashboard-descriptions',
   DARK_MODE = 'dark-mode',
@@ -92,11 +83,14 @@ export enum Key {
 // Infering data record types from the validators
 export type Log = InferType<typeof logValidator>
 export type Setting = InferType<typeof settingValidator>
+// Partials
+export type ParentRecord = Partial<InferType<typeof anyParentValidator>>
+export type ChildRecord = Partial<InferType<typeof anyChildValidator>>
+// Record Specific
 export type ExampleParent = InferType<typeof exampleParentValidator>
 export type ExampleChild = InferType<typeof exampleChildValidator>
 export type TestParent = InferType<typeof testParentValidator>
 export type TestChild = InferType<typeof testChildValidator>
-export type Record = Partial<InferType<typeof recordValidator>>
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -104,65 +98,34 @@ export type Record = Partial<InferType<typeof recordValidator>>
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * How data in the app is set up for display and use.
- */
 export type TypeSchema = {
   type: Type
-  childType?: Type
-  parentType?: Type
-  databaseIndices: string
-  group: Group
   icon: Icon
-  labelSingular: string
-  labelPlural: string
-  validator: MixedSchema<any, any, any>
-  supportedActions: Action[]
-  visibleColumns: Field[]
-  tableColumns: QTableColumn[]
-  fieldProps: FieldProps[]
-  chartProps: ChartProps[]
+  parentLabelSingular: string
+  parentLabelPlural: string
+  parentValidator: ObjectSchema<any, any, any>
+  parentTableColumns: QTableColumn[]
+  parentFieldProps: FieldProps[]
+  parentChartProps: ChartProps[]
+  childLabelSingular: string
+  childLabelPlural: string
+  childValidator: ObjectSchema<any, any, any>
+  childTableColumns: QTableColumn[]
+  childFieldProps: FieldProps[]
+  childChartProps: ChartProps[]
 }
 
-/**
- * Defined properties for each field.
- * - Description is optional
- * - Component can be omitted for non-rendered fields
- */
 export type FieldProps = {
-  field: Field
+  field: RecordField | SettingField | LogField
   label: string
   desc?: string // Optional
   getDefault: () => any
-  validator: MixedSchema<any, any, any>
+  validator: ObjectSchema<any, any, any>
   validationMessage: string
   inspectFormat: (val: any) => string
-  component?: ReturnType<typeof defineAsyncComponent>
+  component?: ReturnType<typeof defineAsyncComponent> // Optional = not rendered
 }
 
-/**
- * Defines properties for each chart.
- */
 export type ChartProps = {
   component: ReturnType<typeof defineAsyncComponent>
-}
-
-/**
- * Defines actions that a database type can perform on the data view.
- */
-export enum Action {
-  INSPECT = 'Inspect',
-  CREATE = 'Create',
-  EDIT = 'Edit',
-  DELETE = 'Delete',
-  CHARTS = 'Charts',
-}
-
-/**
- * Defines the groups that a database type can belong to.
- */
-export enum Group {
-  PARENT = 'parent',
-  CHILD = 'child',
-  INTERNAL = 'internal',
 }
