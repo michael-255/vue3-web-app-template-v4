@@ -1,12 +1,7 @@
-import { Field, Key, Severity } from '@/types/database'
+import { LogField, SettingField, RecordField, SettingKey, Severity } from '@/types/database'
 import { truncateString, getDisplayDate } from '@/utils/common'
 import type { QTableColumn } from 'quasar'
 
-/**
- * Creates standard properties for a QTable column.
- * @param field
- * @param required
- */
 function makeStandardColumn(field: any, required: boolean = false) {
   return {
     name: field,
@@ -17,11 +12,7 @@ function makeStandardColumn(field: any, required: boolean = false) {
   } as QTableColumn
 }
 
-/**
- * Creates required properties for a hidden QTable column.
- * @param field
- * @param name
- */
+// For hidden required porperties
 function makeHiddenColumn(field: any, name: string) {
   return {
     name,
@@ -41,47 +32,43 @@ function makeHiddenColumn(field: any, name: string) {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * Hidden Auto Id column required for some table actions. Hiding saves horizontal space on the data table.
- * @example
- * action(props.cols[0]) // <-- index!
- */
+// Access in QTable via props.cols[0]
 const hiddenAutoIdColumn: Readonly<QTableColumn> = {
-  ...makeHiddenColumn(Field.AUTO_ID, 'hiddenAutoId'),
+  ...makeHiddenColumn(LogField.AUTO_ID, 'hiddenAutoId'),
 }
 
 const autoIdColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.AUTO_ID),
+  ...makeStandardColumn(LogField.AUTO_ID),
   label: 'Auto Id',
   format: (val: number) => `${val}`,
 }
 
 const severityColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.SEVERITY),
+  ...makeStandardColumn(LogField.SEVERITY),
   label: 'Severity',
   format: (val: Severity) => `${val}`,
 }
 
 const labelColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.LABEL),
+  ...makeStandardColumn(LogField.LABEL),
   label: 'Label',
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
 const detailsColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.DETAILS),
+  ...makeStandardColumn(LogField.DETAILS),
   label: 'Details',
   format: (val: any) => truncateString(JSON.stringify(val), 30, '...'),
 }
 
 const messageColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.MESSAGE),
+  ...makeStandardColumn(LogField.MESSAGE),
   label: 'Message',
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
 const stackColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.STACK),
+  ...makeStandardColumn(LogField.STACK),
   label: 'Stack',
   format: (val: string) => truncateString(val, 30, '...'),
 }
@@ -93,15 +80,15 @@ const stackColumn: Readonly<QTableColumn> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const keyColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.KEY),
-  label: 'Key',
-  format: (val: Key) => `${val}`,
+  ...makeStandardColumn(SettingField.KEY),
+  label: 'Setting',
+  format: (val: SettingKey) => `${val}`,
 }
 
 const valueColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.VALUE),
+  ...makeStandardColumn(SettingField.VALUE),
   label: 'Value',
-  format: (val: Key) => truncateString(JSON.stringify(val), 30, '...'),
+  format: (val: SettingKey) => truncateString(JSON.stringify(val), 30, '...'),
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -110,23 +97,19 @@ const valueColumn: Readonly<QTableColumn> = {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * Hidden Id column required for some table actions. Hiding saves horizontal space on the data table.
- * @example
- * action(props.cols[0]) // <-- index!
- */
+// Access in QTable via props.cols[0]
 const hiddenIdColumn: Readonly<QTableColumn> = {
-  ...makeHiddenColumn(Field.ID, 'hiddenId'),
+  ...makeHiddenColumn(RecordField.ID, 'hiddenId'),
 }
 
 const idColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.ID),
+  ...makeStandardColumn(RecordField.ID),
   label: 'Id*',
   format: (val: string) => truncateString(val, 8, '*'),
 }
 
 const timestampColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.TIMESTAMP),
+  ...makeStandardColumn(RecordField.TIMESTAMP),
   label: 'Created Date',
   format: (val: number) => getDisplayDate(val),
 }
@@ -138,25 +121,25 @@ const timestampColumn: Readonly<QTableColumn> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const nameColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.NAME),
+  ...makeStandardColumn(RecordField.NAME),
   label: 'Name',
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
 const descColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.DESC),
+  ...makeStandardColumn(RecordField.DESC),
   label: 'Description',
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
 const enabledColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.ENABLED),
+  ...makeStandardColumn(RecordField.ENABLED),
   label: 'Enabled',
   format: (val: boolean) => (val ? 'Yes' : 'No'),
 }
 
 const favoritedColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.FAVORITED),
+  ...makeStandardColumn(RecordField.FAVORITED),
   label: 'Favorited',
   format: (val: boolean) => (val ? 'Yes' : 'No'),
 }
@@ -168,13 +151,13 @@ const favoritedColumn: Readonly<QTableColumn> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const parentIdColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.PARENT_ID),
+  ...makeStandardColumn(RecordField.PARENT_ID),
   label: 'Parent Id*',
   format: (val: string) => truncateString(val, 8, '*'),
 }
 
 const noteColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.NOTE),
+  ...makeStandardColumn(RecordField.NOTE),
   label: 'Note',
   format: (val: string) => truncateString(val, 30, '...'),
 }
@@ -186,20 +169,20 @@ const noteColumn: Readonly<QTableColumn> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const testIdsColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.TEST_IDS),
+  ...makeStandardColumn(RecordField.TEST_IDS),
   label: 'Tests',
   format: (val: string[]) => truncateString(JSON.stringify(val), 30, '...'),
 }
 
 const percentColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(Field.PERCENT),
+  ...makeStandardColumn(RecordField.PERCENT),
   label: 'Percentage',
   format: (val: number) => `${val}%`,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//     APP SCHEMA TABLE COLUMNS                                              //
+//     TABLE COLUMNS                                                         //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 

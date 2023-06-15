@@ -14,7 +14,14 @@ import {
   valueValidator,
   testIdsValidator,
 } from '@/services/validators'
-import { Field, Key, Severity, type FieldProps } from '@/types/database'
+import {
+  Severity,
+  type FieldProps,
+  LogField,
+  SettingField,
+  SettingKey,
+  RecordField,
+} from '@/types/database'
 import { Limit } from '@/types/general'
 import { getDisplayDate } from '@/utils/common'
 import { defineAsyncComponent } from 'vue'
@@ -27,7 +34,7 @@ import { uid } from 'quasar'
 ///////////////////////////////////////////////////////////////////////////////
 
 const autoIdField: Readonly<FieldProps> = {
-  field: Field.AUTO_ID,
+  field: LogField.AUTO_ID,
   label: 'Auto Id',
   getDefault: () => undefined,
   validator: autoIdValidator,
@@ -37,7 +44,7 @@ const autoIdField: Readonly<FieldProps> = {
 }
 
 const severityField: Readonly<FieldProps> = {
-  field: Field.SEVERITY,
+  field: LogField.SEVERITY,
   label: 'Severity',
   getDefault: () => undefined,
   validator: severityValidator,
@@ -47,7 +54,7 @@ const severityField: Readonly<FieldProps> = {
 }
 
 const labelField: Readonly<FieldProps> = {
-  field: Field.LABEL,
+  field: LogField.LABEL,
   label: 'Label',
   getDefault: () => undefined,
   validator: labelValidator,
@@ -57,7 +64,7 @@ const labelField: Readonly<FieldProps> = {
 }
 
 const detailsField: Readonly<FieldProps> = {
-  field: Field.DETAILS,
+  field: LogField.DETAILS,
   label: 'Details',
   getDefault: () => undefined,
   validator: anyValidator,
@@ -72,7 +79,7 @@ const detailsField: Readonly<FieldProps> = {
 }
 
 const messageField: Readonly<FieldProps> = {
-  field: Field.MESSAGE,
+  field: LogField.MESSAGE,
   label: 'Message',
   getDefault: () => undefined,
   validator: textValidator,
@@ -82,7 +89,7 @@ const messageField: Readonly<FieldProps> = {
 }
 
 const stackField: Readonly<FieldProps> = {
-  field: Field.STACK,
+  field: LogField.STACK,
   label: 'Stack',
   getDefault: () => undefined,
   validator: textValidator,
@@ -98,17 +105,17 @@ const stackField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const keyField: Readonly<FieldProps> = {
-  field: Field.KEY,
+  field: SettingField.KEY,
   label: 'Key',
   getDefault: () => undefined,
   validator: keyValidator,
   validationMessage: 'Invalid',
-  inspectFormat: (val: Key) => `${val || '-'}`,
+  inspectFormat: (val: SettingKey) => `${val || '-'}`,
   // Not rendered
 }
 
 const valueField: Readonly<FieldProps> = {
-  field: Field.VALUE,
+  field: SettingField.VALUE,
   label: 'Value',
   getDefault: () => undefined,
   validator: valueValidator,
@@ -124,7 +131,7 @@ const valueField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const idField: Readonly<FieldProps> = {
-  field: Field.ID,
+  field: RecordField.ID,
   label: 'Id',
   getDefault: () => uid(),
   validator: idValidator,
@@ -134,7 +141,7 @@ const idField: Readonly<FieldProps> = {
 }
 
 const timestampField: Readonly<FieldProps> = {
-  field: Field.TIMESTAMP,
+  field: RecordField.TIMESTAMP,
   label: 'Created Date',
   getDefault: () => Date.now(),
   validator: timestampValidator,
@@ -150,7 +157,7 @@ const timestampField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const nameField: Readonly<FieldProps> = {
-  field: Field.NAME,
+  field: RecordField.NAME,
   label: 'Name',
   getDefault: () => '',
   validator: nameValidator,
@@ -160,7 +167,7 @@ const nameField: Readonly<FieldProps> = {
 }
 
 const descField: Readonly<FieldProps> = {
-  field: Field.DESC,
+  field: RecordField.DESC,
   label: 'Description',
   getDefault: () => '',
   validator: textAreaValidator,
@@ -170,7 +177,7 @@ const descField: Readonly<FieldProps> = {
 }
 
 const enabledField: Readonly<FieldProps> = {
-  field: Field.ENABLED,
+  field: RecordField.ENABLED,
   label: 'Enabled',
   desc: 'Whether the record is enabled and shows up on the Dashboard and in other lists.',
   getDefault: () => true,
@@ -181,7 +188,7 @@ const enabledField: Readonly<FieldProps> = {
 }
 
 const favoritedField: Readonly<FieldProps> = {
-  field: Field.FAVORITED,
+  field: RecordField.FAVORITED,
   label: 'Favorited',
   desc: 'Whether the record is favorited and is prioritized on the Dashboard.',
   getDefault: () => false,
@@ -198,7 +205,7 @@ const favoritedField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const parentIdField: Readonly<FieldProps> = {
-  field: Field.PARENT_ID,
+  field: RecordField.PARENT_ID,
   label: 'Parent Id',
   getDefault: () => undefined,
   validator: idValidator,
@@ -208,7 +215,7 @@ const parentIdField: Readonly<FieldProps> = {
 }
 
 const noteField: Readonly<FieldProps> = {
-  field: Field.NOTE,
+  field: RecordField.NOTE,
   label: 'Note',
   desc: 'Text note about the record that can be viewed on the Dashboard.',
   getDefault: () => '',
@@ -225,7 +232,7 @@ const noteField: Readonly<FieldProps> = {
 ///////////////////////////////////////////////////////////////////////////////
 
 const testIdsField: Readonly<FieldProps> = {
-  field: Field.TEST_IDS,
+  field: RecordField.TEST_IDS,
   label: 'Tests',
   desc: 'Tests that are associated with the Example record.',
   getDefault: () => [],
@@ -236,7 +243,7 @@ const testIdsField: Readonly<FieldProps> = {
 }
 
 const percentField: Readonly<FieldProps> = {
-  field: Field.PERCENT,
+  field: RecordField.PERCENT,
   label: 'Percentage',
   getDefault: () => 0,
   validator: percentValidator,

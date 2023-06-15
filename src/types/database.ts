@@ -1,4 +1,4 @@
-import type { InferType, ObjectSchema } from 'yup'
+import type { InferType, ObjectSchema, AnySchema } from 'yup'
 import type { Icon } from '@/types/icons'
 import type { QTableColumn } from 'quasar'
 import type { defineAsyncComponent } from 'vue'
@@ -50,6 +50,7 @@ export enum RecordField {
   DESC = 'desc',
   ENABLED = 'enabled',
   FAVORITED = 'favorited',
+  LAST_CHILD = 'lastChild',
   // CHILD
   PARENT_ID = 'parentId',
   NOTE = 'note',
@@ -120,7 +121,7 @@ export type FieldProps = {
   label: string
   desc?: string // Optional
   getDefault: () => any
-  validator: ObjectSchema<any, any, any>
+  validator: AnySchema<any, any, any>
   validationMessage: string
   inspectFormat: (val: any) => string
   component?: ReturnType<typeof defineAsyncComponent> // Optional = not rendered

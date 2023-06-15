@@ -1,4 +1,4 @@
-import type { Log, Setting, ParentRecord, ChildRecord, RecordField, Type } from '@/types/database'
+import type { Log, Setting, ParentRecord, ChildRecord } from '@/types/database'
 
 export const AppName = 'Web App Template'
 
@@ -55,15 +55,4 @@ export type BackupData = {
   settings: Setting[]
   parents: ParentRecord[]
   children: ChildRecord[]
-}
-
-export type DashboardParentCardProps = {
-  type: Type
-  [RecordField.ID]: string
-  [RecordField.TIMESTAMP]: number
-  [RecordField.NAME]: string
-  [RecordField.DESC]: string
-  [RecordField.FAVORITED]: boolean
-  previousNote?: string
-  previousTimestamp?: number
 }

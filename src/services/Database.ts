@@ -1,7 +1,7 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
 import { Dark } from 'quasar'
-import type { Log, Record, Setting } from '@/types/database'
-import { Milliseconds, AppName, type DashboardListCardProps, LogRetention } from '@/types/general'
+import type { ChildRecord, Log, ParentRecord, Setting } from '@/types/database'
+import { Milliseconds, AppName, LogRetention } from '@/types/general'
 import { typeValidator, idValidator } from '@/services/validators'
 import { Severity, Type, LogField, SettingField, RecordField, SettingKey } from '@/types/database'
 import DataSchema from '@/services/DataSchema'
@@ -24,6 +24,8 @@ class Database extends Dexie {
     })
   }
 
+  async testType(type: Type) {}
+
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
   //     LIVE QUERIES                                                        //
@@ -38,26 +40,24 @@ class Database extends Dexie {
     return liveQuery(() => this.Logs.orderBy(LogField.AUTO_ID).reverse().toArray())
   }
 
-  // liveDashboard() {
-  //   return liveQuery(async () => {
-  //     const records = await Promise.all([
-  //       await this.getDashboardParents(Type.EXAMPLE_PARENT),
-  //       await this.getDashboardParents(Type.TEST_PARENT),
-  //     ])
+  liveDashboard() {
+    return liveQuery(async () => {
+      const parents = await this.Parents.filter((p) => p.enabled === true).sortBy(RecordField.NAME)
 
-  //     const dashboardCards: { [key in Type]: DashboardListCardProps[] } = Object.values(
-  //       Type
-  //     ).reduce((acc, type) => {
-  //       acc[type] = []
-  //       return acc
-  //     }, {} as { [key in Type]: DashboardListCardProps[] })
+      const favorites: ParentRecord[] = []
+      const nonFavorites: ParentRecord[] = []
 
-  //     dashboardCards[Type.EXAMPLE_PARENT] = records[0]
-  //     dashboardCards[Type.TEST_PARENT] = records[1]
+      parents.forEach((p) => {
+        if (p.favorited === true) {
+          favorites.push(p)
+        } else {
+          nonFavorites.push(p)
+        }
+      })
 
-  //     return dashboardCards
-  //   })
-  // }
+      return [...favorites, ...nonFavorites]
+    })
+  }
 
   // liveDataTable(type: Type) {
   //   return liveQuery(async () => {
@@ -208,10 +208,7 @@ class Database extends Dexie {
   }
 
   async getParent(id: string) {
-    // if (type === Type.LOG) {
-    //   return await this.table(type).get(Number(id))
-    // }
-    // return await this.table(type).get(id)
+    return await this.Parents.get(id)
   }
 
   async getParentChildren(parentId: string) {
@@ -220,58 +217,31 @@ class Database extends Dexie {
       .sortBy(RecordField.TIMESTAMP)
   }
 
-  // Used with live dashboard and parent types only.
-  async getDashboardParents(type: Type) {
-    // // Get enabled parent records
-    // const records = await this.table(type)
-    //   .filter((r) => r.enabled === true)
-    //   .sortBy(Field.NAME)
-    // const favorites: DashboardListCardProps[] = []
-    // const nonFavorites: DashboardListCardProps[] = []
-    // // Build dashboard list cards
-    // for await (const r of records) {
-    //   const previous = (await this.getPreviousChild(
-    //     DataSchema.getChildType(type) as Type,
-    //     r.id
-    //   )) as Record
-    //   const dashboardCard: DashboardListCardProps = {
-    //     type,
-    //     id: r.id,
-    //     timestamp: r.timestamp,
-    //     name: r.name,
-    //     desc: r.desc,
-    //     favorited: r.favorited,
-    //     previousNote: previous?.note,
-    //     previousTimestamp: previous?.timestamp,
-    //     // TODO - Just put the whole parent and previous child record in here
-    //     // parent: r,
-    //     // previousChild: previous,
-    //   }
-    //   // Add to favorites or non-favorites
-    //   if (r.favorited === true) {
-    //     favorites.push(dashboardCard)
-    //   } else {
-    //     nonFavorites.push(dashboardCard)
-    //   }
-    // }
-    // // Return with favorites prioritized
-    // return [...favorites, ...nonFavorites]
-  }
-
   async addParent(record: ParentRecord) {
-    // if (!(await typeValidator.isValid(type))) {
-    //   throw new Error(`Add record type ${type} is invalid`)
+    await typeValidator.validate(record?.type)
+
+    // if (!(await typeValidator.isValid(record?.type))) {
+    //   throw new Error(
+    //     `Must have a valid type to add a parent record. The type ${record?.type} is invalid.`
+    //   )
     // }
-    // // Find record specific validator
-    // const recordValidator = DataSchema.getValidator(type)
-    // if (!recordValidator) {
-    //   throw new Error('Add record validator not found')
-    // }
+
+    const recordValidator = DataSchema.getParentValidator(record.type as Type)
+    if (!recordValidator) {
+      throw new Error('Must have a record validator to add a parent record.')
+    }
+
+    await recordValidator.validate(record)
+
     // if (!(await recordValidator.isValid(record))) {
-    //   throw new Error(`Add record attempted to add invalid record: ${JSON.stringify(record)}`)
+    //   throw new Error(
+    //     `Must have a valid record to add a parent record. The following record is invalid: ${JSON.stringify(
+    //       record
+    //     )}`
+    //   )
     // }
-    // // Validate cleans record of unknown properties
-    // return await this.table(type).add(await recordValidator.validate(record))
+
+    return await this.Parents.add(await recordValidator.validate(record))
   }
 
   async importParents(records: ParentRecord[]) {
@@ -305,54 +275,54 @@ class Database extends Dexie {
     // }
   }
 
-  async updateParent(id: string, changes: { [key in RecordField]?: any }) {
-    // console.log('updateRecord', type, id, changes)
-    // if (!(await idValidator.isValid(id))) {
-    //   throw new Error(`Update record id ${id} is invalid`)
+  async updateParent(oldId: string, updatedRecord: ParentRecord) {
+    await idValidator.validate(oldId)
+
+    // if (!(await idValidator.isValid(oldId))) {
+    //   throw new Error(`Update record id ${oldId} is invalid`)
     // }
-    // if (!(await typeValidator.isValid(type))) {
-    //   throw new Error(`Update record type ${type} is invalid`)
+
+    await typeValidator.validate(updatedRecord?.type)
+
+    // if (!(await typeValidator.isValid(updatedRecord?.type))) {
+    //   throw new Error(`Update record type ${updatedRecord?.type} is invalid`)
     // }
-    // // Get the original record
-    // const record = await this.table(type).get(id)
-    // if (!record) {
-    //   throw new Error('Update record cannot update non-existent record')
-    // }
-    // // Overwrite original fields with changes
-    // Object.keys(changes).forEach((k) => {
-    //   record[k as Field] = changes[k as Field]
-    // })
-    // // Find record specific validator
-    // const recordValidator = DataSchema.getValidator(type)
-    // if (!recordValidator) {
-    //   throw new Error('Update record validator not found')
-    // }
+
+    const record = await this.Parents.get(oldId)
+    if (!record) {
+      throw new Error('Update record cannot update non-existent record')
+    }
+
+    const recordValidator = DataSchema.getParentValidator(updatedRecord.type as Type)
+    if (!recordValidator) {
+      throw new Error('Update record validator not found')
+    }
+
+    await recordValidator.validate(record)
+
     // if (!(await recordValidator.isValid(record))) {
     //   throw new Error('Update record found invalid record changes')
     // }
-    // // Validate cleans record of unknown properties
-    // return await this.table(type).update(id, await recordValidator.validate(record))
+
+    return await this.Parents.update(oldId, await recordValidator.validate(record))
   }
 
   async deleteParent(id: string) {
+    await idValidator.validate(id)
+
     // if (!(await idValidator.isValid(id))) {
     //   throw new Error(`Delete record id ${id} is invalid`)
     // }
-    // if (!(await typeValidator.isValid(type))) {
-    //   throw new Error(`Delete record type ${type} is invalid`)
-    // }
-    // const recordToDelete = await this.getRecord(type, id)
-    // if (!recordToDelete) {
-    //   throw new Error(`Delete record with id ${id} does not exist`)
-    // }
-    // // Delete the exact record first
-    // await this.table(type).delete(id)
-    // const childType = DataSchema.getChildType(type)
-    // if (childType) {
-    //   // Delete children asscoiated with parent record
-    //   await this.table(childType).where(Field.PARENT_ID).equals(id).delete()
-    // }
-    // return recordToDelete // Returns initial deleted record
+
+    const recordToDelete = await this.getParent(id)
+    if (!recordToDelete) {
+      throw new Error(`Delete record with id ${id} does not exist`)
+    }
+
+    await this.Parents.delete(id)
+    await this.Children.where(RecordField.PARENT_ID).equals(id).delete()
+
+    return recordToDelete
   }
 
   async clearParents() {
@@ -370,10 +340,7 @@ class Database extends Dexie {
   }
 
   async getChild(id: string) {
-    // if (type === Type.LOG) {
-    //   return await this.table(type).get(Number(id))
-    // }
-    // return await this.table(type).get(id)
+    return await this.Children.get(id)
   }
 
   async getLastChild(parentId: string) {
@@ -383,19 +350,31 @@ class Database extends Dexie {
   }
 
   async addChild(record: ChildRecord) {
-    // if (!(await typeValidator.isValid(type))) {
-    //   throw new Error(`Add record type ${type} is invalid`)
+    await typeValidator.validate(record?.type)
+
+    // if (!(await typeValidator.isValid(record?.type))) {
+    //   throw new Error(
+    //     `Must have a valid type to add a parent record. The type ${record?.type} is invalid.`
+    //   )
     // }
-    // // Find record specific validator
-    // const recordValidator = DataSchema.getValidator(type)
-    // if (!recordValidator) {
-    //   throw new Error('Add record validator not found')
-    // }
+
+    const recordValidator = DataSchema.getChildValidator(record.type as Type)
+    if (!recordValidator) {
+      throw new Error('Must have a record validator to add a parent record.')
+    }
+
+    await recordValidator.validate(record)
+
     // if (!(await recordValidator.isValid(record))) {
-    //   throw new Error(`Add record attempted to add invalid record: ${JSON.stringify(record)}`)
+    //   throw new Error(
+    //     `Must have a valid record to add a parent record. The following record is invalid: ${JSON.stringify(
+    //       record
+    //     )}`
+    //   )
     // }
-    // // Validate cleans record of unknown properties
-    // return await this.table(type).add(await recordValidator.validate(record))
+
+    return await this.Children.add(await recordValidator.validate(record))
+    // TODO: Update parent lastChild
   }
 
   async importChildren(records: ParentRecord[]) {
@@ -427,60 +406,63 @@ class Database extends Dexie {
     //     }): ${skippedRecords.map((r) => String(r.id))}`
     //   )
     // }
+    // TODO: Update parents lastChildren
   }
 
-  async updateChild(id: string, changes: { [key in RecordField]?: any }) {
-    // console.log('updateRecord', type, id, changes)
-    // if (!(await idValidator.isValid(id))) {
-    //   throw new Error(`Update record id ${id} is invalid`)
+  async updateChild(oldId: string, updatedRecord: ChildRecord) {
+    await idValidator.validate(oldId)
+
+    // if (!(await idValidator.isValid(oldId))) {
+    //   throw new Error(`Update record id ${oldId} is invalid`)
     // }
-    // if (!(await typeValidator.isValid(type))) {
-    //   throw new Error(`Update record type ${type} is invalid`)
+
+    await typeValidator.validate(updatedRecord?.type)
+
+    // if (!(await typeValidator.isValid(updatedRecord?.type))) {
+    //   throw new Error(`Update record type ${updatedRecord?.type} is invalid`)
     // }
-    // // Get the original record
-    // const record = await this.table(type).get(id)
-    // if (!record) {
-    //   throw new Error('Update record cannot update non-existent record')
-    // }
-    // // Overwrite original fields with changes
-    // Object.keys(changes).forEach((k) => {
-    //   record[k as Field] = changes[k as Field]
-    // })
-    // // Find record specific validator
-    // const recordValidator = DataSchema.getValidator(type)
-    // if (!recordValidator) {
-    //   throw new Error('Update record validator not found')
-    // }
+
+    const record = await this.Parents.get(oldId)
+    if (!record) {
+      throw new Error('Update record cannot update non-existent record')
+    }
+
+    const recordValidator = DataSchema.getChildValidator(updatedRecord.type as Type)
+    if (!recordValidator) {
+      throw new Error('Update record validator not found')
+    }
+
+    await recordValidator.validate(record)
+
     // if (!(await recordValidator.isValid(record))) {
     //   throw new Error('Update record found invalid record changes')
     // }
-    // // Validate cleans record of unknown properties
-    // return await this.table(type).update(id, await recordValidator.validate(record))
+
+    // TODO: Update parent lastChild
+    return await this.Children.update(oldId, await recordValidator.validate(record))
   }
 
   async deleteChild(id: string) {
+    await idValidator.validate(id)
+
     // if (!(await idValidator.isValid(id))) {
     //   throw new Error(`Delete record id ${id} is invalid`)
     // }
-    // if (!(await typeValidator.isValid(type))) {
-    //   throw new Error(`Delete record type ${type} is invalid`)
-    // }
-    // const recordToDelete = await this.getRecord(type, id)
-    // if (!recordToDelete) {
-    //   throw new Error(`Delete record with id ${id} does not exist`)
-    // }
-    // // Delete the exact record first
-    // await this.table(type).delete(id)
-    // const childType = DataSchema.getChildType(type)
-    // if (childType) {
-    //   // Delete children asscoiated with parent record
-    //   await this.table(childType).where(Field.PARENT_ID).equals(id).delete()
-    // }
-    // return recordToDelete // Returns initial deleted record
+
+    const recordToDelete = await this.getChild(id)
+    if (!recordToDelete) {
+      throw new Error(`Delete record with id ${id} does not exist`)
+    }
+
+    await this.Children.delete(id)
+
+    // TODO: Update parent lastChild
+    return recordToDelete
   }
 
   async clearChildren() {
     await this.Children.clear()
+    // TODO: Update parent lastChild to undefined for all parents
   }
 
   /////////////////////////////////////////////////////////////////////////////

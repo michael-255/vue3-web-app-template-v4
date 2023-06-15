@@ -18,7 +18,7 @@ import {
   testChildValidator,
   testParentValidator,
 } from '@/services/validators'
-import type { MixedSchema } from 'yup'
+import type { AnySchema } from 'yup'
 import type { QTableColumn } from 'quasar'
 import { percentChart } from '@/services/chart-props'
 
@@ -95,7 +95,11 @@ export default class DataSchema {
   //   }[]
   // }
 
-  // static getValidator(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.validator as MixedSchema<any, any, any>
-  // }
+  static getParentValidator(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.parentValidator as AnySchema<any, any, any>
+  }
+
+  static getChildValidator(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.childValidator as AnySchema<any, any, any>
+  }
 }
