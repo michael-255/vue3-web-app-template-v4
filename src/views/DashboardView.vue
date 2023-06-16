@@ -2,9 +2,8 @@
 import { Icon } from '@/types/icons'
 import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
-import { Key, Type } from '@/types/database'
+import { SettingKey, Type, type ParentRecord } from '@/types/database'
 import { ref, type Ref, onUnmounted } from 'vue'
-import type { DashboardListCardProps } from '@/types/general'
 import { getRecordsCountDisplay } from '@/utils/common'
 import DataSchema from '@/services/DataSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
@@ -23,16 +22,12 @@ const { goToCreate } = useRoutables()
 
 const showDescription: Ref<boolean> = ref(false)
 const dashboardOptions = DataSchema.getParentTypeOptions()
-const dashboardCards: Ref<{ [key in Type]: DashboardListCardProps[] }> = ref(
-  Object.values(Type).reduce((acc, type) => {
-    acc[type] = []
-    return acc
-  }, {} as { [key in Type]: DashboardListCardProps[] })
-)
+const dashboardCards: Ref<ParentRecord[]> = ref([])
 
 const settingsSubscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
-    showDescription.value = !!liveSettings.find((s) => s.key === Key.SHOW_DESCRIPTIONS)?.value
+    showDescription.value = !!liveSettings.find((s) => s.key === SettingKey.SHOW_DESCRIPTIONS)
+      ?.value
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)

@@ -2,7 +2,7 @@
 import { exportFile } from 'quasar'
 import { Icon } from '@/types/icons'
 import { type BackupData, AppName, Limit, LogRetention } from '@/types/general'
-import { type Setting, Type, Key } from '@/types/database'
+import { type Setting, Type, SettingKey } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
 import { useMeta } from 'quasar'
 import DataSchema from '@/services/DataSchema'
@@ -22,21 +22,21 @@ const { confirmDialog } = useDialogs()
 const { onDefaults } = useDefaults()
 const { goToData } = useRoutables()
 
-const typeOptions = DataSchema.getTypeOptions()
+const tableOptions = DataSchema.getTableOptions()
 const settings: Ref<Setting[]> = ref([])
 const logRetentionIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
-const exportModel: Ref<Type[]> = ref([])
-const exportOptions = [...typeOptions]
-const accessOptions = ref([...typeOptions])
+const accessOptions = ref([...tableOptions])
 const accessModel = ref(accessOptions.value[0])
-const deleteOptions = ref([...typeOptions])
+const deleteOptions = ref([...tableOptions])
 const deleteModel = ref(deleteOptions.value[0])
 
 const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     settings.value = liveSettings
-    const logRetentionTime = liveSettings.find((s) => s.key === Key.LOG_RETENTION_TIME)?.value
+    const logRetentionTime = liveSettings.find(
+      (s) => s.key === SettingKey.LOG_RETENTION_TIME
+    )?.value
     logRetentionIndex.value = Object.values(LogRetention).findIndex((i) => i === logRetentionTime)
   },
   error: (error) => {
@@ -73,27 +73,24 @@ function onImportFile() {
 
         log.silentDebug('backupData:', backupData)
 
-        // Do NOT allow importing data from another app
         if (backupData.appName !== AppName) {
-          throw new Error(`Cannot import data from this app: ${backupData.appName} `)
+          throw new Error(`Cannot import data from the app ${backupData.appName}`)
         }
 
-        // Never import logs, settings is handled next if included
-        const types = Object.values(Type).filter(
-          (type) => type !== Type.LOG && type !== Type.SETTING
-        )
-
         // Import settings first in case errors stop type importing below
-        if (backupData[Type.SETTING].length > 0) {
-          // Settings must be explicitly set to be updated
+        if (backupData.settings.length > 0) {
           await Promise.all(
-            backupData[Type.SETTING]
-              .filter((s) => Object.values(Key).includes(s.key as Key))
-              .map(async (s) => await DB.setSetting(s.key as Key, s.value))
+            backupData.settings
+              .filter((s) => Object.values(SettingKey).includes(s.key as SettingKey))
+              .map(async (s) => await DB.setSetting(s.key as SettingKey, s.value))
           )
         }
 
-        await Promise.all(types.map((type) => DB.importRecords(type, backupData[type])))
+        // Logs are never imported
+        await Promise.all([
+          DB.importParents(backupData.parents),
+          DB.importChildren(backupData.children),
+        ])
 
         importFile.value = null // Clear input
         log.info('Successfully imported available data')
@@ -117,22 +114,14 @@ function onExportRecords() {
     'info',
     async () => {
       try {
-        const types = exportModel.value
-
-        const getTypeData = async (type: Type) => {
-          return types.includes(type) ? await DB.getAll(type) : []
-        }
-
         // Build backup data
         const backupData = {
           appName: AppName,
           backupTimestamp: Date.now(),
-          [Type.LOG]: await getTypeData(Type.LOG),
-          [Type.SETTING]: await getTypeData(Type.SETTING),
-          [Type.EXAMPLE_PARENT]: await getTypeData(Type.EXAMPLE_PARENT),
-          [Type.EXAMPLE_CHILD]: await getTypeData(Type.EXAMPLE_CHILD),
-          [Type.TEST_PARENT]: await getTypeData(Type.TEST_PARENT),
-          [Type.TEST_CHILD]: await getTypeData(Type.TEST_CHILD),
+          logs: await DB.getLogs(),
+          settings: await DB.getSettings(),
+          parents: await DB.getParents(),
+          children: await DB.getChildren(),
         } as BackupData
 
         log.silentDebug('backupData:', backupData)
@@ -158,7 +147,7 @@ function onExportRecords() {
 async function onChangeLogRetention(logRetentionIndex: number) {
   try {
     const logRetentionTime = Object.values(LogRetention)[logRetentionIndex]
-    await DB.setSetting(Key.LOG_RETENTION_TIME, logRetentionTime)
+    await DB.setSetting(SettingKey.LOG_RETENTION_TIME, logRetentionTime)
     log.info('Updated log retention time', { time: logRetentionTime, index: logRetentionIndex })
   } catch (error) {
     log.error('Log retention update failed', error)
@@ -182,7 +171,7 @@ async function onResetSettings() {
   )
 }
 
-async function onDeleteBy(label: string, type: Type) {
+async function onDeleteBy(label: string, optionValue: string[]) {
   confirmDialog(
     `Delete ${label}`,
     `Permanetly delete all ${label} from the database?`,
@@ -190,8 +179,27 @@ async function onDeleteBy(label: string, type: Type) {
     'negative',
     async () => {
       try {
-        await DB.clearByType(type)
-        log.info(`${type} successfully deleted`)
+        switch (optionValue[0]) {
+          case 'internal':
+            if (optionValue[1] === 'logs') {
+              await DB.clearLogs()
+            } else if (optionValue[1] === 'settings') {
+              await DB.resetSettings()
+            } else {
+              throw new Error(`Unknown internal type ${optionValue[1]}`)
+            }
+            break
+          case 'parent':
+            await DB.clearParentsByType(optionValue[1] as Type)
+            break
+          case 'child':
+            await DB.clearChildrenByType(optionValue[1] as Type)
+            break
+          default:
+            throw new Error(`Unknown type ${optionValue[0]}`)
+        }
+
+        log.info('Successfully deleted selected data')
       } catch (error) {
         log.error(`Error deleting ${label}`, error)
       }
@@ -207,7 +215,10 @@ async function onDeleteAll() {
     'negative',
     async () => {
       try {
-        await DB.clearAllData()
+        await DB.clearLogs()
+        await DB.resetSettings()
+        await DB.clearParents()
+        await DB.clearChildren()
         log.info('All data successfully deleted')
       } catch (error) {
         log.error('Error deleting all data', error)
@@ -233,7 +244,33 @@ async function onDeleteDatabase() {
   )
 }
 
-function getSettingValue(key: Key) {
+function onAccessData(optionValue: string[]) {
+  try {
+    switch (optionValue[0]) {
+      case 'internal':
+        if (optionValue[1] === 'logs') {
+          // TODO - Go to logs data table
+        } else if (optionValue[1] === 'settings') {
+          // TODO - Go to settings data table
+        } else {
+          throw new Error(`Unknown internal type ${optionValue[1]}`)
+        }
+        break
+      case 'parent':
+        // TODO - Go to parent data table
+        break
+      case 'child':
+        // TODO - Go to child data table
+        break
+      default:
+        throw new Error(`Unknown type ${optionValue[0]}`)
+    }
+  } catch (error) {
+    log.error('Error accessing data table', error)
+  }
+}
+
+function getSettingValue(key: SettingKey) {
   return settings.value.find((s) => s.key === key)?.value
 }
 </script>
@@ -255,8 +292,8 @@ function getSettingValue(key: Key) {
           </p>
           <QToggle
             label="Show Welcome Overlay"
-            :model-value="getSettingValue(Key.SHOW_WELCOME)"
-            @update:model-value="DB.setSetting(Key.SHOW_WELCOME, $event)"
+            :model-value="getSettingValue(SettingKey.SHOW_WELCOME)"
+            @update:model-value="DB.setSetting(SettingKey.SHOW_WELCOME, $event)"
           />
         </div>
 
@@ -264,8 +301,8 @@ function getSettingValue(key: Key) {
           <p>Show descriptions for records displayed on the Dashboard page.</p>
           <QToggle
             label="Show Dashboard Descriptions"
-            :model-value="getSettingValue(Key.SHOW_DESCRIPTIONS)"
-            @update:model-value="DB.setSetting(Key.SHOW_DESCRIPTIONS, $event)"
+            :model-value="getSettingValue(SettingKey.SHOW_DESCRIPTIONS)"
+            @update:model-value="DB.setSetting(SettingKey.SHOW_DESCRIPTIONS, $event)"
           />
         </div>
 
@@ -273,8 +310,8 @@ function getSettingValue(key: Key) {
           <p>Dark mode allows you to switch between a light or dark theme for the app.</p>
           <QToggle
             label="Dark Mode"
-            :model-value="getSettingValue(Key.DARK_MODE)"
-            @update:model-value="DB.setSetting(Key.DARK_MODE, $event)"
+            :model-value="getSettingValue(SettingKey.DARK_MODE)"
+            @update:model-value="DB.setSetting(SettingKey.DARK_MODE, $event)"
           />
         </div>
       </QCardSection>
@@ -327,22 +364,10 @@ function getSettingValue(key: Key) {
 
         <div class="q-mb-md">
           <p>
-            Export the selected data types as a JSON file. Do this on a regularly basis so you have
-            a backup of your data.
+            Export your data as a JSON file. Do this on a regularly basis so you have a backup of
+            your data.
           </p>
-          <QOptionGroup
-            class="q-mb-md"
-            v-model="exportModel"
-            :options="exportOptions"
-            type="checkbox"
-            inline
-          />
-          <QBtn
-            :disable="exportModel.length === 0"
-            label="Export"
-            color="primary"
-            @click="onExportRecords()"
-          />
+          <QBtn label="Export" color="primary" @click="onExportRecords()" />
         </div>
 
         <div class="q-mb-md">
@@ -359,7 +384,7 @@ function getSettingValue(key: Key) {
                 :disable="!accessModel"
                 label="Access Data"
                 color="primary"
-                @click="goToData(accessModel.value)"
+                @click="onAccessData(accessModel.value)"
               />
             </template>
           </QSelect>
@@ -375,8 +400,8 @@ function getSettingValue(key: Key) {
           <p>Show Console Logs will display all log messages in the browser console.</p>
           <QToggle
             label="Show Console Logs"
-            :model-value="getSettingValue(Key.SHOW_CONSOLE_LOGS)"
-            @update:model-value="DB.setSetting(Key.SHOW_CONSOLE_LOGS, $event)"
+            :model-value="getSettingValue(SettingKey.SHOW_CONSOLE_LOGS)"
+            @update:model-value="DB.setSetting(SettingKey.SHOW_CONSOLE_LOGS, $event)"
           />
         </div>
 
@@ -384,8 +409,8 @@ function getSettingValue(key: Key) {
           <p>Show Info Messages will display info level notifications.</p>
           <QToggle
             label="Show Info Messages"
-            :model-value="getSettingValue(Key.SHOW_INFO_MESSAGES)"
-            @update:model-value="DB.setSetting(Key.SHOW_INFO_MESSAGES, $event)"
+            :model-value="getSettingValue(SettingKey.SHOW_INFO_MESSAGES)"
+            @update:model-value="DB.setSetting(SettingKey.SHOW_INFO_MESSAGES, $event)"
           />
         </div>
 

@@ -20,11 +20,9 @@ class Database extends Dexie {
       Logs: `++${LogField.AUTO_ID}`,
       Settings: `&${SettingField.KEY}`,
       Parents: `&${RecordField.ID}, ${RecordField.TYPE}`,
-      Children: `&${RecordField.ID}, ${RecordField.PARENT_ID}, ${RecordField.TYPE}`,
+      Children: `&${RecordField.ID}, ${RecordField.TYPE}, ${RecordField.PARENT_ID}`,
     })
   }
-
-  async testType(type: Type) {}
 
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
@@ -170,6 +168,10 @@ class Database extends Dexie {
     await Promise.all(settings.map((s) => this.setSetting(s.key, s.value)))
   }
 
+  async getSettings() {
+    return await this.Settings.toArray()
+  }
+
   async getSetting(key: SettingKey) {
     return await this.Settings.get(key)
   }
@@ -218,111 +220,83 @@ class Database extends Dexie {
   }
 
   async addParent(record: ParentRecord) {
-    await typeValidator.validate(record?.type)
+    const recordValidator = DataSchema.getParentValidator(record?.type as Type)
 
-    // if (!(await typeValidator.isValid(record?.type))) {
-    //   throw new Error(
-    //     `Must have a valid type to add a parent record. The type ${record?.type} is invalid.`
-    //   )
-    // }
-
-    const recordValidator = DataSchema.getParentValidator(record.type as Type)
-    if (!recordValidator) {
-      throw new Error('Must have a record validator to add a parent record.')
+    if (recordValidator && (await recordValidator.isValid(record))) {
+      return await this.Parents.add(await recordValidator.validate(record))
+    } else {
+      throw new Error(`Invalid record or validator: ${JSON.stringify(record)}`)
     }
-
-    await recordValidator.validate(record)
-
-    // if (!(await recordValidator.isValid(record))) {
-    //   throw new Error(
-    //     `Must have a valid record to add a parent record. The following record is invalid: ${JSON.stringify(
-    //       record
-    //     )}`
-    //   )
-    // }
-
-    return await this.Parents.add(await recordValidator.validate(record))
   }
 
   async importParents(records: ParentRecord[]) {
-    // if (!(await typeValidator.isValid(type))) {
-    //   throw new Error(`Import records type ${type} is invalid`)
-    // }
-    // // Find record specific validator
-    // const recordValidator = DataSchema.getValidator(type)
-    // if (!recordValidator) {
-    //   throw new Error('Import records validator not found')
-    // }
-    // const validRecords: Record[] = []
-    // const skippedRecords: Record[] = []
-    // for await (const r of records) {
-    //   if (await recordValidator.isValid(r)) {
-    //     // Valid records get cleaned and pushed to valid records
-    //     validRecords.push(await recordValidator.validate(r))
-    //   } else {
-    //     skippedRecords.push(r)
-    //   }
-    // }
-    // // Only importing the valid records
-    // await this.table(type).bulkAdd(validRecords)
-    // if (skippedRecords.length > 0) {
-    //   // Error for the frontend to report if any records were skipped
-    //   throw new Error(
-    //     `Records skipped due to validation failures (${
-    //       skippedRecords.length
-    //     }): ${skippedRecords.map((r) => String(r.id))}`
-    //   )
-    // }
+    const validRecords: ParentRecord[] = []
+    const skippedRecords: ParentRecord[] = []
+
+    for await (const r of records) {
+      const recordValidator = DataSchema.getParentValidator(r?.type as Type)
+
+      if (recordValidator && (await recordValidator.isValid(r))) {
+        // Valid records get cleaned and pushed to valid records
+        validRecords.push(await recordValidator.validate(r))
+      } else {
+        skippedRecords.push(r)
+      }
+    }
+
+    await this.Parents.bulkAdd(validRecords) // Only valid records are imported
+
+    if (skippedRecords.length > 0) {
+      // Error for the frontend to report if any records were skipped
+      throw new Error(
+        `Records skipped due to validation failures (${
+          skippedRecords.length
+        }): ${skippedRecords.map((r) => String(r.id))}`
+      )
+    }
   }
 
   async updateParent(oldId: string, updatedRecord: ParentRecord) {
-    await idValidator.validate(oldId)
+    const oldRecord = await this.Parents.get(oldId)
 
-    // if (!(await idValidator.isValid(oldId))) {
-    //   throw new Error(`Update record id ${oldId} is invalid`)
-    // }
-
-    await typeValidator.validate(updatedRecord?.type)
-
-    // if (!(await typeValidator.isValid(updatedRecord?.type))) {
-    //   throw new Error(`Update record type ${updatedRecord?.type} is invalid`)
-    // }
-
-    const record = await this.Parents.get(oldId)
-    if (!record) {
-      throw new Error('Update record cannot update non-existent record')
+    if (!oldRecord) {
+      throw new Error(`Record with old id ${oldId} does not exist.`)
     }
 
-    const recordValidator = DataSchema.getParentValidator(updatedRecord.type as Type)
-    if (!recordValidator) {
-      throw new Error('Update record validator not found')
+    const recordValidator = DataSchema.getParentValidator(updatedRecord?.type as Type)
+
+    if (recordValidator && (await recordValidator.isValid(updatedRecord))) {
+      return await this.Parents.update(oldId, await recordValidator.validate(updatedRecord))
+    } else {
+      throw new Error(`Invalid record or validator: ${JSON.stringify(updatedRecord)}`)
     }
+  }
 
-    await recordValidator.validate(record)
+  async updateParentLastChild(parentId: string) {
+    const lastChild = await this.getLastChild(parentId)
+    return await this.Parents.update(parentId, { lastChild })
+  }
 
-    // if (!(await recordValidator.isValid(record))) {
-    //   throw new Error('Update record found invalid record changes')
-    // }
-
-    return await this.Parents.update(oldId, await recordValidator.validate(record))
+  async updateAllParentLastChild() {
+    const parents = await this.Parents.toArray()
+    await Promise.all(parents.map((p) => this.updateParentLastChild(p.id as string)))
   }
 
   async deleteParent(id: string) {
-    await idValidator.validate(id)
-
-    // if (!(await idValidator.isValid(id))) {
-    //   throw new Error(`Delete record id ${id} is invalid`)
-    // }
-
     const recordToDelete = await this.getParent(id)
+
     if (!recordToDelete) {
-      throw new Error(`Delete record with id ${id} does not exist`)
+      throw new Error(`Record with id ${id} does not exist.`)
     }
 
     await this.Parents.delete(id)
     await this.Children.where(RecordField.PARENT_ID).equals(id).delete()
 
     return recordToDelete
+  }
+
+  async clearParentsByType(type: Type) {
+    await this.Parents.where(RecordField.TYPE).equals(type).delete()
   }
 
   async clearParents() {
@@ -350,119 +324,90 @@ class Database extends Dexie {
   }
 
   async addChild(record: ChildRecord) {
-    await typeValidator.validate(record?.type)
+    const recordValidator = DataSchema.getChildValidator(record?.type as Type)
 
-    // if (!(await typeValidator.isValid(record?.type))) {
-    //   throw new Error(
-    //     `Must have a valid type to add a parent record. The type ${record?.type} is invalid.`
-    //   )
-    // }
-
-    const recordValidator = DataSchema.getChildValidator(record.type as Type)
-    if (!recordValidator) {
-      throw new Error('Must have a record validator to add a parent record.')
+    if (recordValidator && (await recordValidator.isValid(record))) {
+      const addResult = await this.Children.add(await recordValidator.validate(record))
+      await this.updateParentLastChild(record.parentId as string)
+      return addResult
+    } else {
+      throw new Error(`Invalid record or validator: ${JSON.stringify(record)}`)
     }
-
-    await recordValidator.validate(record)
-
-    // if (!(await recordValidator.isValid(record))) {
-    //   throw new Error(
-    //     `Must have a valid record to add a parent record. The following record is invalid: ${JSON.stringify(
-    //       record
-    //     )}`
-    //   )
-    // }
-
-    return await this.Children.add(await recordValidator.validate(record))
-    // TODO: Update parent lastChild
   }
 
   async importChildren(records: ParentRecord[]) {
-    // if (!(await typeValidator.isValid(type))) {
-    //   throw new Error(`Import records type ${type} is invalid`)
-    // }
-    // // Find record specific validator
-    // const recordValidator = DataSchema.getValidator(type)
-    // if (!recordValidator) {
-    //   throw new Error('Import records validator not found')
-    // }
-    // const validRecords: Record[] = []
-    // const skippedRecords: Record[] = []
-    // for await (const r of records) {
-    //   if (await recordValidator.isValid(r)) {
-    //     // Valid records get cleaned and pushed to valid records
-    //     validRecords.push(await recordValidator.validate(r))
-    //   } else {
-    //     skippedRecords.push(r)
-    //   }
-    // }
-    // // Only importing the valid records
-    // await this.table(type).bulkAdd(validRecords)
-    // if (skippedRecords.length > 0) {
-    //   // Error for the frontend to report if any records were skipped
-    //   throw new Error(
-    //     `Records skipped due to validation failures (${
-    //       skippedRecords.length
-    //     }): ${skippedRecords.map((r) => String(r.id))}`
-    //   )
-    // }
-    // TODO: Update parents lastChildren
+    const validRecords: ParentRecord[] = []
+    const skippedRecords: ParentRecord[] = []
+
+    for await (const r of records) {
+      const recordValidator = DataSchema.getChildValidator(r?.type as Type)
+
+      if (recordValidator && (await recordValidator.isValid(r))) {
+        // Valid records get cleaned and pushed to valid records
+        validRecords.push(await recordValidator.validate(r))
+      } else {
+        skippedRecords.push(r)
+      }
+    }
+
+    await this.Children.bulkAdd(validRecords) // Only valid records are imported
+
+    if (skippedRecords.length > 0) {
+      // Error for the frontend to report if any records were skipped
+      throw new Error(
+        `Records skipped due to validation failures (${
+          skippedRecords.length
+        }): ${skippedRecords.map((r) => String(r.id))}`
+      )
+    }
   }
 
   async updateChild(oldId: string, updatedRecord: ChildRecord) {
-    await idValidator.validate(oldId)
+    const oldRecord = await this.Children.get(oldId)
 
-    // if (!(await idValidator.isValid(oldId))) {
-    //   throw new Error(`Update record id ${oldId} is invalid`)
-    // }
-
-    await typeValidator.validate(updatedRecord?.type)
-
-    // if (!(await typeValidator.isValid(updatedRecord?.type))) {
-    //   throw new Error(`Update record type ${updatedRecord?.type} is invalid`)
-    // }
-
-    const record = await this.Parents.get(oldId)
-    if (!record) {
-      throw new Error('Update record cannot update non-existent record')
+    if (!oldRecord) {
+      throw new Error(`Record with old id ${oldId} does not exist.`)
     }
 
-    const recordValidator = DataSchema.getChildValidator(updatedRecord.type as Type)
-    if (!recordValidator) {
-      throw new Error('Update record validator not found')
+    const recordValidator = DataSchema.getChildValidator(updatedRecord?.type as Type)
+
+    if (recordValidator && (await recordValidator.isValid(updatedRecord))) {
+      const updateResult = await this.Children.update(
+        oldId,
+        await recordValidator.validate(updatedRecord)
+      )
+      await this.updateParentLastChild(updatedRecord.parentId as string)
+      return updateResult
+    } else {
+      throw new Error(`Invalid record or validator: ${JSON.stringify(updatedRecord)}`)
     }
-
-    await recordValidator.validate(record)
-
-    // if (!(await recordValidator.isValid(record))) {
-    //   throw new Error('Update record found invalid record changes')
-    // }
-
-    // TODO: Update parent lastChild
-    return await this.Children.update(oldId, await recordValidator.validate(record))
   }
 
   async deleteChild(id: string) {
-    await idValidator.validate(id)
-
-    // if (!(await idValidator.isValid(id))) {
-    //   throw new Error(`Delete record id ${id} is invalid`)
-    // }
-
     const recordToDelete = await this.getChild(id)
+
     if (!recordToDelete) {
-      throw new Error(`Delete record with id ${id} does not exist`)
+      throw new Error(`Record with id ${id} does not exist.`)
     }
 
     await this.Children.delete(id)
-
-    // TODO: Update parent lastChild
+    await this.updateParentLastChild(recordToDelete.parentId as string)
     return recordToDelete
+  }
+
+  async clearChildrenByType(type: Type) {
+    // Get all child records to be deleted
+    const records = await this.Children.where(RecordField.TYPE).equals(type).toArray()
+    // Delete all child records of the given type
+    await this.Children.where(RecordField.TYPE).equals(type).delete()
+    // Update parent records lastChild property to undefined
+    await Promise.all(
+      records.map((r) => this.Parents.update(r.parentId as string, { lastChild: undefined }))
+    )
   }
 
   async clearChildren() {
     await this.Children.clear()
-    // TODO: Update parent lastChild to undefined for all parents
   }
 
   /////////////////////////////////////////////////////////////////////////////

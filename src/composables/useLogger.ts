@@ -1,5 +1,5 @@
 import { Icon } from '@/types/icons'
-import { Key, Severity } from '@/types/database'
+import { SettingKey, Severity } from '@/types/database'
 import useNotifications from '@/composables/useNotifications'
 import Logger from '@/services/Logger'
 import DB from '@/services/Database'
@@ -53,13 +53,13 @@ export default function useLogger() {
     info: async (name: string, details?: any) => {
       const severity = Severity.INFO
 
-      if ((await DB.getSetting(Key.SHOW_CONSOLE_LOGS))?.value) {
+      if ((await DB.getSetting(SettingKey.SHOW_CONSOLE_LOGS))?.value) {
         Logger.info(`[${severity}]`, name, details)
       }
 
       await DB.addLog(severity, name, details)
 
-      if ((await DB.getSetting(Key.SHOW_INFO_MESSAGES))?.value) {
+      if ((await DB.getSetting(SettingKey.SHOW_INFO_MESSAGES))?.value) {
         notify(name, Icon.INFO, 'info')
       }
     },
@@ -71,7 +71,7 @@ export default function useLogger() {
     warn: async (name: string, details?: any) => {
       const severity = Severity.WARN
 
-      if ((await DB.getSetting(Key.SHOW_CONSOLE_LOGS))?.value) {
+      if ((await DB.getSetting(SettingKey.SHOW_CONSOLE_LOGS))?.value) {
         Logger.warn(`[${severity}]`, name, details)
       }
 
@@ -87,7 +87,7 @@ export default function useLogger() {
     error: async (name: string, details?: any) => {
       const severity = Severity.ERROR
 
-      if ((await DB.getSetting(Key.SHOW_CONSOLE_LOGS))?.value) {
+      if ((await DB.getSetting(SettingKey.SHOW_CONSOLE_LOGS))?.value) {
         Logger.error(`[${severity}]`, name, details)
       }
 

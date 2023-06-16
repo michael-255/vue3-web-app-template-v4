@@ -88,12 +88,19 @@ export default class DataSchema {
   //   return this.dataSchema.find((s) => s.type === type)?.chartProps as ChartProps[]
   // }
 
-  // static getTypeOptions() {
-  //   return this.dataSchema.map((s) => ({ value: s.type, label: s.labelPlural })) as {
-  //     value: Type
-  //     label: string
-  //   }[]
-  // }
+  static getTableOptions() {
+    const options = [
+      { value: ['internal', 'logs'], label: 'Logs' },
+      { value: ['internal', 'settings'], label: 'Settings' },
+    ]
+
+    this.dataSchema.forEach((t) => {
+      options.push({ value: ['parent', t.type], label: t.parentLabelPlural })
+      options.push({ value: ['child', t.type], label: t.childLabelPlural })
+    })
+
+    return options
+  }
 
   static getParentValidator(type: Type) {
     return this.dataSchema.find((s) => s.type === type)?.parentValidator as AnySchema<any, any, any>
