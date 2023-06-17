@@ -6,15 +6,7 @@ structured.
 
 ## TODO
 
-Do this first:
-
-- Don't think you'll need `Actions` anymore
-- Move core tables and their functionality separate from app specific record functionality
-  - `Logs` table
-  - `Settings` table
-  - `Parents` table
-  - `Children` table
-- Have inspect be a dialog (maybe fullscreen)
+- `Inspect` as a fullscreen dialog?
 
 Make NEW components that separate core functionality from app specific functionality:
 

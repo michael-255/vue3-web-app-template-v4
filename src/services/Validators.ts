@@ -76,6 +76,12 @@ const parent = object({
   [RecordField.DESC]: textAreaValidator,
   [RecordField.ENABLED]: booleanValidator,
   [RecordField.FAVORITED]: booleanValidator,
+  [RecordField.LAST_CHILD]: core.concat(
+    object({
+      [RecordField.PARENT_ID]: idValidator,
+      [RecordField.NOTE]: textAreaValidator,
+    }).noUnknown()
+  ),
 }).noUnknown()
 
 const child = object({

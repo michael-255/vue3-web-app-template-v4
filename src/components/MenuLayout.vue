@@ -13,7 +13,7 @@ const uiStore = useUIStore()
 const route = useRoute()
 
 // Data
-const parentSchemas = DataSchema.getParentSchemas()
+const parentOptions = DataSchema.getParentTypeOptions()
 </script>
 
 <template>
@@ -56,19 +56,19 @@ const parentSchemas = DataSchema.getParentSchemas()
 
         <!-- Parent Data Table Links -->
         <QItem
-          v-for="(parent, i) in parentSchemas"
+          v-for="(parent, i) in parentOptions"
           :key="i"
           clickable
           v-ripple
           :to="{
-            name: RouteName.DATA,
-            params: { type: parent.type },
+            name: RouteName.DATA_PARENTS,
+            params: { type: parent.value },
           }"
         >
           <QItemSection avatar>
             <QIcon color="primary" :name="parent.icon" />
           </QItemSection>
-          <QItemSection>{{ parent.labelPlural }}</QItemSection>
+          <QItemSection>{{ parent.label }}</QItemSection>
         </QItem>
 
         <QSeparator spaced="md" inset />

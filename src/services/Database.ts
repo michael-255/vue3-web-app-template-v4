@@ -53,7 +53,13 @@ class Database extends Dexie {
         }
       })
 
-      return [...favorites, ...nonFavorites]
+      return Object.values(Type).reduce((acc, type) => {
+        acc[type] = [
+          ...favorites.filter((p) => p.type === type),
+          ...nonFavorites.filter((p) => p.type === type),
+        ]
+        return acc
+      }, {} as { [key in Type]: ParentRecord[] })
     })
   }
 

@@ -20,9 +20,9 @@ const { log } = useLogger()
 const { notify } = useNotifications()
 const { confirmDialog } = useDialogs()
 const { onDefaults } = useDefaults()
-const { goToData } = useRoutables()
+const { goToLogsData, goToSettingsData, goToParentData, goToChildData } = useRoutables()
 
-const tableOptions = DataSchema.getTableOptions()
+const tableOptions = DataSchema.getAllTypeOptions()
 const settings: Ref<Setting[]> = ref([])
 const logRetentionIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
@@ -109,7 +109,7 @@ function onExportRecords() {
 
   confirmDialog(
     'Export',
-    `Export all selected record types into the file ${filename}?`,
+    `Export all data into the file "${filename}" as a backup?`,
     Icon.INFO,
     'info',
     async () => {
@@ -249,18 +249,18 @@ function onAccessData(optionValue: string[]) {
     switch (optionValue[0]) {
       case 'internal':
         if (optionValue[1] === 'logs') {
-          // TODO - Go to logs data table
+          goToLogsData()
         } else if (optionValue[1] === 'settings') {
-          // TODO - Go to settings data table
+          goToSettingsData()
         } else {
           throw new Error(`Unknown internal type ${optionValue[1]}`)
         }
         break
       case 'parent':
-        // TODO - Go to parent data table
+        goToParentData(optionValue[1] as Type)
         break
       case 'child':
-        // TODO - Go to child data table
+        goToChildData(optionValue[1] as Type)
         break
       default:
         throw new Error(`Unknown type ${optionValue[0]}`)

@@ -23,31 +23,52 @@ const router = createRouter({
       component: () => import('../views/DataSettingsView.vue'),
     },
     {
-      path: '/data/:type',
-      name: RouteName.DATA,
+      path: '/parent-data/:type',
+      name: RouteName.DATA_PARENTS,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/DataView.vue'),
+      component: () => import('../views/DataView.vue'), // TODO - DataParentView
     },
     {
-      /**
-       * Parent Id required for child of parent creation
-       */
-      path: '/create/:type/:parentId?',
-      name: RouteName.CREATE,
+      path: '/child-data/:type',
+      name: RouteName.DATA_CHILDREN,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/CreateView.vue'),
+      component: () => import('../views/DataView.vue'), // TODO - DataChildView
     },
     {
-      path: '/inspect/:type/:id',
-      name: RouteName.INSPECT,
+      path: '/create-parent/:type',
+      name: RouteName.CREATE_PARENT,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/InspectView.vue'),
+      component: () => import('../views/CreateView.vue'), // TODO - CreateParentView
     },
     {
-      path: '/edit/:type/:id',
-      name: RouteName.EDIT,
+      path: '/create-child/:type/:parentId?',
+      name: RouteName.CREATE_CHILD,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/EditView.vue'),
+      component: () => import('../views/CreateView.vue'), // TODO - CreateChildView
+    },
+    {
+      path: '/edit-parent/:type/:id',
+      name: RouteName.EDIT_PARENT,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/EditView.vue'), // TODO - EditParentView
+    },
+    {
+      path: '/edit-child/:type/:id',
+      name: RouteName.EDIT_CHILD,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/EditView.vue'), // TODO - EditChildView
+    },
+    {
+      path: '/inspect-parent/:type/:id',
+      name: RouteName.INSPECT_PARENT,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/InspectView.vue'), // TODO - InspectParentView
+    },
+    {
+      path: '/inspect-child/:type/:id',
+      name: RouteName.INSPECT_CHILD,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/InspectView.vue'), // TODO - InspectChildView
     },
     {
       path: '/charts/:type/:id',

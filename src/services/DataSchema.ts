@@ -88,15 +88,23 @@ export default class DataSchema {
   //   return this.dataSchema.find((s) => s.type === type)?.chartProps as ChartProps[]
   // }
 
-  static getTableOptions() {
+  static getParentLabelSingular(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.parentLabelSingular as string
+  }
+
+  static getParentTypeOptions() {
+    return this.dataSchema.map((s) => ({ value: s.type, label: s.parentLabelPlural, icon: s.icon }))
+  }
+
+  static getAllTypeOptions() {
     const options = [
-      { value: ['internal', 'logs'], label: 'Logs' },
-      { value: ['internal', 'settings'], label: 'Settings' },
+      { value: ['internal', 'logs'], label: 'Logs', icon: Icon.LOGS },
+      { value: ['internal', 'settings'], label: 'Settings', icon: Icon.SETTINGS },
     ]
 
-    this.dataSchema.forEach((t) => {
-      options.push({ value: ['parent', t.type], label: t.parentLabelPlural })
-      options.push({ value: ['child', t.type], label: t.childLabelPlural })
+    this.dataSchema.forEach((s) => {
+      options.push({ value: ['parent', s.type], label: s.parentLabelPlural, icon: s.icon })
+      options.push({ value: ['child', s.type], label: s.childLabelPlural, icon: s.icon })
     })
 
     return options
