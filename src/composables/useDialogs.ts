@@ -2,9 +2,6 @@ import { useQuasar } from 'quasar'
 import { Icon } from '@/types/icons'
 import SimpleDialog from '@/components/SimpleDialog.vue'
 
-/**
- * Composable with convenient simple dialogs.
- */
 export default function useDialogs() {
   const $q = useQuasar()
 

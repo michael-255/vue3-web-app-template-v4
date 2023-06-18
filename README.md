@@ -4,23 +4,6 @@ This Vue 3 Typescript project can be used as a web application template to help 
 developing. Read through this README to have a better understanding of how this project is
 structured.
 
-## TODO
-
-- Confirm which fields should appear and be editable for records
-- Remove unneeded comments from all files
-
-```typescript
-// Future note?
-
-/**
- * Defines unique ids that are reserved for specific records.
- * - Mainly used for cross referencing when doing imports
- */
-export enum ReservedId {
-  UID_01 = '00000000-0000-0000-0000-000000000001',
-}
-```
-
 ## Post Cloning Steps
 
 - [ ] Update `package.json`

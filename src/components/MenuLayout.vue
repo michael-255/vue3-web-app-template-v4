@@ -7,12 +7,10 @@ import DataSchema from '@/services/DataSchema'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
 
-// Composables & Stores
 const { goBack } = useRoutables()
 const uiStore = useUIStore()
 const route = useRoute()
 
-// Data
 const parentOptions = DataSchema.getParentTypeOptions()
 </script>
 

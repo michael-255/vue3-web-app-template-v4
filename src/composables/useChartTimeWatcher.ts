@@ -3,10 +3,6 @@ import { watch } from 'vue'
 import useUIStore from '@/stores/ui'
 import useLogger from '@/composables/useLogger'
 
-/**
- * Composable with the watcher for triggering chart updates.
- * @param chartUpdateFunc
- */
 export default function useChartTimeWatcher(chartUpdateFunc: () => Promise<void>) {
   const uiStore = useUIStore()
   const { log } = useLogger()

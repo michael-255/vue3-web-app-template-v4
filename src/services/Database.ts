@@ -224,6 +224,10 @@ class Database extends Dexie {
     return await this.Parents.toArray()
   }
 
+  async getParentsByType(type: Type) {
+    return await this.Parents.where(Field.TYPE).equals(type).toArray()
+  }
+
   async getParent(id: string) {
     return await this.Parents.get(id)
   }
@@ -329,12 +333,18 @@ class Database extends Dexie {
     return await this.Children.toArray()
   }
 
+  async getChildrenByType(type: Type) {
+    return await this.Children.where(Field.TYPE).equals(type).toArray()
+  }
+
   async getChild(id: string) {
     return await this.Children.get(id)
   }
 
   async getLastChild(parentId: string) {
-    return (await this.Children.where(Field.PARENT_ID).equals(parentId).toArray()).reverse()[0]
+    return (
+      await this.Children.where(Field.PARENT_ID).equals(parentId).sortBy(Field.TIMESTAMP)
+    ).reverse()[0]
   }
 
   async addChild(record: ChildRecord) {

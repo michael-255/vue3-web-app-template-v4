@@ -8,15 +8,12 @@ import useLogger from '@/composables/useLogger'
 import useDefaults from '@/composables/useDefaults'
 import DB from '@/services/Database'
 
-// Composables & Stores
 const { onDefaults } = useDefaults()
 const { log } = useLogger()
 
-// Data
 const exampleFavorite: Ref<number> = ref(0)
 const showWelcome: Ref<any> = ref(false)
 
-// Subscriptions
 const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     showWelcome.value = liveSettings.find((s) => s.key === SettingKey.SHOW_WELCOME)?.value
@@ -30,9 +27,6 @@ onUnmounted(() => {
   subscription.unsubscribe()
 })
 
-/**
- * Set Welcome Overlay setting value to false in settings to close the dialog card.
- */
 async function onCloseWelcomeOverlay() {
   await DB.setSetting(SettingKey.SHOW_WELCOME, false)
 }

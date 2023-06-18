@@ -135,7 +135,7 @@ async function onChildDelete(id: string) {
           round
           flat
           class="absolute-top-right q-mr-sm q-mt-sm"
-          :icon="Icon.BACK"
+          :icon="Icon.CLOSE"
           @click="goBack()"
         />
       </div>

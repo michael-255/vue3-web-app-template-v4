@@ -6,16 +6,10 @@ import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/Database'
 
-/**
- * Composable with functions for generating default data for the app.
- */
 export default function useDefaults() {
   const { log } = useLogger()
   const { confirmDialog } = useDialogs()
 
-  /**
-   * Generate default demostration data for the template app.
-   */
   async function onDefaults() {
     confirmDialog(
       'Load Defaults',
@@ -128,8 +122,8 @@ export default function useDefaults() {
             }
           }
 
-          buildExampleRecords(2)
-          buildTestRecords(2)
+          buildExampleRecords(360)
+          buildTestRecords(360)
 
           await Promise.all([DB.importParents(parentRecords), DB.importChildren(childRecords)])
           await DB.updateAllParentLastChild()

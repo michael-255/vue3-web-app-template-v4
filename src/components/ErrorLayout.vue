@@ -11,7 +11,6 @@ import { AppHeaderColor, AppName } from '@/types/general'
       </QToolbar>
     </QHeader>
 
-    <!-- Router View -->
     <QPageContainer>
       <RouterView v-slot="{ Component, route }">
         <transition name="global-fade" mode="out-in">

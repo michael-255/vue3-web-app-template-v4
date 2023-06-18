@@ -19,7 +19,6 @@ $q.dialog({...})
   })
 */
 
-// Props & Emits
 const props = defineProps<{
   type: 'Confirm' | 'Dismiss'
   icon: Icon
@@ -31,12 +30,8 @@ const props = defineProps<{
 
 defineEmits([...useDialogPluginComponent.emits])
 
-// Composables & Stores
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
 
-/**
- * Called when the dialog confirmation button is clicked.
- */
 function onOKClick() {
   onDialogOK()
 }

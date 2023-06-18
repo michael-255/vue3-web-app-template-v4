@@ -33,14 +33,13 @@ ChartJS.register(
   LineElement
 )
 
-// Composables & Stores
 const uiStore = useUIStore()
 const { getPaletteColor } = colors
 const { log } = useLogger()
 const { routeType, routeId } = useRoutables()
 useChartTimeWatcher(recalculateChart)
 
-// Data
+const recordCount: Ref<number> = ref(0)
 const chartLabel = 'Percentages'
 const chartOptions = {
   reactive: true,
@@ -71,7 +70,6 @@ const chartOptions = {
     },
   },
 }
-const recordCount: Ref<number> = ref(0)
 const chartData: Ref<{
   labels: any[]
   datasets: any[]
@@ -93,9 +91,6 @@ function downwardTrend(ctx: any, color: any) {
   return ctx.p0.parsed.y > ctx.p1.parsed.y ? color : undefined
 }
 
-/**
- * Rebuilds the chart data.
- */
 async function recalculateChart() {
   try {
     // Get all records for the current route type and id
@@ -103,8 +98,7 @@ async function recalculateChart() {
     const isIdValid = await idValidator.isValid(routeId)
 
     if (isTypeValid && isIdValid) {
-      const childType = DataSchema.getChildType(routeType)
-      const chartingRecords = await DB.getParentChildren(childType as Type, routeId as string)
+      const chartingRecords = await DB.getParentChildren(routeId as string)
 
       // Continue if there are records
       if (chartingRecords.length > 0) {
@@ -156,15 +150,13 @@ async function recalculateChart() {
       <p class="text-h6">{{ chartLabel }}</p>
 
       <!-- Chart -->
-      <Line v-if="recordCount && recordCount > 0" :options="chartOptions" :data="chartData" />
+      <div v-if="recordCount > 0">
+        <Line :options="chartOptions" :data="chartData" />
 
-      <!-- Record Count -->
-      <QBadge v-if="recordCount && recordCount === 1" rounded color="secondary" class="q-py-none">
-        <span class="text-caption">{{ recordCount }} record in time frame</span>
-      </QBadge>
-      <QBadge v-if="recordCount && recordCount > 1" rounded color="secondary" class="q-py-none">
-        <span class="text-caption">{{ recordCount }} records in time frame</span>
-      </QBadge>
+        <QBadge rounded color="secondary" class="q-py-none">
+          <span class="text-caption">{{ recordCount }} in time frame</span>
+        </QBadge>
+      </div>
 
       <!-- No Data -->
       <div v-else>
