@@ -19,6 +19,8 @@ Make NEW components that separate core functionality from app specific functiona
 - `DataLogsView.vue`
 - `DataSettingsView.vue`
 
+- Delete `DashboardParentCard` once your sure it's not needed
+
 ```typescript
 // Future note?
 

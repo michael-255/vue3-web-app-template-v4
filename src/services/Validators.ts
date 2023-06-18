@@ -1,4 +1,4 @@
-import { Type, Severity, LogField, SettingField, RecordField } from '@/types/database'
+import { Type, Severity, Field } from '@/types/database'
 import { mixed, object, array, string, number, boolean } from 'yup'
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,50 +66,52 @@ export const percentValidator = number().required().min(0).max(100)
 ///////////////////////////////////////////////////////////////////////////////
 
 const core = object({
-  [RecordField.ID]: idValidator,
-  [RecordField.TIMESTAMP]: timestampValidator,
-  [RecordField.TYPE]: typeValidator,
+  [Field.ID]: idValidator,
+  [Field.TIMESTAMP]: timestampValidator,
+  [Field.TYPE]: typeValidator,
 }).noUnknown()
 
 const parent = object({
-  [RecordField.NAME]: nameValidator,
-  [RecordField.DESC]: textAreaValidator,
-  [RecordField.ENABLED]: booleanValidator,
-  [RecordField.FAVORITED]: booleanValidator,
-  [RecordField.LAST_CHILD]: core.concat(
-    object({
-      [RecordField.PARENT_ID]: idValidator,
-      [RecordField.NOTE]: textAreaValidator,
-    }).noUnknown()
-  ),
+  [Field.NAME]: nameValidator,
+  [Field.DESC]: textAreaValidator,
+  [Field.ENABLED]: booleanValidator,
+  [Field.FAVORITED]: booleanValidator,
+  [Field.LAST_CHILD]: anyValidator,
+  // [Field.LAST_CHILD]: object({
+  //   [Field.ID]: idValidator,
+  //   [Field.TIMESTAMP]: timestampValidator,
+  //   [Field.TYPE]: typeValidator,
+  //   [Field.PARENT_ID]: idValidator,
+  //   [Field.NOTE]: textAreaValidator,
+  // }),
 }).noUnknown()
 
 const child = object({
-  [RecordField.PARENT_ID]: idValidator,
-  [RecordField.NOTE]: textAreaValidator,
+  [Field.PARENT_ID]: idValidator,
+  [Field.NOTE]: textAreaValidator,
 }).noUnknown()
 
 const exampleParent = object({
-  [RecordField.TEST_IDS]: testIdsValidator,
+  [Field.TEST_IDS]: testIdsValidator,
 }).noUnknown()
 
 const testChild = object({
-  [RecordField.PERCENT]: percentValidator,
+  [Field.PERCENT]: percentValidator,
 }).noUnknown()
 
 export const logValidator = object({
-  [LogField.AUTO_ID]: autoIdValidator,
-  [LogField.TIMESTAMP]: timestampValidator,
-  [LogField.SEVERITY]: severityValidator,
-  [LogField.LABEL]: labelValidator,
-  [LogField.DETAILS]: anyValidator,
-  [LogField.MESSAGE]: textValidator,
-  [LogField.STACK]: textValidator,
+  [Field.AUTO_ID]: autoIdValidator,
+  [Field.TIMESTAMP]: timestampValidator,
+  [Field.SEVERITY]: severityValidator,
+  [Field.LABEL]: labelValidator,
+  [Field.DETAILS]: anyValidator,
+  [Field.MESSAGE]: textValidator,
+  [Field.STACK]: textValidator,
 }).noUnknown()
 
 export const settingValidator = object({
-  [SettingField.KEY]: keyValidator,
-  [SettingField.VALUE]: valueValidator,
+  [Field.KEY]: keyValidator,
+  [Field.VALUE]: valueValidator,
 }).noUnknown()
 
 export const anyParentValidator = core.concat(parent).concat(exampleParent)

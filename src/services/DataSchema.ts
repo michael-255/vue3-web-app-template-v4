@@ -92,6 +92,10 @@ export default class DataSchema {
     return this.dataSchema.find((s) => s.type === type)?.parentLabelSingular as string
   }
 
+  static getChildLabelSingular(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.childLabelSingular as string
+  }
+
   static getParentTypeOptions() {
     return this.dataSchema.map((s) => ({ value: s.type, label: s.parentLabelPlural, icon: s.icon }))
   }
@@ -116,5 +120,13 @@ export default class DataSchema {
 
   static getChildValidator(type: Type) {
     return this.dataSchema.find((s) => s.type === type)?.childValidator as AnySchema<any, any, any>
+  }
+
+  static getParentFieldProps(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.parentFieldProps as FieldProps[]
+  }
+
+  static getChildFieldProps(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.parentFieldProps as FieldProps[]
   }
 }

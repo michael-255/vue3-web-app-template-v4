@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
-import type { RecordField } from '@/types/database'
+import type { Field } from '@/types/database'
 
 const useActionStore = defineStore({
   id: 'action',
 
   state: () => ({
-    record: {} as Partial<{ [key in RecordField]: any }>,
+    record: {} as Partial<{ [key in Field]: any }>,
   }),
 })
 

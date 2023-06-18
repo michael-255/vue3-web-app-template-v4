@@ -2,8 +2,7 @@ import Dexie, { liveQuery, type Table } from 'dexie'
 import { Dark } from 'quasar'
 import type { ChildRecord, Log, ParentRecord, Setting } from '@/types/database'
 import { Milliseconds, AppName, LogRetention } from '@/types/general'
-import { typeValidator, idValidator } from '@/services/validators'
-import { Severity, Type, LogField, SettingField, RecordField, SettingKey } from '@/types/database'
+import { Severity, Type, Field, SettingKey } from '@/types/database'
 import DataSchema from '@/services/DataSchema'
 
 class Database extends Dexie {
@@ -17,10 +16,10 @@ class Database extends Dexie {
     super(name)
 
     this.version(1).stores({
-      Logs: `++${LogField.AUTO_ID}`,
-      Settings: `&${SettingField.KEY}`,
-      Parents: `&${RecordField.ID}, ${RecordField.TYPE}`,
-      Children: `&${RecordField.ID}, ${RecordField.TYPE}, ${RecordField.PARENT_ID}`,
+      Logs: `++${Field.AUTO_ID}`,
+      Settings: `&${Field.KEY}`,
+      Parents: `&${Field.ID}, ${Field.TYPE}`,
+      Children: `&${Field.ID}, ${Field.TYPE}, ${Field.PARENT_ID}`,
     })
   }
 
@@ -35,12 +34,12 @@ class Database extends Dexie {
   }
 
   liveLogs() {
-    return liveQuery(() => this.Logs.orderBy(LogField.AUTO_ID).reverse().toArray())
+    return liveQuery(() => this.Logs.orderBy(Field.AUTO_ID).reverse().toArray())
   }
 
   liveDashboard() {
     return liveQuery(async () => {
-      const parents = await this.Parents.filter((p) => p.enabled === true).sortBy(RecordField.NAME)
+      const parents = await this.Parents.filter((p) => p.enabled === true).sortBy(Field.NAME)
 
       const favorites: ParentRecord[] = []
       const nonFavorites: ParentRecord[] = []
@@ -77,6 +76,10 @@ class Database extends Dexie {
 
   async getLogs() {
     return await this.Logs.toArray()
+  }
+
+  async getLog(autoId: number) {
+    return await this.Logs.get(autoId)
   }
 
   async addLog(severity: Severity, label: string, details?: any) {
@@ -220,9 +223,7 @@ class Database extends Dexie {
   }
 
   async getParentChildren(parentId: string) {
-    return await this.Children.where(RecordField.PARENT_ID)
-      .equals(parentId)
-      .sortBy(RecordField.TIMESTAMP)
+    return await this.Children.where(Field.PARENT_ID).equals(parentId).sortBy(Field.TIMESTAMP)
   }
 
   async addParent(record: ParentRecord) {
@@ -238,6 +239,8 @@ class Database extends Dexie {
   async importParents(records: ParentRecord[]) {
     const validRecords: ParentRecord[] = []
     const skippedRecords: ParentRecord[] = []
+
+    console.log(records)
 
     for await (const r of records) {
       const recordValidator = DataSchema.getParentValidator(r?.type as Type)
@@ -283,6 +286,9 @@ class Database extends Dexie {
     return await this.Parents.update(parentId, { lastChild })
   }
 
+  /**
+   * Must call at the end of bulk imports to update the lastChild property of all parents
+   */
   async updateAllParentLastChild() {
     const parents = await this.Parents.toArray()
     await Promise.all(parents.map((p) => this.updateParentLastChild(p.id as string)))
@@ -296,13 +302,13 @@ class Database extends Dexie {
     }
 
     await this.Parents.delete(id)
-    await this.Children.where(RecordField.PARENT_ID).equals(id).delete()
+    await this.Children.where(Field.PARENT_ID).equals(id).delete()
 
     return recordToDelete
   }
 
   async clearParentsByType(type: Type) {
-    await this.Parents.where(RecordField.TYPE).equals(type).delete()
+    await this.Parents.where(Field.TYPE).equals(type).delete()
   }
 
   async clearParents() {
@@ -324,9 +330,7 @@ class Database extends Dexie {
   }
 
   async getLastChild(parentId: string) {
-    return (
-      await this.Children.where(RecordField.PARENT_ID).equals(parentId).toArray()
-    ).reverse()[0]
+    return (await this.Children.where(Field.PARENT_ID).equals(parentId).toArray()).reverse()[0]
   }
 
   async addChild(record: ChildRecord) {
@@ -341,9 +345,9 @@ class Database extends Dexie {
     }
   }
 
-  async importChildren(records: ParentRecord[]) {
-    const validRecords: ParentRecord[] = []
-    const skippedRecords: ParentRecord[] = []
+  async importChildren(records: ChildRecord[]) {
+    const validRecords: ChildRecord[] = []
+    const skippedRecords: ChildRecord[] = []
 
     for await (const r of records) {
       const recordValidator = DataSchema.getChildValidator(r?.type as Type)
@@ -403,9 +407,9 @@ class Database extends Dexie {
 
   async clearChildrenByType(type: Type) {
     // Get all child records to be deleted
-    const records = await this.Children.where(RecordField.TYPE).equals(type).toArray()
+    const records = await this.Children.where(Field.TYPE).equals(type).toArray()
     // Delete all child records of the given type
-    await this.Children.where(RecordField.TYPE).equals(type).delete()
+    await this.Children.where(Field.TYPE).equals(type).delete()
     // Update parent records lastChild property to undefined
     await Promise.all(
       records.map((r) => this.Parents.update(r.parentId as string, { lastChild: undefined }))

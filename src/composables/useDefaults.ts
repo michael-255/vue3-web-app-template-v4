@@ -1,6 +1,14 @@
 import { Icon } from '@/types/icons'
 import { uid } from 'quasar'
-import { type Record, Type } from '@/types/database'
+import {
+  Type,
+  type ParentRecord,
+  type ChildRecord,
+  type ExampleParent,
+  type ExampleChild,
+  type TestParent,
+  type TestChild,
+} from '@/types/database'
 import { Milliseconds } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
@@ -72,59 +80,68 @@ export default function useDefaults() {
             return Date.now() - Milliseconds.PER_YEAR
           }
 
-          const recordTypes: { [key in Type]: Record[] } = Object.values(Type).reduce(
-            (acc, type) => {
-              acc[type] = []
-              return acc
-            },
-            {} as { [key in Type]: Record[] }
-          )
+          const parentRecords: ParentRecord[] = []
+          const childRecords: ChildRecord[] = []
 
-          const createRecords = (
-            childCount: number,
-            type: Type.EXAMPLE_PARENT | Type.TEST_PARENT
-          ) => {
+          const buildExampleRecords = (count: number) => {
             const parentId = uid()
             const name = `${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
-            // Create Parent (1)
-            recordTypes[type].push({
+            parentRecords.push({
               id: parentId,
+              type: Type.EXAMPLE,
               timestamp: Date.now(),
               name,
-              desc: `${name} ${type} description.`,
+              desc: `${name} description.`,
               enabled: true,
               favorited: randomBoolean(),
-              testIds: type === Type.EXAMPLE_PARENT ? [uid()] : undefined,
-            } as Record)
+              lastChild: {},
+              testIds: [uid(), uid(), uid()], // Not linked to any real child records
+            } as ParentRecord)
 
-            if (childCount > 0) {
-              const childType = DataSchema.getChildType(type)
-              // Create Children (childCount)
-              for (let i = 0; i < childCount; i++) {
-                recordTypes[childType as Type].push({
-                  id: uid(),
-                  parentId,
-                  timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
-                  note: `Note ${i}`,
-                  percent: type === Type.TEST_PARENT ? randomPercent() : undefined,
-                } as Record)
-              }
+            for (let i = 0; i < count; i++) {
+              childRecords.push({
+                id: uid(),
+                type: Type.EXAMPLE,
+                parentId,
+                timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
+                note: `Note ${i}`,
+              } as ChildRecord)
             }
           }
 
-          createRecords(3, Type.EXAMPLE_PARENT)
-          createRecords(2, Type.EXAMPLE_PARENT)
-          createRecords(0, Type.EXAMPLE_PARENT)
-          createRecords(0, Type.EXAMPLE_PARENT)
-          createRecords(360, Type.TEST_PARENT)
-          createRecords(0, Type.TEST_PARENT)
+          const buildTestRecords = (count: number) => {
+            const parentId = uid()
+            const name = `${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
-          log.silentDebug('recordTypes:', recordTypes)
+            parentRecords.push({
+              id: parentId,
+              type: Type.TEST,
+              timestamp: Date.now(),
+              name,
+              desc: `${name} description.`,
+              enabled: true,
+              favorited: randomBoolean(),
+              lastChild: {},
+            } as ParentRecord)
 
-          await Promise.all(
-            Object.entries(recordTypes).map(([k, v]) => DB.importRecords(k as Type, v))
-          )
+            for (let i = 0; i < count; i++) {
+              childRecords.push({
+                id: uid(),
+                type: Type.TEST,
+                parentId,
+                timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
+                note: `Note ${i}`,
+                percent: randomPercent(),
+              } as ChildRecord)
+            }
+          }
+
+          buildExampleRecords(2)
+          buildTestRecords(2)
+
+          await Promise.all([DB.importParents(parentRecords), DB.importChildren(childRecords)])
+          await DB.updateAllParentLastChild()
 
           log.info('Defaults loaded')
         } catch (error) {

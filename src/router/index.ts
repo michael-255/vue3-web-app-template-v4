@@ -59,16 +59,22 @@ const router = createRouter({
       component: () => import('../views/EditView.vue'), // TODO - EditChildView
     },
     {
+      path: '/inspect-log/:autoId',
+      name: RouteName.INSPECT_LOG,
+      meta: { layout: 'MenuLayout' },
+      component: () => import('../views/InspectLogView.vue'),
+    },
+    {
       path: '/inspect-parent/:type/:id',
       name: RouteName.INSPECT_PARENT,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/InspectView.vue'), // TODO - InspectParentView
+      component: () => import('../views/InspectParentView.vue'),
     },
     {
       path: '/inspect-child/:type/:id',
       name: RouteName.INSPECT_CHILD,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/InspectView.vue'), // TODO - InspectChildView
+      component: () => import('../views/InspectChildView.vue'),
     },
     {
       path: '/charts/:type/:id',

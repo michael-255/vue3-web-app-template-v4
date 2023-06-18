@@ -25,22 +25,17 @@ export enum Type {
   TEST = 'test',
 }
 
-export enum LogField {
+export enum Field {
+  // LOG
   AUTO_ID = 'autoId',
-  TIMESTAMP = 'timestamp',
   SEVERITY = 'severity',
   LABEL = 'label',
   DETAILS = 'details',
   MESSAGE = 'message',
   STACK = 'stack',
-}
-
-export enum SettingField {
+  // SETTING
   KEY = 'key',
   VALUE = 'value',
-}
-
-export enum RecordField {
   // CORE
   ID = 'id',
   TIMESTAMP = 'timestamp',
@@ -117,7 +112,7 @@ export type TypeSchema = {
 }
 
 export type FieldProps = {
-  field: RecordField | SettingField | LogField
+  field: Field
   label: string
   desc?: string // Optional
   getDefault: () => any

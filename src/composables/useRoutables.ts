@@ -10,12 +10,14 @@ export default function useRoutables() {
 
   // Possible route params
   const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  const autoId = Array.isArray(route.params.autoId) ? route.params.autoId[0] : route.params.autoId
   const parentId = Array.isArray(route.params.parentId)
     ? route.params.parentId[0]
     : route.params.parentId
   const type = Array.isArray(route.params.type) ? route.params.type[0] : route.params.type
   // Cleaned route params
   const routeId = String(id) || undefined
+  const routeAutoId = Number(autoId) || undefined
   const routeParentId = String(parentId) || undefined
   const routeType = (String(type) as Type) || undefined
 
@@ -105,6 +107,17 @@ export default function useRoutables() {
     }
   }
 
+  function goToLogInspect(autoId: number) {
+    try {
+      router.push({
+        name: RouteName.INSPECT_LOG,
+        params: { autoId },
+      })
+    } catch (error) {
+      log.error('Error accessing logs inspect route', error)
+    }
+  }
+
   function goToParentInspect(type: Type, id: string) {
     try {
       router.push({
@@ -155,6 +168,7 @@ export default function useRoutables() {
 
   return {
     routeId,
+    routeAutoId,
     routeParentId,
     routeType,
     goToLogsData,
@@ -165,6 +179,7 @@ export default function useRoutables() {
     goToChildCreate,
     goToParentEdit,
     goToChildEdit,
+    goToLogInspect,
     goToParentInspect,
     goToChildInspect,
     goToCharts,
