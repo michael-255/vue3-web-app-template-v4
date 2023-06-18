@@ -11,7 +11,7 @@ import useRoutables from '@/composables/useRoutables'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import DB from '@/services/Database'
 
-useMeta({ title: `${AppName} - Inspect Child Record` })
+useMeta({ title: `${AppName} - Inspect Record` })
 
 const { routeType, routeId } = useRoutables()
 const { log } = useLogger()

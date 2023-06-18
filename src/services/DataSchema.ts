@@ -28,34 +28,32 @@ export default class DataSchema {
     {
       type: Type.EXAMPLE,
       icon: Icon.EXAMPLES,
+      chartProps: [],
       parentLabelSingular: 'Example Parent',
       parentLabelPlural: 'Example Parents',
       parentValidator: exampleParentValidator,
       parentTableColumns: exampleParentColumns,
       parentFieldProps: exampleParentFields,
-      parentChartProps: [],
       childLabelSingular: 'Example Child',
       childLabelPlural: 'Example Children',
       childValidator: exampleChildValidator,
       childTableColumns: exampleChildColumns,
       childFieldProps: exampleChildFields,
-      childChartProps: [],
     },
     {
       type: Type.TEST,
       icon: Icon.TESTS,
+      chartProps: [percentChart],
       parentLabelSingular: 'Test Parent',
       parentLabelPlural: 'Test Parents',
       parentValidator: testParentValidator,
       parentTableColumns: testParentColumns,
       parentFieldProps: testParentFields,
-      parentChartProps: [percentChart],
       childLabelSingular: 'Test Child',
       childLabelPlural: 'Test Children',
       childValidator: testChildValidator,
       childTableColumns: testChildColumns,
       childFieldProps: testChildFields,
-      childChartProps: [],
     },
   ]
 
@@ -68,32 +66,20 @@ export default class DataSchema {
     }
   }
 
-  // static getLabelSingular(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.labelSingular as string
-  // }
-
-  // static getLabelPlural(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.labelPlural as string
-  // }
-
-  // static getTableColumns(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.tableColumns as QTableColumn[]
-  // }
-
-  // static getFieldProps(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.fieldProps as FieldProps[]
-  // }
-
-  // static getChartProps(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.chartProps as ChartProps[]
-  // }
-
   static getParentLabelSingular(type: Type) {
     return this.dataSchema.find((s) => s.type === type)?.parentLabelSingular as string
   }
 
   static getChildLabelSingular(type: Type) {
     return this.dataSchema.find((s) => s.type === type)?.childLabelSingular as string
+  }
+
+  static getParentLabelPlural(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.parentLabelPlural as string
+  }
+
+  static getChildLabelPlural(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.childLabelPlural as string
   }
 
   static getParentTypeOptions() {
@@ -128,5 +114,17 @@ export default class DataSchema {
 
   static getChildFieldProps(type: Type) {
     return this.dataSchema.find((s) => s.type === type)?.parentFieldProps as FieldProps[]
+  }
+
+  static getParentTableColumns(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.parentTableColumns as QTableColumn[]
+  }
+
+  static getChildTableColumns(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.childTableColumns as QTableColumn[]
+  }
+
+  static getChartProps(type: Type) {
+    return this.dataSchema.find((s) => s.type === type)?.chartProps as ChartProps[]
   }
 }

@@ -121,7 +121,7 @@ async function onUnfavorite(id: string, name: string) {
 
     <!-- Dashboard Cards -->
     <div v-for="(record, i) in dashboardRecords[uiStore.dashboardSelection]" :key="i">
-      <QCard>
+      <QCard class="q-mb-md">
         <QCardSection>
           <p class="text-h6">{{ record.name }}</p>
           <p v-if="showDescription">{{ record.desc }}</p>

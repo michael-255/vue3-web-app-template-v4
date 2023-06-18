@@ -13,18 +13,16 @@ import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Logs Data` })
 
-// Composables & Stores
 const { log } = useLogger()
-const { routeType, goToInspect, goBack } = useRoutables()
+const { goToLogInspect, goBack } = useRoutables()
 
-// Data
+const searchFilter: Ref<string> = ref('')
+const rows: Ref<any[]> = ref([])
+const visibleColumns: Ref<Field[]> = ref([Field.TIMESTAMP, Field.SEVERITY, Field.LABEL])
 const columns: Ref<QTableColumn[]> = ref(logColumns)
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
 )
-const visibleColumns: Ref<Field[]> = ref([Field.TIMESTAMP, Field.SEVERITY, Field.LABEL])
-const rows: Ref<any[]> = ref([])
-const searchFilter: Ref<string> = ref('')
 
 const subscription = DB.liveLogs().subscribe({
   next: (records) => {
@@ -38,11 +36,6 @@ const subscription = DB.liveLogs().subscribe({
 onUnmounted(() => {
   subscription.unsubscribe()
 })
-
-// TODO
-function inspectTheseRows(id: string) {
-  return rows.value.find((row) => row.autoId === Number(id))
-}
 </script>
 
 <template>
@@ -87,7 +80,7 @@ function inspectTheseRows(id: string) {
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="goToInspect(routeType, inspectTheseRows(props.cols[0].value))"
+            @click="goToLogInspect(props.cols[0].value)"
           />
         </QTd>
       </QTr>
@@ -96,13 +89,13 @@ function inspectTheseRows(id: string) {
     <template v-slot:top>
       <div class="row justify-start full-width q-mb-md">
         <!-- Table Title -->
-        <div class="col-10 text-h6 ellipsis">Logs</div>
+        <div class="col-10 text-h6 text-bold ellipsis">Logs</div>
         <!-- Go Back Button -->
         <QBtn
           round
           flat
           class="absolute-top-right q-mr-sm q-mt-sm"
-          :icon="Icon.BACK"
+          :icon="Icon.CLOSE"
           @click="goBack()"
         />
       </div>

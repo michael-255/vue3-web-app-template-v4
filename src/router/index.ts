@@ -26,13 +26,13 @@ const router = createRouter({
       path: '/parent-data/:type',
       name: RouteName.DATA_PARENTS,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/DataView.vue'), // TODO - DataParentView
+      component: () => import('../views/DataParentView.vue'),
     },
     {
       path: '/child-data/:type',
       name: RouteName.DATA_CHILDREN,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/DataView.vue'), // TODO - DataChildView
+      component: () => import('../views/DataChildView.vue'),
     },
     {
       path: '/create-parent/:type',
@@ -41,7 +41,7 @@ const router = createRouter({
       component: () => import('../views/CreateView.vue'), // TODO - CreateParentView
     },
     {
-      path: '/create-child/:type/:parentId?',
+      path: '/create-child/:type/:parentId',
       name: RouteName.CREATE_CHILD,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/CreateView.vue'), // TODO - CreateChildView

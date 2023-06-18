@@ -6,20 +6,10 @@ structured.
 
 ## TODO
 
-- `Inspect` as a fullscreen dialog?
-
-Make NEW components that separate core functionality from app specific functionality:
-
 - `CreateParentView.vue`
-- `EditParentView.vue`
 - `CreateChildView.vue`
+- `EditParentView.vue`
 - `EditChildView.vue`
-- `DataParentView.vue`
-- `DataChildView.vue`
-- `DataLogsView.vue`
-- `DataSettingsView.vue`
-
-- Delete `DashboardParentCard` once your sure it's not needed
 
 ```typescript
 // Future note?

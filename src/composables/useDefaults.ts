@@ -1,18 +1,9 @@
 import { Icon } from '@/types/icons'
 import { uid } from 'quasar'
-import {
-  Type,
-  type ParentRecord,
-  type ChildRecord,
-  type ExampleParent,
-  type ExampleChild,
-  type TestParent,
-  type TestChild,
-} from '@/types/database'
+import { Type, type ParentRecord, type ChildRecord } from '@/types/database'
 import { Milliseconds } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
-import DataSchema from '@/services/DataSchema'
 import DB from '@/services/Database'
 
 /**
@@ -95,7 +86,7 @@ export default function useDefaults() {
               desc: `${name} description.`,
               enabled: true,
               favorited: randomBoolean(),
-              lastChild: {},
+              lastChild: undefined,
               testIds: [uid(), uid(), uid()], // Not linked to any real child records
             } as ParentRecord)
 
@@ -122,7 +113,7 @@ export default function useDefaults() {
               desc: `${name} description.`,
               enabled: true,
               favorited: randomBoolean(),
-              lastChild: {},
+              lastChild: undefined,
             } as ParentRecord)
 
             for (let i = 0; i < count; i++) {

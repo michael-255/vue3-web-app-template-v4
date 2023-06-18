@@ -140,6 +140,7 @@ export default function useRoutables() {
     }
   }
 
+  // Charts can only be accessed from parents
   function goToCharts(type: Type, id: string) {
     try {
       router.push({

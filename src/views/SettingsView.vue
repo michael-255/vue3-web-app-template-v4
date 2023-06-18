@@ -92,6 +92,8 @@ function onImportFile() {
           DB.importChildren(backupData.children),
         ])
 
+        await DB.updateAllParentLastChild()
+
         importFile.value = null // Clear input
         log.info('Successfully imported available data')
       } catch (error) {

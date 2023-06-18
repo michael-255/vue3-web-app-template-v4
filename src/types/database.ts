@@ -4,13 +4,9 @@ import type { QTableColumn } from 'quasar'
 import type { defineAsyncComponent } from 'vue'
 import type {
   anyChildValidator,
-  exampleChildValidator,
-  exampleParentValidator,
   logValidator,
   anyParentValidator,
   settingValidator,
-  testChildValidator,
-  testParentValidator,
 } from '@/services/validators'
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -76,17 +72,11 @@ export enum SettingKey {
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-// Infering data record types from the validators
+// Infering record types from validators
 export type Log = InferType<typeof logValidator>
 export type Setting = InferType<typeof settingValidator>
-// Partials
 export type ParentRecord = Partial<InferType<typeof anyParentValidator>>
 export type ChildRecord = Partial<InferType<typeof anyChildValidator>>
-// Record Specific
-export type ExampleParent = InferType<typeof exampleParentValidator>
-export type ExampleChild = InferType<typeof exampleChildValidator>
-export type TestParent = InferType<typeof testParentValidator>
-export type TestChild = InferType<typeof testChildValidator>
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
@@ -97,18 +87,17 @@ export type TestChild = InferType<typeof testChildValidator>
 export type TypeSchema = {
   type: Type
   icon: Icon
+  chartProps: ChartProps[]
   parentLabelSingular: string
   parentLabelPlural: string
   parentValidator: ObjectSchema<any, any, any>
   parentTableColumns: QTableColumn[]
   parentFieldProps: FieldProps[]
-  parentChartProps: ChartProps[]
   childLabelSingular: string
   childLabelPlural: string
   childValidator: ObjectSchema<any, any, any>
   childTableColumns: QTableColumn[]
   childFieldProps: FieldProps[]
-  childChartProps: ChartProps[]
 }
 
 export type FieldProps = {

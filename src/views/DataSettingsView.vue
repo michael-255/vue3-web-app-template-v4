@@ -12,14 +12,12 @@ import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Settings Data` })
 
-// Composables & Stores
 const { log } = useLogger()
 const { goBack } = useRoutables()
 
-// Data
-const columns: Ref<QTableColumn[]> = ref(settingColumns)
-const rows: Ref<any[]> = ref([])
 const searchFilter: Ref<string> = ref('')
+const rows: Ref<any[]> = ref([])
+const columns: Ref<QTableColumn[]> = ref(settingColumns)
 
 const subscription = DB.liveSettings().subscribe({
   next: (records) => {
@@ -67,13 +65,13 @@ onUnmounted(() => {
     <template v-slot:top>
       <div class="row justify-start full-width q-mb-md">
         <!-- Table Title -->
-        <div class="col-10 text-h6 ellipsis">Settings</div>
+        <div class="col-10 text-h6 text-bold ellipsis">Settings</div>
         <!-- Go Back Button -->
         <QBtn
           round
           flat
           class="absolute-top-right q-mr-sm q-mt-sm"
-          :icon="Icon.BACK"
+          :icon="Icon.CLOSE"
           @click="goBack()"
         />
       </div>

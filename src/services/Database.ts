@@ -62,11 +62,17 @@ class Database extends Dexie {
     })
   }
 
-  // liveDataTable(type: Type) {
-  //   return liveQuery(async () => {
-  //     return (await this.table(type).toCollection().sortBy(Field.TIMESTAMP)).reverse()
-  //   })
-  // }
+  liveParents(type: Type) {
+    return liveQuery(async () => {
+      return await this.Parents.where(Field.TYPE).equals(type).sortBy(Field.NAME)
+    })
+  }
+
+  liveChildren(type: Type) {
+    return liveQuery(async () => {
+      return (await this.Children.where(Field.TYPE).equals(type).sortBy(Field.TIMESTAMP)).reverse()
+    })
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
@@ -239,8 +245,6 @@ class Database extends Dexie {
   async importParents(records: ParentRecord[]) {
     const validRecords: ParentRecord[] = []
     const skippedRecords: ParentRecord[] = []
-
-    console.log(records)
 
     for await (const r of records) {
       const recordValidator = DataSchema.getParentValidator(r?.type as Type)

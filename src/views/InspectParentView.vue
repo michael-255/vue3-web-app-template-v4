@@ -5,13 +5,12 @@ import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
 import type { ParentRecord } from '@/types/database'
 import DataSchema from '@/services/DataSchema'
-import ParentInfoCard from '@/components/ParentInfoCard.vue'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import DB from '@/services/Database'
 
-useMeta({ title: `${AppName} - Inspect Parent Record` })
+useMeta({ title: `${AppName} - Inspect Record` })
 
 const { routeType, routeId } = useRoutables()
 const { log } = useLogger()
@@ -38,10 +37,6 @@ onMounted(async () => {
     :bannerIcon="Icon.INSPECT"
     :bannerTitle="`Inspect ${DataSchema.getParentLabelSingular(routeType)}`"
   >
-    <!-- Parent info card for child record creation  -->
-    <ParentInfoCard />
-
-    <!-- Field Loop -->
     <QCard
       v-for="(fieldProp, i) in DataSchema.getParentFieldProps(routeType)"
       :key="i"

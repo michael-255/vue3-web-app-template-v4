@@ -76,14 +76,13 @@ const parent = object({
   [Field.DESC]: textAreaValidator,
   [Field.ENABLED]: booleanValidator,
   [Field.FAVORITED]: booleanValidator,
-  [Field.LAST_CHILD]: anyValidator,
-  // [Field.LAST_CHILD]: object({
-  //   [Field.ID]: idValidator,
-  //   [Field.TIMESTAMP]: timestampValidator,
-  //   [Field.TYPE]: typeValidator,
-  //   [Field.PARENT_ID]: idValidator,
-  //   [Field.NOTE]: textAreaValidator,
-  // }),
+  [Field.LAST_CHILD]: object({
+    [Field.ID]: idValidator.optional(),
+    [Field.TYPE]: typeValidator.optional(),
+    [Field.TIMESTAMP]: timestampValidator.optional(),
+    [Field.PARENT_ID]: idValidator.optional(),
+    [Field.NOTE]: textAreaValidator.optional(),
+  }),
 }).noUnknown()
 
 const child = object({
