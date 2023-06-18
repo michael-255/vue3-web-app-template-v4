@@ -3,7 +3,6 @@ import type { Field } from '@/types/database'
 import { onMounted } from 'vue'
 import useActionStore from '@/stores/action'
 
-// Props & Emits
 const props = defineProps<{
   field: Field
   label: string
@@ -11,7 +10,6 @@ const props = defineProps<{
   getDefault: () => any
 }>()
 
-// Composables & Stores
 const actionStore = useActionStore()
 
 onMounted(() => {

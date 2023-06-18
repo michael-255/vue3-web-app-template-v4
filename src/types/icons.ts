@@ -1,5 +1,4 @@
 /**
- * Material Design icons.
  * @see https://fonts.google.com/icons
  */
 export enum Icon {

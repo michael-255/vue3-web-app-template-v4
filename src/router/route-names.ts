@@ -1,12 +1,16 @@
-/**
- * Application route names used by Vue router.
- */
 export enum RouteName {
   DASHBOARD = 'Dashboard',
-  DATA = 'Data',
-  INSPECT = 'Inspect',
-  CREATE = 'Create',
-  EDIT = 'Edit',
+  DATA_LOGS = 'DataLogs',
+  DATA_SETTINGS = 'DataSettings',
+  DATA_PARENTS = 'DataParents',
+  DATA_CHILDREN = 'DataChildren',
+  CREATE_PARENT = 'CreateParent',
+  CREATE_CHILD = 'CreateChild',
+  EDIT_PARENT = 'EditParent',
+  EDIT_CHILD = 'EditChild',
+  INSPECT_LOG = 'InspectLog',
+  INSPECT_PARENT = 'InspectParent',
+  INSPECT_CHILD = 'InspectChild',
   CHARTS = 'Charts',
   SETTINGS = 'Settings',
   FAQ = 'FAQ',

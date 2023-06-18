@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@/types/icons'
 
-// Props & Emits
 defineProps<{
   bannerIcon?: Icon
   bannerTitle?: string
@@ -11,19 +10,16 @@ defineProps<{
 </script>
 
 <template>
-  <QPage padding>
+  <QPage class="q-ma-md q-mt-lg">
     <div class="row justify-center">
       <div class="col-md-8 col-sm-10 col-xs-12">
         <!-- Optional Banner -->
-        <QCard v-if="bannerIcon && bannerTitle" class="q-mb-md">
-          <QCardSection class="text-h6">
-            <QIcon class="q-pb-xs q-pr-xs" :name="bannerIcon" />
-            {{ bannerTitle }}
-          </QCardSection>
-        </QCard>
+        <div v-if="bannerIcon && bannerTitle" class="text-h5 text-bold q-mb-lg">
+          <QIcon class="q-pb-xs q-pr-xs" :name="bannerIcon" />
+          {{ bannerTitle }}
+        </div>
 
-        <!-- Page Error -->
-        <!-- Use as a catch-all for errors at the View level -->
+        <!-- Page Error - catch-all for errors at View level -->
         <QCard v-if="showPageError">
           <QCardSection>
             <div class="text-h6 q-mb-md">Page Error</div>
@@ -34,8 +30,7 @@ defineProps<{
           </QCardSection>
         </QCard>
 
-        <!-- Page No Data -->
-        <!-- Use as a catch-all for missing data at the View level -->
+        <!-- Page No Data - catch-all for missing data at View level -->
         <div v-else-if="showPageNoData">
           <QCard class="q-mb-md">
             <QCardSection>
@@ -45,17 +40,13 @@ defineProps<{
           </QCard>
         </div>
 
-        <!-- Slot for additional page content -->
-        <div v-else>
+        <!-- Extra space at bottom of page for scroller -->
+        <div class="q-mb-xl" v-else>
           <slot />
         </div>
-
-        <!-- Extra space at page bottom so scroller doesn't cover content  -->
-        <div class="q-mb-xl" />
       </div>
     </div>
 
-    <!-- Page Scroller -->
     <QPageScroller>
       <QBtn fab :icon="Icon.TOP_OF_PAGE" color="accent" />
     </QPageScroller>

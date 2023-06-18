@@ -3,23 +3,20 @@ import { Icon } from '@/types/icons'
 import { type Ref, ref, onUnmounted } from 'vue'
 import { RouteName } from '@/router/route-names'
 import { AppDescription, AppName } from '@/types/general'
-import { Key } from '@/types/database'
+import { SettingKey } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDefaults from '@/composables/useDefaults'
 import DB from '@/services/Database'
 
-// Composables & Stores
 const { onDefaults } = useDefaults()
 const { log } = useLogger()
 
-// Data
 const exampleFavorite: Ref<number> = ref(0)
 const showWelcome: Ref<any> = ref(false)
 
-// Subscriptions
 const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
-    showWelcome.value = liveSettings.find((s) => s.key === Key.SHOW_WELCOME)?.value
+    showWelcome.value = liveSettings.find((s) => s.key === SettingKey.SHOW_WELCOME)?.value
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)
@@ -30,11 +27,8 @@ onUnmounted(() => {
   subscription.unsubscribe()
 })
 
-/**
- * Set Welcome Overlay setting value to false in settings to close the dialog card.
- */
 async function onCloseWelcomeOverlay() {
-  await DB.setSetting(Key.SHOW_WELCOME, false)
+  await DB.setSetting(SettingKey.SHOW_WELCOME, false)
 }
 </script>
 

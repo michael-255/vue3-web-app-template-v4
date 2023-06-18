@@ -3,9 +3,6 @@ import { RouteName } from '@/router/route-names'
 import { useRoute, useRouter } from 'vue-router'
 import useLogger from '@/composables/useLogger'
 
-/**
- * Composable with route param helpers and navigation functions.
- */
 export default function useRoutables() {
   const route = useRoute()
   const router = useRouter()
@@ -13,83 +10,137 @@ export default function useRoutables() {
 
   // Possible route params
   const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  const autoId = Array.isArray(route.params.autoId) ? route.params.autoId[0] : route.params.autoId
   const parentId = Array.isArray(route.params.parentId)
     ? route.params.parentId[0]
     : route.params.parentId
   const type = Array.isArray(route.params.type) ? route.params.type[0] : route.params.type
   // Cleaned route params
   const routeId = String(id) || undefined
+  const routeAutoId = Number(autoId) || undefined
   const routeParentId = String(parentId) || undefined
   const routeType = (String(type) as Type) || undefined
 
-  /**
-   * Go to data table route.
-   * @param type
-   */
-  async function goToData(type: Type) {
+  function goToLogsData() {
     try {
       router.push({
-        name: RouteName.DATA,
+        name: RouteName.DATA_LOGS,
+      })
+    } catch (error) {
+      log.error('Error accessing logs data route', error)
+    }
+  }
+
+  function goToSettingsData() {
+    try {
+      router.push({
+        name: RouteName.DATA_SETTINGS,
+      })
+    } catch (error) {
+      log.error('Error accessing settings data route', error)
+    }
+  }
+
+  function goToParentData(type: Type) {
+    try {
+      router.push({
+        name: RouteName.DATA_PARENTS,
         params: { type },
       })
     } catch (error) {
-      log.error('Error accessing data route', error)
+      log.error('Error accessing parent data route', error)
     }
   }
 
-  /**
-   * Go to record creation route.
-   * @param type
-   * @param parentId
-   */
-  function goToCreate(type: Type, parentId?: string) {
+  function goToChildData(type: Type) {
     try {
       router.push({
-        name: RouteName.CREATE,
+        name: RouteName.DATA_CHILDREN,
+        params: { type },
+      })
+    } catch (error) {
+      log.error('Error accessing child data route', error)
+    }
+  }
+
+  function goToParentCreate(type: Type) {
+    try {
+      router.push({
+        name: RouteName.CREATE_PARENT,
+        params: { type },
+      })
+    } catch (error) {
+      log.error('Error accessing parent create route', error)
+    }
+  }
+
+  function goToChildCreate(type: Type, parentId: string) {
+    try {
+      router.push({
+        name: RouteName.CREATE_CHILD,
         params: { type, parentId },
       })
     } catch (error) {
-      log.error('Error accessing create route', error)
+      log.error('Error accessing child create route', error)
     }
   }
 
-  /**
-   * Go to record inspection route.
-   * @param type
-   * @param id
-   */
-  function goToInspect(type: Type, id: string) {
+  function goToParentEdit(type: Type, id: string) {
     try {
       router.push({
-        name: RouteName.INSPECT,
+        name: RouteName.EDIT_PARENT,
         params: { type, id },
       })
     } catch (error) {
-      log.error('Error accessing inspect route', error)
+      log.error('Error accessing parent edit route', error)
     }
   }
 
-  /**
-   * Go to record edit route.
-   * @param type
-   * @param id
-   */
-  function goToEdit(type: Type, id: string) {
+  function goToChildEdit(type: Type, id: string) {
     try {
       router.push({
-        name: RouteName.EDIT,
+        name: RouteName.EDIT_CHILD,
         params: { type, id },
       })
     } catch (error) {
-      log.error('Error accessing edit route', error)
+      log.error('Error accessing child edit route', error)
     }
   }
 
-  /**
-   * Go to charts route.
-   * @param type
-   * @param id
-   */
+  function goToLogInspect(autoId: number) {
+    try {
+      router.push({
+        name: RouteName.INSPECT_LOG,
+        params: { autoId },
+      })
+    } catch (error) {
+      log.error('Error accessing logs inspect route', error)
+    }
+  }
+
+  function goToParentInspect(type: Type, id: string) {
+    try {
+      router.push({
+        name: RouteName.INSPECT_PARENT,
+        params: { type, id },
+      })
+    } catch (error) {
+      log.error('Error accessing parent inspect route', error)
+    }
+  }
+
+  function goToChildInspect(type: Type, id: string) {
+    try {
+      router.push({
+        name: RouteName.INSPECT_CHILD,
+        params: { type, id },
+      })
+    } catch (error) {
+      log.error('Error accessing child inspect route', error)
+    }
+  }
+
+  // Charts can only be accessed from parents
   function goToCharts(type: Type, id: string) {
     try {
       router.push({
@@ -118,12 +169,20 @@ export default function useRoutables() {
 
   return {
     routeId,
+    routeAutoId,
     routeParentId,
     routeType,
-    goToData,
-    goToInspect,
-    goToCreate,
-    goToEdit,
+    goToLogsData,
+    goToSettingsData,
+    goToParentData,
+    goToChildData,
+    goToParentCreate,
+    goToChildCreate,
+    goToParentEdit,
+    goToChildEdit,
+    goToLogInspect,
+    goToParentInspect,
+    goToChildInspect,
     goToCharts,
     goBack,
   }

@@ -14,7 +14,7 @@ import {
   valueValidator,
   testIdsValidator,
 } from '@/services/validators'
-import { Field, Key, Severity, type FieldProps } from '@/types/database'
+import { Severity, type FieldProps, SettingKey, Field } from '@/types/database'
 import { Limit } from '@/types/general'
 import { getDisplayDate } from '@/utils/common'
 import { defineAsyncComponent } from 'vue'
@@ -103,7 +103,7 @@ const keyField: Readonly<FieldProps> = {
   getDefault: () => undefined,
   validator: keyValidator,
   validationMessage: 'Invalid',
-  inspectFormat: (val: Key) => `${val || '-'}`,
+  inspectFormat: (val: SettingKey) => `${val || '-'}`,
   // Not rendered
 }
 
