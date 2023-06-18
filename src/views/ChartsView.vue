@@ -9,11 +9,9 @@ import DataSchema from '@/services/DataSchema'
 
 useMeta({ title: `${AppName} - Charts` })
 
-// Composables & Stores
 const { routeType } = useRoutables()
 
-// Data
-const title = DataSchema.getLabelSingular(routeType)
+const title = DataSchema.getParentLabelSingular(routeType)
 const chartProps = DataSchema.getChartProps(routeType)
 </script>
 
@@ -26,7 +24,6 @@ const chartProps = DataSchema.getChartProps(routeType)
     <ChartTime class="q-mb-md" />
 
     <div v-for="(chartProp, i) in chartProps" :key="i" class="q-mb-md">
-      <!-- Dynamic Async Components -->
       <component :is="chartProp.component" />
     </div>
   </ResponsivePage>

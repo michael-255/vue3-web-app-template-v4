@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@/types/icons'
-import { type Record, Field } from '@/types/database'
+import { Field, type ChildRecord } from '@/types/database'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { AppName } from '@/types/general'
 import { extend, useMeta } from 'quasar'
@@ -16,31 +16,28 @@ import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Edit Record` })
 
-// Composables & Stores
 const { routeType, routeId, goBack } = useRoutables()
 const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
 
-// Data
-const labelSingular = DataSchema.getLabelSingular(routeType)
-const fieldProps = DataSchema.getFieldProps(routeType)
+const labelSingular = DataSchema.getChildLabelSingular(routeType)
+const fieldProps = DataSchema.getChildFieldProps(routeType)
 const isFormValid = ref(true)
 
 onMounted(async () => {
   try {
     if (await idValidator.isValid(routeId)) {
-      const editRecord = (await DB.getRecord(routeType, routeId as string)) as Record
+      const editRecord = (await DB.getChild(routeId as string)) as any
 
       if (editRecord) {
-        // Assign values from record to the action store
         Object.keys(editRecord).forEach((key) => {
-          actionStore.record[key as Field] = editRecord[key as Field] as any
+          actionStore.record[key as Field] = editRecord[key]
         })
       }
     }
   } catch (error) {
-    log.error('Error loading edit view', error)
+    log.error('Error loading edit child view', error)
   }
 })
 
@@ -48,22 +45,18 @@ onUnmounted(() => {
   actionStore.$reset()
 })
 
-/**
- * Confirmation creates a new record in the database. All inputs must be valid.
- */
 async function onSubmit() {
-  confirmDialog('Update', `Update ${labelSingular} record?`, Icon.CREATE, 'positive', async () => {
+  confirmDialog('Update', `Update ${labelSingular} record?`, Icon.SAVE, 'positive', async () => {
     try {
-      const deepRecordCopy = extend(true, {}, actionStore.record) as Record
-
-      await DB.updateRecord(routeType, routeId as string, deepRecordCopy)
+      const deepRecordCopy = extend(true, {}, actionStore.record) as ChildRecord
+      await DB.updateChild(routeId as string, deepRecordCopy)
 
       log.info('Successfully updated record', {
         id: deepRecordCopy[Field.ID],
         type: routeType,
       })
 
-      goBack() // Return to previous page
+      goBack()
     } catch (error) {
       log.error('Update failed', error)
     }
@@ -90,9 +83,11 @@ async function onSubmit() {
         @validation-error="isFormValid = false"
         @validation-success="isFormValid = true"
       >
-        <!-- Parent info card for child record actions -->
-        <ParentInfoCard />
-        <!-- Dynamic Async Components -->
+        <ParentInfoCard
+          v-if="actionStore.record?.parentId"
+          :parentId="actionStore.record.parentId"
+        />
+
         <div v-for="(fieldProp, i) in fieldProps" :key="i" class="q-mb-md">
           <component
             :is="fieldProp.component"

@@ -74,7 +74,7 @@ export default function useRoutables() {
     }
   }
 
-  function goToChildCreate(type: Type, parentId?: string) {
+  function goToChildCreate(type: Type, parentId: string) {
     try {
       router.push({
         name: RouteName.CREATE_CHILD,

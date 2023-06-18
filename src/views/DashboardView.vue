@@ -218,7 +218,7 @@ async function onUnfavorite(id: string, name: string) {
             label="Attach Record"
             color="primary"
             :icon="Icon.ADD_NOTE"
-            @click="goToChildCreate(record?.lastChild?.type as Type, record.id)"
+            @click="goToChildCreate(record?.lastChild?.type as Type, record.id as string)"
           />
         </QCardSection>
       </QCard>

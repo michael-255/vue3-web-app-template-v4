@@ -38,25 +38,25 @@ const router = createRouter({
       path: '/create-parent/:type',
       name: RouteName.CREATE_PARENT,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/CreateView.vue'), // TODO - CreateParentView
+      component: () => import('../views/CreateParentView.vue'),
     },
     {
       path: '/create-child/:type/:parentId',
       name: RouteName.CREATE_CHILD,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/CreateView.vue'), // TODO - CreateChildView
+      component: () => import('../views/CreateChildView.vue'),
     },
     {
       path: '/edit-parent/:type/:id',
       name: RouteName.EDIT_PARENT,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/EditView.vue'), // TODO - EditParentView
+      component: () => import('../views/EditParentView.vue'),
     },
     {
       path: '/edit-child/:type/:id',
       name: RouteName.EDIT_CHILD,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/EditView.vue'), // TODO - EditChildView
+      component: () => import('../views/EditChildView.vue'),
     },
     {
       path: '/inspect-log/:autoId',

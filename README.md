@@ -6,12 +6,8 @@ structured.
 
 ## TODO
 
-- Clean up `ParentInfoCard` for Create, Edit, and Inspect child views.
-- Build `CreateParentView`
-- Build `EditParentView`
-- Build `CreateChildView`
-- Build `EditChildView`
-- Fix `ChartsView`
+- Confirm which fields should appear and be editable for records
+- Remove unneeded comments from all files
 
 ```typescript
 // Future note?

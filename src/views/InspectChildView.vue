@@ -38,10 +38,8 @@ onMounted(async () => {
     :bannerIcon="Icon.INSPECT"
     :bannerTitle="`Inspect ${DataSchema.getChildLabelSingular(routeType)}`"
   >
-    <!-- Parent info card for child record creation  -->
-    <ParentInfoCard />
+    <ParentInfoCard v-if="inspectRecord?.parentId" :parentId="inspectRecord.parentId" />
 
-    <!-- Field Loop -->
     <QCard
       v-for="(fieldProp, i) in DataSchema.getChildFieldProps(routeType)"
       :key="i"

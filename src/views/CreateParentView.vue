@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { Icon } from '@/types/icons'
-import { type Record, Field } from '@/types/database'
+import { Field, type ParentRecord } from '@/types/database'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { AppName } from '@/types/general'
 import { extend, uid, useMeta } from 'quasar'
-import { idValidator } from '@/services/validators'
 import DataSchema from '@/services/DataSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
-import ParentInfoCard from '@/components/ParentInfoCard.vue'
 import useRoutables from '@/composables/useRoutables'
 import useActionStore from '@/stores/action'
 import useLogger from '@/composables/useLogger'
@@ -16,27 +14,21 @@ import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Create Record` })
 
-// Composables & Stores
-const { routeType, routeParentId, goBack } = useRoutables()
+const { routeType, goBack } = useRoutables()
 const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
 
-// Data
-const labelSingular = DataSchema.getLabelSingular(routeType)
-const fieldProps = DataSchema.getFieldProps(routeType)
+const labelSingular = DataSchema.getParentLabelSingular(routeType)
+const fieldProps = DataSchema.getParentFieldProps(routeType)
 const isFormValid = ref(true)
 
 onMounted(async () => {
   try {
-    if (await idValidator.isValid(routeParentId)) {
-      // Attaching child record to this parent id
-      actionStore.record[Field.PARENT_ID] = routeParentId
-    }
-
-    actionStore.record[Field.ID] = uid() // New record id
+    actionStore.record[Field.ID] = uid()
+    actionStore.record[Field.TYPE] = routeType
   } catch (error) {
-    log.error('Error loading create view', error)
+    log.error('Error loading create parent view', error)
   }
 })
 
@@ -44,22 +36,18 @@ onUnmounted(() => {
   actionStore.$reset()
 })
 
-/**
- * Confirmation creates a new record in the database. All inputs must be valid.
- */
 async function onSubmit() {
   confirmDialog('Create', `Create ${labelSingular} record?`, Icon.CREATE, 'positive', async () => {
     try {
-      const deepRecordCopy = extend(true, {}, actionStore.record) as Record
-
-      await DB.addRecord(routeType, deepRecordCopy)
+      const deepRecordCopy = extend(true, {}, actionStore.record) as ParentRecord
+      await DB.addParent(deepRecordCopy)
 
       log.info('Successfully created record', {
         id: deepRecordCopy[Field.ID],
         type: routeType,
       })
 
-      goBack() // Return to previous page
+      goBack()
     } catch (error) {
       log.error('Create failed', error)
     }
@@ -86,8 +74,6 @@ async function onSubmit() {
         @validation-error="isFormValid = false"
         @validation-success="isFormValid = true"
       >
-        <!-- Parent info card for child record actions -->
-        <ParentInfoCard />
         <!-- Dynamic Async Components -->
         <div v-for="(fieldProp, i) in fieldProps" :key="i" class="q-mb-md">
           <component

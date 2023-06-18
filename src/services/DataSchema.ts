@@ -113,7 +113,7 @@ export default class DataSchema {
   }
 
   static getChildFieldProps(type: Type) {
-    return this.dataSchema.find((s) => s.type === type)?.parentFieldProps as FieldProps[]
+    return this.dataSchema.find((s) => s.type === type)?.childFieldProps as FieldProps[]
   }
 
   static getParentTableColumns(type: Type) {
