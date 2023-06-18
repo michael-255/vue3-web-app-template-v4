@@ -6,10 +6,12 @@ structured.
 
 ## TODO
 
-- `CreateParentView.vue`
-- `CreateChildView.vue`
-- `EditParentView.vue`
-- `EditChildView.vue`
+- Clean up `ParentInfoCard` for Create, Edit, and Inspect child views.
+- Build `CreateParentView`
+- Build `EditParentView`
+- Build `CreateChildView`
+- Build `EditChildView`
+- Fix `ChartsView`
 
 ```typescript
 // Future note?
