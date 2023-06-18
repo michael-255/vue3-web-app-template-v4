@@ -4,6 +4,12 @@ This Vue 3 Typescript project can be used as a web application template to help 
 developing. Read through this README to have a better understanding of how this project is
 structured.
 
+## TODO
+
+- [ ] Test all `Settings` operations (buttons)
+- [ ] Test all `Create`, `Edit`, `Inspect`, and `Delete` operations
+- [ ] Update tests if needed
+
 ## Post Cloning Steps
 
 - [ ] Update `package.json`
