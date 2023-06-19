@@ -158,7 +158,7 @@ class Database extends Dexie {
     const defaultSettings: Readonly<{
       [key in SettingKey]: any
     }> = {
-      // Can't use undefined or null as default values for settings
+      // Supports "null" as a value to indicate that the setting has no value yet
       [SettingKey.SHOW_WELCOME]: true,
       [SettingKey.SHOW_DESCRIPTIONS]: true,
       [SettingKey.DARK_MODE]: true,
@@ -171,15 +171,17 @@ class Database extends Dexie {
 
     // Replace Setting value with default if needed
     const settings = await Promise.all(
-      keys.map(async (key) => ({
-        key,
-        value: (await this.Settings.get(key))?.value ?? defaultSettings[key],
-      }))
+      keys.map(async (key) => {
+        const settingValue = (await this.Settings.get(key))?.value
+        return {
+          key,
+          value: settingValue === undefined ? defaultSettings[key] : settingValue,
+        }
+      })
     )
 
     Dark.set(!!settings.find((s) => s.key === SettingKey.DARK_MODE)?.value)
 
-    // Set all Settings in the database
     await Promise.all(settings.map((s) => this.setSetting(s.key, s.value)))
   }
 
@@ -192,16 +194,15 @@ class Database extends Dexie {
   }
 
   async setSetting(key: SettingKey, value: any) {
-    // Set Quasar dark mode if the key is for dark mode
     if (key === SettingKey.DARK_MODE) {
-      Dark.set(!!value) // Cast to boolean just in case
+      Dark.set(!!value)
     }
 
     const setting: Setting = { key, value }
     const settingValue = await this.Settings.get(setting.key)
 
-    if (!settingValue) {
-      // Create Setting if it doesn't exist
+    if (settingValue === undefined) {
+      // Create Setting if it doesn't exist (undefined only)
       return await this.Settings.add(setting)
     } else {
       // Update Setting if it does exist
