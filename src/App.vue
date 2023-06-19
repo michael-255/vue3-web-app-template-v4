@@ -54,12 +54,10 @@ useMeta({
   },
 })
 
-// Composables & Stores
 const { log } = useLogger()
 const { notify } = useNotifications()
 const route = useRoute()
 
-// Data
 const layout: Ref<any> = ref(null)
 
 onMounted(async () => {
