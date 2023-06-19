@@ -35,7 +35,7 @@ onMounted(async () => {
       throw new Error(`Invalid parent id: ${routeParentId}`)
     }
   } catch (error) {
-    log.error('Error loading create parent view', error)
+    log.error('Error loading create child view', error)
   }
 })
 

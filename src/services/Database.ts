@@ -315,8 +315,10 @@ class Database extends Dexie {
     return recordToDelete
   }
 
+  // Also deletes accompanying child records
   async clearParentsByType(type: Type) {
     await this.Parents.where(Field.TYPE).equals(type).delete()
+    await this.Children.where(Field.TYPE).equals(type).delete()
   }
 
   async clearParents() {
