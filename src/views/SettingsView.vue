@@ -64,7 +64,7 @@ function onRejectedFile(entries: any) {
 function onImportFile() {
   confirmDialog(
     'Import',
-    `Import backup data from ${importFile?.value?.name} and attempt to load records into the database from it?`,
+    `Import backup data from ${importFile?.value?.name} and attempt to load records into the database from it? Please note that Logs are NOT imported.`,
     Icon.INFO,
     'info',
     async () => {
@@ -104,7 +104,6 @@ function onImportFile() {
 }
 
 function onExportRecords() {
-  // Build export file name
   const appNameSlug = AppName.toLowerCase().split(' ').join('-')
   const date = new Date().toISOString().split('T')[0]
   const filename = `export-${appNameSlug}-${date}.json`
@@ -116,7 +115,6 @@ function onExportRecords() {
     'info',
     async () => {
       try {
-        // Build backup data
         const backupData = {
           appName: AppName,
           backupTimestamp: Date.now(),
@@ -128,7 +126,6 @@ function onExportRecords() {
 
         log.silentDebug('backupData:', backupData)
 
-        // Attempt to download the export records as a JSON file
         const fileStatus = exportFile(filename, JSON.stringify(backupData), {
           encoding: 'UTF-8',
           mimeType: 'application/json',
