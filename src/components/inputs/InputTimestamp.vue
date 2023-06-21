@@ -30,10 +30,14 @@ function updateDisplayDate(timestamp: number = props.getDefault()) {
 }
 
 function onPickerUpdate() {
-  if (datePicker.value && timePicker.value) {
-    const dateTimestamp = new Date(`${datePicker.value} ${timePicker.value}`).getTime()
-    updateDisplayDate(dateTimestamp)
-  }
+  // Set empty pickers with current time
+  datePicker.value = datePicker.value
+    ? datePicker.value
+    : date.formatDate(Date.now(), 'ddd MMM DD YYYY')
+  timePicker.value = timePicker.value ? timePicker.value : date.formatDate(Date.now(), 'HH:mm:00')
+
+  const dateTimestamp = new Date(`${datePicker.value} ${timePicker.value}`).getTime()
+  updateDisplayDate(dateTimestamp)
 }
 </script>
 

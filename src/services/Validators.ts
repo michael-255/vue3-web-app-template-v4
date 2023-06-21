@@ -82,7 +82,7 @@ const parent = object({
     [Field.TIMESTAMP]: timestampValidator.optional(),
     [Field.PARENT_ID]: idValidator.optional(),
     [Field.NOTE]: textAreaValidator.optional(),
-  }),
+  }).optional(),
 }).noUnknown()
 
 const child = object({

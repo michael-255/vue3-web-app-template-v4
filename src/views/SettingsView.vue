@@ -120,7 +120,10 @@ function onExportRecords() {
           backupTimestamp: Date.now(),
           logs: await DB.getLogs(),
           settings: await DB.getSettings(),
-          parents: await DB.getParents(),
+          parents: (await DB.getParents()).map((p) => {
+            delete p.lastChild
+            return p
+          }),
           children: await DB.getChildren(),
         } as BackupData
 

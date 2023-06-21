@@ -1,8 +1,5 @@
 import { AppName } from '@/types/general'
 
-/**
- * Logger adds some style to your console.
- */
 export default class Logger {
   private static instance: Logger | null = null
   private static loggerName: string = `%c${AppName}`

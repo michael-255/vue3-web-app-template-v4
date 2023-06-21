@@ -25,7 +25,7 @@ const props = defineProps<{
   title: string
   message: string
   color: string
-  persistent: boolean // If it can be dismissed by clicking outside it
+  persistent: boolean
 }>()
 
 defineEmits([...useDialogPluginComponent.emits])
