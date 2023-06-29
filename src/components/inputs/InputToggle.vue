@@ -28,3 +28,4 @@ onMounted(() => {
     </QCardSection>
   </QCard>
 </template>
+@/types/data

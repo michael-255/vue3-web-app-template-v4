@@ -166,3 +166,4 @@ async function recalculateChart() {
     </QCardSection>
   </QCard>
 </template>
+@/types/data

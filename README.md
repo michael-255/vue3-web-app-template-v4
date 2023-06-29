@@ -4,6 +4,17 @@ This Vue 3 Typescript project can be used as a web application template to help 
 developing. Read through this README to have a better understanding of how this project is
 structured.
 
+## TODOS
+
+CLEAN-UP:
+
+- [ ] `DataLogsView`
+- [ ] `DataRecordsView`
+- [ ] `CreateView`
+- [ ] `EditView`
+- [ ] Build `InspectDialog.vue` component (figure out how you want to handle this)
+- [ ] Validate that `zod` schemas are working as expected
+
 ## Post Cloning Steps
 
 - [ ] Update `package.json`

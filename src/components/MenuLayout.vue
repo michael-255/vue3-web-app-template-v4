@@ -6,12 +6,13 @@ import { AppHeaderColor, AppName } from '@/types/general'
 import DataSchema from '@/services/DataSchema'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
+import { recordGroupSchema } from '@/types/database'
 
 const { goBack } = useRoutables()
 const uiStore = useUIStore()
 const route = useRoute()
 
-const parentOptions = DataSchema.getParentTypeOptions()
+const groupOptions = DataSchema.getGroupOptions(recordGroupSchema.Values['core-record'])
 </script>
 
 <template>
@@ -54,19 +55,19 @@ const parentOptions = DataSchema.getParentTypeOptions()
 
         <!-- Parent Data Table Links -->
         <QItem
-          v-for="(parent, i) in parentOptions"
+          v-for="(opt, i) in groupOptions"
           :key="i"
           clickable
           v-ripple
           :to="{
-            name: RouteName.DATA_PARENTS,
-            params: { type: parent.value },
+            name: RouteName.DATA_RECORDS,
+            params: { group: opt?.value?.group, type: opt?.value?.type },
           }"
         >
           <QItemSection avatar>
-            <QIcon color="primary" :name="parent.icon" />
+            <QIcon color="primary" :name="opt.icon" />
           </QItemSection>
-          <QItemSection>{{ parent.label }}</QItemSection>
+          <QItemSection>{{ opt.label }}</QItemSection>
         </QItem>
 
         <QSeparator spaced="md" inset />

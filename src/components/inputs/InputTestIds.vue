@@ -64,3 +64,4 @@ function validationRule() {
     </QCardSection>
   </QCard>
 </template>
+@/types/data

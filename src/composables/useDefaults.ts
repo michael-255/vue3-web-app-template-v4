@@ -1,6 +1,11 @@
 import { Icon } from '@/types/icons'
 import { uid } from 'quasar'
-import { Type, type ParentRecord, type ChildRecord } from '@/types/database'
+import {
+  type AnyCoreRecord,
+  type AnySubRecord,
+  recordGroupSchema,
+  recordTypeSchema,
+} from '@/types/database'
 import { Milliseconds } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
@@ -65,68 +70,74 @@ export default function useDefaults() {
             return Date.now() - Milliseconds.PER_YEAR
           }
 
-          const parentRecords: ParentRecord[] = []
-          const childRecords: ChildRecord[] = []
+          const coreRecords: any[] = []
+          const subRecords: any[] = []
 
           const buildExampleRecords = (count: number) => {
-            const parentId = uid()
+            const coreId = uid()
             const name = `${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
-            parentRecords.push({
-              id: parentId,
-              type: Type.EXAMPLE,
+            coreRecords.push({
+              type: recordTypeSchema.Values.example,
+              group: recordGroupSchema.Values['core-record'],
+              id: coreId,
               timestamp: Date.now(),
               name,
               desc: `${name} description.`,
-              enabled: true,
-              favorited: randomBoolean(),
-              lastChild: undefined,
+              enable: true,
+              favorite: randomBoolean(),
+              lastSub: undefined,
               testIds: [uid(), uid(), uid()], // Not linked to any real child records
-            } as ParentRecord)
+            } as AnyCoreRecord)
 
             for (let i = 0; i < count; i++) {
-              childRecords.push({
+              subRecords.push({
+                type: recordTypeSchema.Values.example,
+                group: recordGroupSchema.Values['sub-record'],
                 id: uid(),
-                type: Type.EXAMPLE,
-                parentId,
+                coreId,
                 timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
                 note: `Note ${i}`,
-              } as ChildRecord)
+              } as AnySubRecord)
             }
           }
 
           const buildTestRecords = (count: number) => {
-            const parentId = uid()
+            const coreId = uid()
             const name = `${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
-            parentRecords.push({
-              id: parentId,
-              type: Type.TEST,
+            coreRecords.push({
+              type: recordTypeSchema.Values.test,
+              group: recordGroupSchema.Values['core-record'],
+              id: coreId,
               timestamp: Date.now(),
               name,
               desc: `${name} description.`,
-              enabled: true,
-              favorited: randomBoolean(),
-              lastChild: undefined,
-            } as ParentRecord)
+              enable: true,
+              favorite: randomBoolean(),
+              lastSub: undefined,
+            } as AnyCoreRecord)
 
             for (let i = 0; i < count; i++) {
-              childRecords.push({
+              subRecords.push({
+                type: recordTypeSchema.Values.test,
+                group: recordGroupSchema.Values['sub-record'],
                 id: uid(),
-                type: Type.TEST,
-                parentId,
+                coreId,
                 timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
                 note: `Note ${i}`,
                 percent: randomPercent(),
-              } as ChildRecord)
+              } as AnySubRecord)
             }
           }
 
           buildExampleRecords(360)
           buildTestRecords(360)
 
-          await Promise.all([DB.importParents(parentRecords), DB.importChildren(childRecords)])
-          await DB.updateAllParentLastChild()
+          await Promise.all([
+            DB.importRecords(recordGroupSchema.Values['core-record'], coreRecords),
+            DB.importRecords(recordGroupSchema.Values['sub-record'], subRecords),
+          ])
 
           log.info('Defaults loaded')
         } catch (error) {

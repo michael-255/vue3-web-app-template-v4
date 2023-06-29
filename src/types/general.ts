@@ -1,5 +1,3 @@
-import type { Log, Setting, ParentRecord, ChildRecord } from '@/types/database'
-
 export const AppName = 'Web App Template'
 
 export const AppDescription = `
@@ -46,13 +44,4 @@ export enum ChartTime {
   SIX_MONTHS = '6 Months',
   ONE_YEAR = 'One Year',
   ALL_TIME = 'All Time',
-}
-
-export type BackupData = {
-  appName: string
-  backupTimestamp: number
-  logs: Log[]
-  settings: Setting[]
-  parents: ParentRecord[]
-  children: ChildRecord[]
 }
