@@ -6,8 +6,8 @@ structured.
 
 ## TODOS
 
+- [ ] Convert `Charts` route to a fullscreen dialog like inspect?
 - [ ] Fully implement `Inspect` feature with the new fullscreen dialog
-- [ ] Validate that `zod` schemas are working as expected
 
 ## Post Cloning Steps
 

@@ -35,7 +35,7 @@ const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
 
       <QCardSection class="q-mt-md">{{ JSON.stringify(record) }}</QCardSection>
 
-      <QCardSection v-if="record?.id" class="q-mt-md">{{ record.id }}</QCardSection>
+      <QCardSection v-if="record?.autoId" class="q-mt-md">{{ record.autoId }}</QCardSection>
 
       <QCardSection v-if="record?.type" class="q-mt-md">{{ record.type }}</QCardSection>
     </QCard>

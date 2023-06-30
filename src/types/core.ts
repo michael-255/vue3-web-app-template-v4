@@ -26,6 +26,7 @@ export const settingkeys = z.enum([
 ])
 export type SettingKey = z.infer<typeof settingkeys>
 
+// Validators
 export const autoIdSchema = z.number().int().positive().optional() // Handled by Dexie
 export const textSchema = z.string().trim()
 export const idSchema = z.string().uuid()
@@ -35,12 +36,13 @@ export const textAreaSchema = z.string().max(Limit.MAX_TEXT_AREA).trim().optiona
 export const booleanSchema = z.boolean()
 export const percentSchema = z.number().min(0).max(100)
 
-export const settingSchema = z.object({
+// Non-exported schemas
+const settingSchema = z.object({
   key: settingkeys,
   value: z.any(),
 })
 
-export const logSchema = z.object({
+const logSchema = z.object({
   autoId: autoIdSchema,
   timestamp: timestampSchema,
   logLevel: logLevels,
@@ -50,7 +52,6 @@ export const logSchema = z.object({
   stack: textSchema.optional(),
 })
 
-// Base, Sub, and Core
 const baseSchema = z.object({
   type: recordTypes,
   id: idSchema,
