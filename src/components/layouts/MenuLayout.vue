@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
-import { recordGroups } from '@/types/database'
+import { recordGroups } from '@/types/core'
 import { AppHeaderColor, AppName } from '@/constants/global'
 import { Icon, routeNames } from '@/types/general'
 import DataSchema from '@/services/DataSchema'

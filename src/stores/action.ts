@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { AnyField } from '@/types/database'
+import type { AnyField } from '@/types/core'
 
 const useActionStore = defineStore({
   id: 'action',

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import { truncateString } from '@/utils/common'
-import { recordGroups, type AnyField, recordTypes, type AnyCoreRecord } from '@/types/database'
+import { recordGroups, type AnyField, recordTypes, type AnyCoreRecord } from '@/types/core'
 import type { z } from 'zod'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'

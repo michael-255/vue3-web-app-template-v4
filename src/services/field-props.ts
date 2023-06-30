@@ -11,7 +11,7 @@ import {
   textAreaSchema,
   booleanSchema,
   percentSchema,
-} from '@/types/database'
+} from '@/types/core'
 import { z } from 'zod'
 
 //

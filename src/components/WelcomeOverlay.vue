@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon, routeNames } from '@/types/general'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { settingkeys } from '@/types/database'
+import { settingkeys } from '@/types/core'
 import { AppDescription, AppName } from '@/constants/global'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/Database'

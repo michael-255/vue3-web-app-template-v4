@@ -1,6 +1,6 @@
 import type { QTableColumn } from 'quasar'
 import { truncateString, getDisplayDate } from '@/utils/common'
-import { type LogLevel, type AnyField, allFields } from '@/types/database'
+import { type LogLevel, type AnyField, allFields } from '@/types/core'
 
 function makeStandardColumn(field: AnyField, required: boolean = false) {
   return {

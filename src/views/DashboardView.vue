@@ -13,7 +13,7 @@ import {
   settingkeys,
   recordGroups,
   recordTypes,
-} from '@/types/database'
+} from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import WelcomeOverlay from '@/components/WelcomeOverlay.vue'

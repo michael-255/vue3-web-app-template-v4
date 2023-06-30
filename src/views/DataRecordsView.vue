@@ -13,7 +13,7 @@ import {
   type RecordGroup,
   type AnyField,
   type AnyDatabaseRecord,
-} from '@/types/database'
+} from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'

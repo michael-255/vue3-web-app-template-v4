@@ -1,4 +1,4 @@
-import type { RecordGroup, RecordType } from '@/types/database'
+import type { RecordGroup, RecordType } from '@/types/core'
 import { useRoute, useRouter } from 'vue-router'
 import { routeNames } from '@/types/general'
 import useLogger from '@/composables/useLogger'

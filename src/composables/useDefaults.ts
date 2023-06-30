@@ -7,7 +7,7 @@ import {
   type ExampleSubRecord,
   type TestCoreRecord,
   type TestSubRecord,
-} from '@/types/database'
+} from '@/types/core'
 import { Duration } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'

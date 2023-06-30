@@ -13,7 +13,7 @@ import {
   LineElement,
 } from 'chart.js'
 import { onMounted, ref, type Ref } from 'vue'
-import { idSchema, allFields, recordTypes } from '@/types/database'
+import { idSchema, allFields, recordTypes } from '@/types/core'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { date } from 'quasar'
 import { onMounted, type Ref, ref } from 'vue'
-import type { AnyField } from '@/types/database'
+import type { AnyField } from '@/types/core'
 import { Icon } from '@/types/general'
 import useActionStore from '@/stores/action'
 

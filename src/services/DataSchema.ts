@@ -10,7 +10,7 @@ import {
   exampleSubSchema,
   testCoreSchema,
   testSubSchema,
-} from '@/types/database'
+} from '@/types/core'
 import {
   exampleCoreColumns,
   exampleSubColumns,

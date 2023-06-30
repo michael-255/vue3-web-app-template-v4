@@ -12,7 +12,7 @@ import {
   type RecordType,
   settingkeys,
   recordGroups,
-} from '@/types/database'
+} from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
@@ -39,7 +39,7 @@ const accessModel = ref(accessOptions.value[0])
 const deleteOptions = ref([...allOptions])
 const deleteModel = ref(deleteOptions.value[0])
 const logDurationKeys = [
-  Duration[Duration.Now],
+  // Duration[Duration.Now], // For testing log purges
   Duration[Duration['One Week']],
   Duration[Duration['One Month']],
   Duration[Duration['Three Months']],

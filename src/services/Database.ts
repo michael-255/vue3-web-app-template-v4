@@ -16,7 +16,7 @@ import {
   settingkeys,
   recordTypes,
   recordGroups,
-} from '@/types/database'
+} from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 
 class Database extends Dexie {

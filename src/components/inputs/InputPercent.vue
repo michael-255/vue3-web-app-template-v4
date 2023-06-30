@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import type { AnyField } from '@/types/database'
+import type { AnyField } from '@/types/core'
 import type { z } from 'zod'
 import useActionStore from '@/stores/action'
 

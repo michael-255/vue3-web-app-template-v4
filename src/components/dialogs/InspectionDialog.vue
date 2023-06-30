@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar'
 import { Icon } from '@/types/general'
+import type { AnyDatabaseRecord } from '@/types/core'
 
 defineProps<{
   title: string
-  record: { [key: string]: any }
+  record: AnyDatabaseRecord
 }>()
 
 defineEmits([...useDialogPluginComponent.emits])
@@ -40,3 +41,4 @@ const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
     </QCard>
   </QDialog>
 </template>
+@/types/core

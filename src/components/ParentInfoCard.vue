@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type Ref, ref, onMounted } from 'vue'
-import { recordGroups, type AnyCoreRecord } from '@/types/database'
+import { recordGroups, type AnyCoreRecord } from '@/types/core'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/Database'
 
