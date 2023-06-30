@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 import { allFields, type AnyField, type AnyRecord } from '@/types/database'
 import { onMounted, onUnmounted, ref } from 'vue'
-import { AppName } from '@/types/general'
 import { extend, uid, useMeta } from 'quasar'
+import { AppName } from '@/constants/global'
 import DataSchema from '@/services/DataSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import ParentInfoCard from '@/components/ParentInfoCard.vue'

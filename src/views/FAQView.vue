@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Icon } from '@/types/icons'
-import { AppName } from '@/types/general'
+import { Icon } from '@/types/general'
+import { AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 

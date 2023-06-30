@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 
 defineProps<{
   bannerIcon?: Icon

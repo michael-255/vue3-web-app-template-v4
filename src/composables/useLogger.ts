@@ -1,4 +1,4 @@
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 import { logLevels, settingkeys } from '@/types/database'
 import useNotifications from '@/composables/useNotifications'
 import Logger from '@/services/Logger'

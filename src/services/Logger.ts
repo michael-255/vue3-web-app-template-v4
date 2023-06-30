@@ -1,4 +1,4 @@
-import { AppName } from '@/types/general'
+import { AppName } from '@/constants/global'
 
 export default class Logger {
   private static loggerName: string = `%c${AppName}`

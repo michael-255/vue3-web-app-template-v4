@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar'
-import type { Icon } from '@/types/icons'
+import type { Icon } from '@/types/general'
 
 const props = defineProps<{
   title: string

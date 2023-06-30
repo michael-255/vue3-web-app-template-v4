@@ -1,7 +1,7 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
 import { Dark } from 'quasar'
-import { Milliseconds, AppName, LogRetention } from '@/types/general'
-import DataSchema from '@/services/DataSchema'
+import { Duration } from '@/types/general'
+import { AppName } from '@/constants/global'
 import {
   type Log,
   type Setting,
@@ -17,6 +17,7 @@ import {
   recordTypes,
   recordGroups,
 } from '@/types/database'
+import DataSchema from '@/services/DataSchema'
 
 class Database extends Dexie {
   // Required for easier TypeScript usage
@@ -72,20 +73,11 @@ class Database extends Dexie {
   }
 
   async deleteExpiredLogs() {
-    const logRetentionTime = (await this.Settings.get(settingkeys.Values['log-retention-time']))
-      ?.value as LogRetention
+    const logDuration = (await this.Settings.get(settingkeys.Values['log-retention-duration']))
+      ?.value as Duration
 
-    if (!logRetentionTime || logRetentionTime === LogRetention.FOREVER) {
+    if (!logDuration || logDuration === Duration.Forever) {
       return 0 // No logs purged
-    }
-
-    const lookupMilliseconds: Readonly<{
-      [key in LogRetention]: number
-    }> = {
-      [LogRetention.ONE_WEEK]: Milliseconds.PER_WEEK,
-      [LogRetention.THREE_MONTHS]: Milliseconds.PER_THREE_MONTHS,
-      [LogRetention.ONE_YEAR]: Milliseconds.PER_YEAR,
-      [LogRetention.FOREVER]: Milliseconds.FOREVER,
     }
 
     const logs = await this.Logs.toArray()
@@ -94,8 +86,8 @@ class Database extends Dexie {
     const removableLogs = logs
       .filter((log: Log) => {
         const logTimestamp = log.timestamp ?? 0
-        const logAgeMilliseconds = Date.now() - logTimestamp
-        return logAgeMilliseconds > lookupMilliseconds[logRetentionTime]
+        const logAge = Date.now() - logTimestamp
+        return logAge > logDuration
       })
       .map((log: Log) => log.autoId as number) // Map remaining Log ids for removal
 
@@ -125,7 +117,7 @@ class Database extends Dexie {
       [settingkeys.Values['dark-mode']]: true,
       [settingkeys.Values['console-logs']]: false,
       [settingkeys.Values['info-messages']]: true,
-      [settingkeys.Values['log-retention-time']]: LogRetention.THREE_MONTHS,
+      [settingkeys.Values['log-retention-duration']]: Duration['Three Months'],
     }
 
     const keys = settingkeys.options

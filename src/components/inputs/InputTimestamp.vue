@@ -2,7 +2,7 @@
 import { date } from 'quasar'
 import { onMounted, type Ref, ref } from 'vue'
 import type { AnyField } from '@/types/database'
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 import useActionStore from '@/stores/action'
 
 const props = defineProps<{

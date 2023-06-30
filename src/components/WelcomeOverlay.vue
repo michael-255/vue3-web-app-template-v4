@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { Icon } from '@/types/icons'
+import { Icon, routeNames } from '@/types/general'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { RouteName } from '@/router/route-names'
-import { AppDescription, AppName } from '@/types/general'
 import { settingkeys } from '@/types/database'
+import { AppDescription, AppName } from '@/constants/global'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/Database'
 
 const { log } = useLogger()
 
 const exampleFavorite: Ref<number> = ref(0)
-const menuTooltip: Ref<boolean> = ref(false)
 const showWelcome: Ref<any> = ref(false)
 
 const subscription = DB.liveSettings().subscribe({
@@ -85,7 +83,7 @@ async function onCloseWelcomeOverlay() {
           <QBtn
             color="warning"
             label="Donate"
-            :to="{ name: RouteName.DONATE }"
+            :to="{ name: routeNames.Values.Donate }"
             :icon="Icon.DONATE"
           />
         </div>

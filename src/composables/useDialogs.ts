@@ -1,5 +1,5 @@
 import { useQuasar } from 'quasar'
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 import confirmationDialog from '@/components/dialogs/confirmationDialog.vue'
 import dismissalDialog from '@/components/dialogs/dismissalDialog.vue'
 import inspectionDialog from '@/components/dialogs/inspectionDialog.vue'

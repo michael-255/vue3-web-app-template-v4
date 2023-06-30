@@ -1,5 +1,5 @@
-import { Milliseconds } from '@/types/general'
 import { date } from 'quasar'
+import { Duration } from '@/types/general'
 import * as slug from 'slugify'
 
 /**
@@ -96,10 +96,10 @@ export function getDurationFromMilliseconds(milliseconds?: number): string | und
     return undefined
   }
 
-  const seconds = Math.floor((milliseconds / Milliseconds.PER_SECOND) % 60)
-  const minutes = Math.floor((milliseconds / Milliseconds.PER_MINUTE) % 60)
-  const hours = Math.floor((milliseconds / Milliseconds.PER_HOUR) % 24)
-  const days = Math.floor(milliseconds / Milliseconds.PER_DAY)
+  const seconds = Math.floor((milliseconds / Duration['One Second']) % 60)
+  const minutes = Math.floor((milliseconds / Duration['One Minute']) % 60)
+  const hours = Math.floor((milliseconds / Duration['One Hour']) % 24)
+  const days = Math.floor(milliseconds / Duration['One Day'])
 
   const daysStr = days > 0 ? `${days}d ` : ''
   const hoursStr = hours > 0 ? `${hours}h ` : ''

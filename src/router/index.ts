@@ -1,72 +1,72 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { RouteName } from '@/router/route-names'
+import { routeNames } from '@/types/general'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: RouteName.DASHBOARD,
+      name: routeNames.Values.Dashboard,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DashboardView.vue'),
     },
     {
       path: '/logs-data',
-      name: RouteName.DATA_LOGS,
+      name: routeNames.Values.DataLogs,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DataLogsView.vue'),
     },
     {
       path: '/records-data/:group/:type',
-      name: RouteName.DATA_RECORDS,
+      name: routeNames.Values.DataRecords,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DataRecordsView.vue'),
     },
     {
       path: '/create/:group/:type/:coreId?',
-      name: RouteName.CREATE,
+      name: routeNames.Values.Create,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/CreateView.vue'),
     },
     {
       path: '/edit/:group/:type/:id',
-      name: RouteName.EDIT,
+      name: routeNames.Values.Edit,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/EditView.vue'),
     },
     {
       path: '/charts/:type/:id',
-      name: RouteName.CHARTS,
+      name: routeNames.Values.Charts,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/ChartsView.vue'),
     },
     {
       path: '/settings',
-      name: RouteName.SETTINGS,
+      name: routeNames.Values.Settings,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/SettingsView.vue'),
     },
     {
       path: '/faq',
-      name: RouteName.FAQ,
+      name: routeNames.Values.FAQ,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/FAQView.vue'),
     },
     {
       path: '/about',
-      name: RouteName.ABOUT,
+      name: routeNames.Values.About,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/AboutView.vue'),
     },
     {
       path: '/donate',
-      name: RouteName.DONATE,
+      name: routeNames.Values.Donate,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DonateView.vue'),
     },
     {
       path: '/:pathMatch(.*)*', // 404 Not Found
-      name: RouteName.NOT_FOUND,
+      name: routeNames.Values.NotFound,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/NotFoundView.vue'),
     },

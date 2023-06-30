@@ -32,7 +32,7 @@ function validationRule() {
       <QInput
         v-model="actionStore.record[field]"
         :rules="[validationRule()]"
-        :maxlength="Limit.MAX_NAME_LENGTH"
+        :maxlength="Limit.MAX_NAME"
         type="text"
         lazy-rules
         counter

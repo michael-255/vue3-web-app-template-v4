@@ -6,7 +6,6 @@ structured.
 
 ## TODOS
 
-- [ ] Refactor enums in `general.ts` if it makes sense
 - [ ] Fully implement `Inspect` feature with the new fullscreen dialog
 - [ ] Validate that `zod` schemas are working as expected
 

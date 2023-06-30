@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { Icon } from '@/types/icons'
-import { AppName } from '@/types/general'
+import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
+import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
 import { hiddenColumnNames, logColumns } from '@/services/table-columns'
 import { allFields, type AnyDatabaseRecord, type AnyField, type Log } from '@/types/database'

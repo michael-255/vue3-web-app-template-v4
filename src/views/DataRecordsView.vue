@@ -2,9 +2,9 @@
 import type { QTableColumn } from 'quasar'
 import { type Ref, ref, onUnmounted } from 'vue'
 import type { Subscription } from 'dexie'
-import { Icon } from '@/types/icons'
-import { AppName } from '@/types/general'
+import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
+import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
 import { hiddenColumnNames } from '@/services/table-columns'
 import {

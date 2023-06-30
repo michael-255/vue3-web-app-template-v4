@@ -35,7 +35,7 @@ function validationRule() {
       <QInput
         v-model="actionStore.record[field]"
         :rules="[validationRule()]"
-        :maxlength="Limit.MAX_TEXT_AREA_LENGTH"
+        :maxlength="Limit.MAX_TEXT_AREA"
         type="textarea"
         lazy-rules
         autogrow

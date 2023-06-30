@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { exportFile } from 'quasar'
-import { Icon } from '@/types/icons'
-import { AppName, Limit, LogRetention } from '@/types/general'
+import { Duration, Icon, Limit } from '@/types/general'
 import { type Ref, ref, onUnmounted } from 'vue'
+import { AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
 import {
   type Setting,
@@ -32,20 +32,32 @@ const { goToRecordsData, goToLogsData } = useRoutables()
 
 const allOptions = DataSchema.getAllOptions()
 const settings: Ref<Setting[]> = ref([])
-const logRetentionIndex: Ref<number> = ref(0)
+const logDurationIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
 const accessOptions = ref([...allOptions])
 const accessModel = ref(accessOptions.value[0])
 const deleteOptions = ref([...allOptions])
 const deleteModel = ref(deleteOptions.value[0])
+const logDurationKeys = [
+  Duration[Duration.Now],
+  Duration[Duration['One Week']],
+  Duration[Duration['One Month']],
+  Duration[Duration['Three Months']],
+  Duration[Duration['Six Months']],
+  Duration[Duration['One Year']],
+  Duration[Duration['Forever']],
+]
 
 const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     settings.value = liveSettings
-    const logRetentionTime = liveSettings.find(
-      (s) => s.key === settingkeys.Values['log-retention-time']
+
+    let logDuration = liveSettings.find(
+      (s) => s.key === settingkeys.Values['log-retention-duration']
     )?.value
-    logRetentionIndex.value = Object.values(LogRetention).findIndex((i) => i === logRetentionTime)
+
+    logDuration = Duration[logDuration]
+    logDurationIndex.value = logDurationKeys.findIndex((i) => i === logDuration)
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)
@@ -152,13 +164,20 @@ function onExportRecords() {
   )
 }
 
-async function onChangeLogRetention(logRetentionIndex: number) {
+async function onChangeLogRetention(logDurationIndex: number) {
   try {
-    const logRetentionTime = Object.values(LogRetention)[logRetentionIndex]
-    await DB.setSetting(settingkeys.Values['log-retention-time'], logRetentionTime)
-    log.info('Updated log retention time', { time: logRetentionTime, index: logRetentionIndex })
+    const logDurationKey = logDurationKeys[logDurationIndex]
+    const logDuration = Duration[logDurationKey as keyof typeof Duration]
+
+    await DB.setSetting(settingkeys.Values['log-retention-duration'], logDuration)
+
+    log.info('Updated log retention duration', {
+      logDurationKey,
+      logDuration,
+      index: logDurationIndex,
+    })
   } catch (error) {
-    log.error('Log retention update failed', error)
+    log.error('Log retention duration update failed', error)
   }
 }
 
@@ -415,21 +434,22 @@ function getSettingValue(key: SettingKey) {
 
         <div class="q-mb-md">
           <p>
-            Change log retention time below. Logs older than the selected time will be deleted. This
-            functions retroactivley, so if you change the time to 3 months, all logs older than 3
-            months will be deleted. Expired log processing occurs every time the app is loaded.
+            Change log retention duration below. Logs older than the selected time will be deleted.
+            This functions retroactivley. Change the time to three months will cause all logs older
+            than three months to be deleted. Expired log processing occurs every time the app is
+            loaded.
           </p>
 
           <div class="q-mx-lg">
             <QSlider
-              v-model="logRetentionIndex"
-              :label-value="Object.values(LogRetention)[logRetentionIndex]"
+              v-model="logDurationIndex"
+              :label-value="logDurationKeys[logDurationIndex]"
               color="primary"
               markers
               label-always
               switch-label-side
               :min="0"
-              :max="Object.values(LogRetention).length - 1"
+              :max="logDurationKeys.length - 1"
               @change="(index) => onChangeLogRetention(index)"
             />
           </div>

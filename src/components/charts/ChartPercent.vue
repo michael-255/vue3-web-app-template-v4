@@ -19,6 +19,7 @@ import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
 import useChartTimeWatcher from '@/composables/useChartTimeWatcher'
 import DB from '@/services/Database'
+import { Duration } from '@/types/general'
 
 ChartJS.register(
   Title,
@@ -102,12 +103,10 @@ async function recalculateChart() {
 
       // Continue if there are records
       if (chartingRecords.length > 0) {
-        const chartMilliseconds = uiStore.getChartTimeMilliseconds
-
         // Filter records to only include those within the chart time
         const timeRestrictedRecords = chartingRecords.filter((record: any) => {
           const timeDifference = new Date().getTime() - record[allFields.Values.timestamp]
-          return timeDifference <= chartMilliseconds
+          return timeDifference <= Duration[uiStore.chartTime]
         })
 
         recordCount.value = timeRestrictedRecords.length

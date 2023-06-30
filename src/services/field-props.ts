@@ -1,7 +1,6 @@
 import { Limit } from '@/types/general'
 import { getDisplayDate } from '@/utils/common'
 import { defineAsyncComponent } from 'vue'
-import { uid } from 'quasar'
 import {
   type FieldProps,
   type LogLevel,
@@ -90,7 +89,7 @@ const nameField: FieldProps = {
   inspectFormat: (val: string) => `${val || '-'}`,
   getDefault: () => '',
   schema: nameSchema,
-  message: `Name must be between ${Limit.MIN_NAME_LENGTH} and ${Limit.MAX_NAME_LENGTH} characters`,
+  message: `Name must be between ${Limit.MIN_NAME} and ${Limit.MAX_NAME} characters`,
   component: defineAsyncComponent(() => import('@/components/inputs/InputName.vue')),
 }
 
@@ -100,7 +99,7 @@ const descField: FieldProps = {
   inspectFormat: (val: string) => `${val || '-'}`,
   getDefault: () => '',
   schema: textAreaSchema,
-  message: `Description cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
+  message: `Description cannot exceed ${Limit.MAX_TEXT_AREA} characters`,
   component: defineAsyncComponent(() => import('@/components/inputs/InputTextArea.vue')),
 }
 
@@ -147,7 +146,7 @@ const noteField: FieldProps = {
   inspectFormat: (val: string) => `${val || '-'}`,
   getDefault: () => '',
   schema: textAreaSchema,
-  message: `Note cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
+  message: `Note cannot exceed ${Limit.MAX_TEXT_AREA} characters`,
   component: defineAsyncComponent(() => import('@/components/inputs/InputTextArea.vue')),
 }
 

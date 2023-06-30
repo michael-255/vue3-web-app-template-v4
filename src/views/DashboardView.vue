@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useTimeAgo } from '@vueuse/core'
 import { getDisplayDate } from '@/utils/common'
-import { Icon } from '@/types/icons'
-import { AppName } from '@/types/general'
+import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
 import { ref, type Ref, onUnmounted } from 'vue'
+import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
 import {
   type AnyCoreRecord,

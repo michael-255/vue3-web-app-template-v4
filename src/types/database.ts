@@ -1,10 +1,10 @@
-import type { Icon } from '@/types/icons'
+import { Limit, Icon } from '@/types//general'
 import type { QTableColumn } from 'quasar'
 import type { defineAsyncComponent } from 'vue'
 import { z } from 'zod'
 
 //
-// SCHEMAS
+// DATABASE TYPES
 //
 
 export const recordTypes = z.enum(['example', 'test']) // URL friendly slug
@@ -22,7 +22,7 @@ export const settingkeys = z.enum([
   'dark-mode',
   'console-logs',
   'info-messages',
-  'log-retention-time',
+  'log-retention-duration',
 ])
 export type SettingKey = z.infer<typeof settingkeys>
 
@@ -30,8 +30,8 @@ export const autoIdSchema = z.number().int().positive().optional() // Handled by
 export const textSchema = z.string().trim()
 export const idSchema = z.string().uuid()
 export const timestampSchema = z.number().int()
-export const nameSchema = z.string().min(1).max(50).trim()
-export const textAreaSchema = z.string().max(500).trim().optional()
+export const nameSchema = z.string().min(Limit.MIN_NAME).max(Limit.MAX_NAME).trim()
+export const textAreaSchema = z.string().max(Limit.MAX_TEXT_AREA).trim().optional()
 export const booleanSchema = z.boolean()
 export const percentSchema = z.number().min(0).max(100)
 
@@ -139,7 +139,7 @@ export type TestCoreRecord = z.infer<typeof testCoreSchema>
 export type TestSubRecord = z.infer<typeof testSubSchema>
 
 //
-// MISCELLANEOUS
+// MISCELLANEOUS TYPES
 //
 
 export type BackupData = {

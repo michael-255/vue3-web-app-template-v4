@@ -1,5 +1,5 @@
 import { useQuasar } from 'quasar'
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 
 export default function useNotifications() {
   const $q = useQuasar()

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, type Ref } from 'vue'
-import { Icon } from '@/types/icons'
-import { AppName, ChartTime } from '@/types/general'
+import { Duration, Icon } from '@/types/general'
+import { AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
 import { recordGroups } from '@/types/database'
 import useUIStore from '@/stores/ui'
@@ -15,7 +15,14 @@ const uiStore = useUIStore()
 const { routeType } = useRoutables()
 
 const inputRef: Ref<any> = ref(null)
-const options: Ref<ChartTime[]> = ref(Object.values(ChartTime))
+const options: Ref<string[]> = ref([
+  Duration[Duration['One Week']],
+  Duration[Duration['One Month']],
+  Duration[Duration['Three Months']],
+  Duration[Duration['Six Months']],
+  Duration[Duration['One Year']],
+  Duration[Duration['All Time']],
+])
 const title = DataSchema.getLabel(recordGroups.Values.core, routeType, 'singular')
 const charts = DataSchema.getCharts(routeType)
 
@@ -42,7 +49,7 @@ function chartTimeRule(time: string) {
           ref="inputRef"
           label="Chart Time"
           :options="options"
-          :rules="[(time: ChartTime) => chartTimeRule(time) || '* Required']"
+          :rules="[(chartTime: string) => chartTimeRule(chartTime) || '* Required']"
           emit-value
           map-options
           options-dense

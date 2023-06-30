@@ -1,4 +1,4 @@
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 import { defineAsyncComponent } from 'vue'
 import {
   type RecordProps,

@@ -1,4 +1,4 @@
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 import { uid } from 'quasar'
 import {
   recordGroups,
@@ -8,7 +8,7 @@ import {
   type TestCoreRecord,
   type TestSubRecord,
 } from '@/types/database'
-import { Milliseconds } from '@/types/general'
+import { Duration } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/Database'
@@ -61,7 +61,7 @@ export default function useDefaults() {
   }
 
   function previousDateMilliseconds() {
-    return Date.now() - Milliseconds.PER_YEAR
+    return Date.now() - Duration['One Year']
   }
 
   async function onDefaultExamples() {
@@ -96,7 +96,7 @@ export default function useDefaults() {
                 type: recordTypes.Values.example,
                 id: uid(),
                 coreId,
-                timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
+                timestamp: previousDateMilliseconds() + Duration['One Day'] * i,
                 note: `Example sub-record note ${i}`,
                 percent: randomPercent(),
               })
@@ -149,7 +149,7 @@ export default function useDefaults() {
                 type: recordTypes.Values.test,
                 id: uid(),
                 coreId,
-                timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
+                timestamp: previousDateMilliseconds() + Duration['One Day'] * i,
                 note: `Test sub-record note ${i}`,
               })
             }

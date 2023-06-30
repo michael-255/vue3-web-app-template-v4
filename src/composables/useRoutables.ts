@@ -1,6 +1,6 @@
 import type { RecordGroup, RecordType } from '@/types/database'
-import { RouteName } from '@/router/route-names'
 import { useRoute, useRouter } from 'vue-router'
+import { routeNames } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 
 export default function useRoutables() {
@@ -23,7 +23,7 @@ export default function useRoutables() {
   function goToLogsData() {
     try {
       router.push({
-        name: RouteName.DATA_LOGS,
+        name: routeNames.Values.DataLogs,
       })
     } catch (error) {
       log.error('Error accessing logs data route', error)
@@ -33,7 +33,7 @@ export default function useRoutables() {
   function goToRecordsData(group: RecordGroup, type: RecordType) {
     try {
       router.push({
-        name: RouteName.DATA_RECORDS,
+        name: routeNames.Values.DataRecords,
         params: { group, type },
       })
     } catch (error) {
@@ -44,7 +44,7 @@ export default function useRoutables() {
   function goToCreate(group: RecordGroup, type: RecordType, coreId?: string) {
     try {
       router.push({
-        name: RouteName.CREATE,
+        name: routeNames.Values.Create,
         params: { group, type, coreId },
       })
     } catch (error) {
@@ -55,7 +55,7 @@ export default function useRoutables() {
   function goToEdit(group: RecordGroup, type: RecordType, id: string) {
     try {
       router.push({
-        name: RouteName.EDIT,
+        name: routeNames.Values.Edit,
         params: { group, type, id },
       })
     } catch (error) {
@@ -67,7 +67,7 @@ export default function useRoutables() {
   function goToCharts(type: RecordType, id: string) {
     try {
       router.push({
-        name: RouteName.CHARTS,
+        name: routeNames.Values.Charts,
         params: { type, id },
       })
     } catch (error) {
@@ -83,7 +83,7 @@ export default function useRoutables() {
       if (router?.options?.history?.state?.back) {
         router.back()
       } else {
-        router.push({ name: RouteName.DASHBOARD })
+        router.push({ name: routeNames.Values.Dashboard })
       }
     } catch (error) {
       log.error('Error accessing go back route', error)

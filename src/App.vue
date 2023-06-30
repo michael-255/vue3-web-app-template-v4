@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
 import { onMounted, type Ref, ref, watch, markRaw } from 'vue'
-import { Icon } from '@/types/icons'
-import { AppDescription } from '@/types/general'
+import { Icon } from '@/types/general'
+import { AppDescription } from './constants/global'
 import { useMeta } from 'quasar'
 import ErrorLayout from '@/components/layouts/ErrorLayout.vue'
 import useLogger from '@/composables/useLogger'
