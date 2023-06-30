@@ -13,7 +13,7 @@ import {
   LineElement,
 } from 'chart.js'
 import { onMounted, ref, type Ref } from 'vue'
-import { idSchema, recordFields, recordTypes } from '@/types/database'
+import { idSchema, allFields, recordTypes } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
@@ -42,6 +42,8 @@ const chartLabel = 'Percentages'
 const chartOptions = {
   reactive: true,
   responsive: true,
+  maintainAspectRatio: true,
+  aspectRatio: 1.75,
   radius: 2,
   plugins: {
     legend: {
@@ -104,7 +106,7 @@ async function recalculateChart() {
 
         // Filter records to only include those within the chart time
         const timeRestrictedRecords = chartingRecords.filter((record: any) => {
-          const timeDifference = new Date().getTime() - record[recordFields.Values.timestamp]
+          const timeDifference = new Date().getTime() - record[allFields.Values.timestamp]
           return timeDifference <= chartMilliseconds
         })
 
@@ -112,12 +114,12 @@ async function recalculateChart() {
 
         // Create chart label dates from the created timestamps
         const chartLabels = timeRestrictedRecords.map((record: any) =>
-          date.formatDate(record[recordFields.Values.timestamp], 'YYYY MMM D')
+          date.formatDate(record[allFields.Values.timestamp], 'YYYY MMM D')
         )
 
         // Create chart data from the number fields
         const chartDataItems = timeRestrictedRecords.map(
-          (record: any) => record[recordFields.Values.percent]
+          (record: any) => record[allFields.Values.percent]
         )
 
         // Set chart data with the labels and data

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { date } from 'quasar'
 import { onMounted, type Ref, ref } from 'vue'
-import type { RecordField } from '@/types/database'
+import type { AnyField } from '@/types/database'
 import { Icon } from '@/types/icons'
 import useActionStore from '@/stores/action'
 
 const props = defineProps<{
-  field: RecordField
+  field: AnyField
   label: string
   getDefault: () => any
 }>()

@@ -25,7 +25,6 @@ import {
 } from '@/services/field-props'
 
 export default class DataSchema {
-  private static instance: DataSchema | null = null
   private static recordProps: RecordProps[] = [
     {
       type: recordTypes.Values.example,
@@ -33,10 +32,9 @@ export default class DataSchema {
       icon: Icon.EXAMPLES,
       singular: 'Core Example',
       plural: 'Core Examples',
-      charts: [],
+      charts: [defineAsyncComponent(() => import('@/components/charts/ChartPercent.vue'))],
       tableColumns: exampleCoreColumns,
-      fields: exampleCoreFieldProps,
-      // fields: exampleCoreFields.options,
+      fieldProps: exampleCoreFieldProps,
       schema: exampleCoreSchema,
     },
     {
@@ -47,8 +45,7 @@ export default class DataSchema {
       plural: 'Sub Examples',
       charts: [],
       tableColumns: exampleSubColumns,
-      fields: exampleSubFieldProps,
-      // fields: exampleSubFields.options,
+      fieldProps: exampleSubFieldProps,
       schema: exampleSubSchema,
     },
     {
@@ -59,8 +56,7 @@ export default class DataSchema {
       plural: 'Core Tests',
       charts: [],
       tableColumns: testCoreColumns,
-      fields: testCoreFieldProps,
-      // fields: testCoreFields.options,
+      fieldProps: testCoreFieldProps,
       schema: testCoreSchema,
     },
     {
@@ -69,10 +65,9 @@ export default class DataSchema {
       icon: Icon.TESTS,
       singular: 'Sub Test',
       plural: 'Sub Tests',
-      charts: [defineAsyncComponent(() => import('@/components/charts/ChartPercent.vue'))],
+      charts: [],
       tableColumns: testSubColumns,
-      fields: testSubFieldProps,
-      // fields: testSubFields.options,
+      fieldProps: testSubFieldProps,
       schema: testSubSchema,
     },
   ]
@@ -119,17 +114,12 @@ export default class DataSchema {
     return this.recordProps.find((p) => p.group === group && p.type === type)?.tableColumns
   }
 
-  static getFields(group: RecordGroup, type: RecordType) {
-    return this.recordProps.find((p) => p.group === group && p.type === type)?.fields
-  }
-
   static getSchema(group: RecordGroup, type: RecordType) {
     return this.recordProps.find((p) => p.group === group && p.type === type)?.schema
   }
 
-  // TODO - TEMP
   static getFieldProps(group: RecordGroup, type: RecordType) {
-    return this.recordProps.find((p) => p.group === group && p.type === type)?.fields
+    return this.recordProps.find((p) => p.group === group && p.type === type)?.fieldProps
   }
 
   static getCharts(type: RecordType) {

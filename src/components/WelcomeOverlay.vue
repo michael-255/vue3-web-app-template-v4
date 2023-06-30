@@ -5,13 +5,12 @@ import { RouteName } from '@/router/route-names'
 import { AppDescription, AppName } from '@/types/general'
 import { settingkeys } from '@/types/database'
 import useLogger from '@/composables/useLogger'
-import useDefaults from '@/composables/useDefaults'
 import DB from '@/services/Database'
 
-const { onDefaults } = useDefaults()
 const { log } = useLogger()
 
 const exampleFavorite: Ref<number> = ref(0)
+const menuTooltip: Ref<boolean> = ref(false)
 const showWelcome: Ref<any> = ref(false)
 
 const subscription = DB.liveSettings().subscribe({
@@ -74,16 +73,7 @@ async function onCloseWelcomeOverlay() {
             tables, Frequently Asked Questions (FAQ), Settings, and more. More advanced operations
             for the app are available on the Settings page.
           </p>
-          <QBtn color="primary" class="q-px-sm" :icon="Icon.MENU_STANDARD" />
-        </div>
-
-        <!-- Defaults -->
-        <div class="q-mb-md">
-          <p>
-            You can load default demostration data into the database to get started with the app
-            right away by clicking the button below. This action can be repeated.
-          </p>
-          <QBtn color="primary" label="Add Defaults" :icon="Icon.ADD_NOTE" @click="onDefaults()" />
+          <QBtn disable color="primary" class="q-px-sm" :icon="Icon.MENU_STANDARD" />
         </div>
 
         <!-- Donation -->

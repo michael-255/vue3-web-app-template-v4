@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import { truncateString } from '@/utils/common'
-import { recordGroups, type RecordField, recordTypes, type AnyCoreRecord } from '@/types/database'
+import { recordGroups, type AnyField, recordTypes, type AnyCoreRecord } from '@/types/database'
 import type { z } from 'zod'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
 import DB from '@/services/Database'
 
 const props = defineProps<{
-  field: RecordField
+  field: AnyField
   label: string
   desc: string
   getDefault: () => any
-  validator: z.ZodType<any, any, any>
-  validationMessage: string
+  schema: z.ZodType<any, any, any>
+  message: string
 }>()
 
 const { log } = useLogger()
@@ -40,7 +40,7 @@ onMounted(async () => {
 })
 
 function validationRule() {
-  return (val: string) => props.validator.safeParse(val).success || props.validationMessage
+  return (val: string) => props.schema.safeParse(val).success || props.message
 }
 </script>
 

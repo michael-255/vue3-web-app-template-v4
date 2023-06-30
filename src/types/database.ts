@@ -78,6 +78,7 @@ const coreSchema = baseSchema.merge(
 export const exampleSubSchema = subSchema.merge(
   z.object({
     type: z.literal(recordTypes.Values.example),
+    percent: percentSchema,
   })
 )
 
@@ -93,7 +94,6 @@ export const exampleCoreSchema = coreSchema.merge(
 export const testSubSchema = subSchema.merge(
   z.object({
     type: z.literal(recordTypes.Values.test),
-    percent: percentSchema,
   })
 )
 
@@ -104,11 +104,9 @@ export const testCoreSchema = coreSchema.merge(
   })
 )
 
-//
-// Fields
-//
-
-// Use this schema to collect all fields from all schemas
+/**
+ * - Use this schema to collect all fields from all schemas
+ */
 const allSchema = settingSchema
   .merge(logSchema)
   .merge(exampleCoreSchema)
@@ -161,18 +159,17 @@ export type RecordProps = {
   plural: string
   charts: ReturnType<typeof defineAsyncComponent>[]
   tableColumns: QTableColumn[]
-  fields: FieldProps[]
-  // fields: RecordField[]
+  fieldProps: FieldProps[]
   schema: z.ZodObject<any, any, any>
 }
 
 export type FieldProps = {
   field: AnyField
   label: string
-  desc?: string
-  getDefault: () => any
-  validator: z.ZodType<any, any, any>
-  validationMessage: string
   inspectFormat: (val: any) => string
+  getDefault?: () => any
+  desc?: string
+  schema?: z.ZodType<any, any, any>
+  message?: string
   component?: ReturnType<typeof defineAsyncComponent>
 }

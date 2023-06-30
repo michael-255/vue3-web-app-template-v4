@@ -95,24 +95,23 @@ async function onSubmit() {
             :label="fieldProp.label"
             :desc="fieldProp.desc"
             :getDefault="fieldProp.getDefault"
-            :validator="fieldProp.validator"
-            :validationMessage="fieldProp.validationMessage"
+            :schema="fieldProp.schema"
+            :message="fieldProp.message"
           />
         </div>
 
-        <div class="row justify-start">
-          <!-- Submit -->
-          <div class="col">
-            <QBtn label="Update" type="submit" color="positive" :icon="Icon.SAVE" />
-          </div>
-          <!-- Invalid entries message -->
-          <div class="col">
-            <div v-show="!isFormValid">
-              <QIcon :name="Icon.WARN" color="warning" />
-              <span class="text-caption q-ml-xs text-warning">
-                Correct invalid entries and try again
-              </span>
-            </div>
+        <!-- Submit -->
+        <div class="row justify-center q-my-sm">
+          <QBtn label="Update" type="submit" color="positive" :icon="Icon.SAVE" />
+        </div>
+
+        <!-- Validation Message -->
+        <div class="row justify-center">
+          <div v-show="!isFormValid">
+            <QIcon :name="Icon.WARN" color="warning" />
+            <span class="text-caption q-ml-xs text-warning">
+              Correct invalid entries and try again
+            </span>
           </div>
         </div>
       </QForm>

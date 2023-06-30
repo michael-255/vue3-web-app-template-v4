@@ -1,7 +1,6 @@
 import { AppName } from '@/types/general'
 
 export default class Logger {
-  private static instance: Logger | null = null
   private static loggerName: string = `%c${AppName}`
   private static baseStyle = 'border-radius: 3px; padding: 2px 4px; color: white; background-color:'
   // Was unable to get Quasar getPaletteColor() to work for this

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import type { RecordField } from '@/types/database'
+import type { AnyField } from '@/types/database'
 import type { z } from 'zod'
 import useActionStore from '@/stores/action'
 
 const props = defineProps<{
-  field: RecordField
+  field: AnyField
   label: string
   getDefault: () => any
-  validator: z.ZodType<any, any, any>
-  validationMessage: string
+  schema: z.ZodType<any, any, any>
+  message: string
 }>()
 
 const actionStore = useActionStore()
@@ -19,7 +19,7 @@ onMounted(() => {
 })
 
 function validationRule() {
-  return (val: string) => props.validator.safeParse(val).success || props.validationMessage
+  return (val: string) => props.schema.safeParse(val).success || props.message
 }
 </script>
 

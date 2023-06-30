@@ -115,21 +115,23 @@ async function onInspect(type: RecordType, id: string) {
     <WelcomeOverlay />
 
     <section class="q-mb-lg">
-      <p class="text-h6 q-mb-sm">What would you like to work on?</p>
+      <p class="text-h6 q-mb-sm text-center">What would you like to work on?</p>
 
-      <QOptionGroup
-        color="primary"
-        :options="dashboardOptions"
-        :model-value="uiStore.dashboardSelection"
-        @update:model-value="uiStore.dashboardSelection = $event"
-      >
-        <template v-slot:label="opt">
-          <div class="row items-center">
-            <QIcon :name="opt.icon" size="xs" class="q-mr-sm" />
-            <span>{{ opt.label }}</span>
-          </div>
-        </template>
-      </QOptionGroup>
+      <div class="row justify-center">
+        <QOptionGroup
+          color="primary"
+          :options="dashboardOptions"
+          :model-value="uiStore.dashboardSelection"
+          @update:model-value="uiStore.dashboardSelection = $event"
+        >
+          <template v-slot:label="opt">
+            <div class="row items-center">
+              <QIcon :name="opt.icon" size="xs" class="q-mr-sm" />
+              <span>{{ opt.label }}</span>
+            </div>
+          </template>
+        </QOptionGroup>
+      </div>
     </section>
 
     <!-- Dashboard Cards -->

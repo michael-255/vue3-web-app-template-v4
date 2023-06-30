@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { RecordField } from '@/types/database'
+import type { AnyField } from '@/types/database'
 import { onMounted } from 'vue'
 import useActionStore from '@/stores/action'
 
 const props = defineProps<{
-  field: RecordField
+  field: AnyField
   label: string
   desc: string
   getDefault: () => any

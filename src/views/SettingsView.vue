@@ -27,7 +27,7 @@ useMeta({ title: `${AppName} - Settings` })
 const { log } = useLogger()
 const { notify } = useNotifications()
 const { confirmDialog } = useDialogs()
-const { onDefaults } = useDefaults()
+const { onDefaultExamples, onDefaultTests } = useDefaults()
 const { goToRecordsData, goToLogsData } = useRoutables()
 
 const allOptions = DataSchema.getAllOptions()
@@ -302,7 +302,14 @@ function getSettingValue(key: SettingKey) {
 
         <div>
           <p>Load default demostration records into the database. This action can be repeated.</p>
-          <QBtn label="Load Examples" color="primary" @click="onDefaults()" />
+
+          <div class="q-mb-md">
+            <QBtn label="Load Examples" color="primary" @click="onDefaultExamples()" />
+          </div>
+
+          <div>
+            <QBtn label="Load Tests" color="primary" @click="onDefaultTests()" />
+          </div>
         </div>
       </QCardSection>
     </QCard>

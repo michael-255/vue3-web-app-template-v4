@@ -6,9 +6,6 @@ import {
   type FieldProps,
   type LogLevel,
   allFields,
-  autoIdSchema,
-  logLevels,
-  textSchema,
   idSchema,
   timestampSchema,
   nameSchema,
@@ -22,92 +19,64 @@ import { z } from 'zod'
 // LOG
 //
 
-const autoIdField: Readonly<FieldProps> = {
+const autoIdField: FieldProps = {
   field: allFields.Values.autoId,
   label: 'Auto Id',
-  getDefault: () => undefined,
-  validator: autoIdSchema,
-  validationMessage: 'Invalid',
   inspectFormat: (val: number) => `${val || '-'}`,
-  // Not rendered
 }
 
-const logLevelField: Readonly<FieldProps> = {
+const logLevelField: FieldProps = {
   field: allFields.Values.logLevel,
   label: 'Log Level',
-  getDefault: () => undefined,
-  validator: logLevels,
-  validationMessage: 'Invalid',
   inspectFormat: (val: LogLevel) => `${val || '-'}`,
-  // Not rendered
 }
 
-const labelField: Readonly<FieldProps> = {
+const labelField: FieldProps = {
   field: allFields.Values.label,
   label: 'Label',
-  getDefault: () => undefined,
-  validator: textSchema,
-  validationMessage: 'Invalid',
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
 }
 
-const detailsField: Readonly<FieldProps> = {
+const detailsField: FieldProps = {
   field: allFields.Values.details,
   label: 'Details',
-  getDefault: () => undefined,
-  validator: z.any(),
-  validationMessage: 'Invalid',
   inspectFormat: (val: any) =>
     val
       ? Object.entries(val)
           .map(([key, value]) => `${key}: ${value}`)
           .join(', ')
       : '-',
-  // Not rendered
 }
 
-const messageField: Readonly<FieldProps> = {
+const messageField: FieldProps = {
   field: allFields.Values.message,
   label: 'Message',
-  getDefault: () => undefined,
-  validator: textSchema.optional(),
-  validationMessage: 'Invalid',
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
 }
 
-const stackField: Readonly<FieldProps> = {
+const stackField: FieldProps = {
   field: allFields.Values.stack,
   label: 'Stack',
-  getDefault: () => undefined,
-  validator: textSchema.optional(),
-  validationMessage: 'Invalid',
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
 }
 
 //
 // BASE
 //
 
-const idField: Readonly<FieldProps> = {
+const idField: FieldProps = {
   field: allFields.Values.id,
   label: 'Id',
-  getDefault: () => uid(),
-  validator: idSchema,
-  validationMessage: 'Invalid',
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
 }
 
-const timestampField: Readonly<FieldProps> = {
+const timestampField: FieldProps = {
   field: allFields.Values.timestamp,
   label: 'Created Date',
-  getDefault: () => Date.now(),
-  validator: timestampSchema,
-  validationMessage: 'Must be a valid number',
   inspectFormat: (val: number) => getDisplayDate(val) || '-',
+  getDefault: () => Date.now(),
+  schema: timestampSchema,
+  message: 'Must be a valid number',
   component: defineAsyncComponent(() => import('@/components/inputs/InputTimestamp.vue')),
 }
 
@@ -115,45 +84,45 @@ const timestampField: Readonly<FieldProps> = {
 // CORE RECORD
 //
 
-const nameField: Readonly<FieldProps> = {
+const nameField: FieldProps = {
   field: allFields.Values.name,
   label: 'Name',
-  getDefault: () => '',
-  validator: nameSchema,
-  validationMessage: `Name must be between ${Limit.MIN_NAME_LENGTH} and ${Limit.MAX_NAME_LENGTH} characters`,
   inspectFormat: (val: string) => `${val || '-'}`,
+  getDefault: () => '',
+  schema: nameSchema,
+  message: `Name must be between ${Limit.MIN_NAME_LENGTH} and ${Limit.MAX_NAME_LENGTH} characters`,
   component: defineAsyncComponent(() => import('@/components/inputs/InputName.vue')),
 }
 
-const descField: Readonly<FieldProps> = {
+const descField: FieldProps = {
   field: allFields.Values.desc,
   label: 'Description',
-  getDefault: () => '',
-  validator: textAreaSchema,
-  validationMessage: `Description cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   inspectFormat: (val: string) => `${val || '-'}`,
+  getDefault: () => '',
+  schema: textAreaSchema,
+  message: `Description cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   component: defineAsyncComponent(() => import('@/components/inputs/InputTextArea.vue')),
 }
 
-const enabledField: Readonly<FieldProps> = {
+const enabledField: FieldProps = {
   field: allFields.Values.enabled,
   label: 'Enabled',
-  desc: 'Whether the record is enabled and shows up on the Dashboard and in other lists.',
-  getDefault: () => true,
-  validator: booleanSchema,
-  validationMessage: '* Required',
   inspectFormat: (val: boolean) => (val ? 'Yes' : 'No'),
+  getDefault: () => true,
+  desc: 'Whether the record is enabled and shows up on the Dashboard and in other lists.',
+  schema: booleanSchema,
+  message: '* Required',
   component: defineAsyncComponent(() => import('@/components/inputs/InputToggle.vue')),
 }
 
-const favoritedField: Readonly<FieldProps> = {
+const favoritedField: FieldProps = {
   field: allFields.Values.favorited,
   label: 'Favorited',
-  desc: 'Whether the record is favorited and is prioritized on the Dashboard.',
-  getDefault: () => false,
-  validator: booleanSchema,
-  validationMessage: '* Required',
   inspectFormat: (val: boolean) => (val ? 'Yes' : 'No'),
+  getDefault: () => false,
+  desc: 'Whether the record is favorited and is prioritized on the Dashboard.',
+  schema: booleanSchema,
+  message: '* Required',
   component: defineAsyncComponent(() => import('@/components/inputs/InputToggle.vue')),
 }
 
@@ -161,24 +130,24 @@ const favoritedField: Readonly<FieldProps> = {
 // SUB RECORD
 //
 
-const coreIdField: Readonly<FieldProps> = {
+const coreIdField: FieldProps = {
   field: allFields.Values.coreId,
   label: 'Core Id',
-  getDefault: () => undefined,
-  validator: idSchema,
-  validationMessage: `Invalid`,
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
+  getDefault: () => undefined,
+  schema: idSchema,
+  message: `Invalid`,
+  // TODO
 }
 
-const noteField: Readonly<FieldProps> = {
+const noteField: FieldProps = {
   field: allFields.Values.note,
   label: 'Note',
   desc: 'Text note about the record that can be viewed on the Dashboard.',
-  getDefault: () => '',
-  validator: textAreaSchema,
-  validationMessage: `Note cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   inspectFormat: (val: string) => `${val || '-'}`,
+  getDefault: () => '',
+  schema: textAreaSchema,
+  message: `Note cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   component: defineAsyncComponent(() => import('@/components/inputs/InputTextArea.vue')),
 }
 
@@ -186,24 +155,24 @@ const noteField: Readonly<FieldProps> = {
 // RECORD SPECIFIC
 //
 
-const testIdsField: Readonly<FieldProps> = {
+const testIdsField: FieldProps = {
   field: allFields.Values.testIds,
   label: 'Tests',
-  desc: 'Tests that are associated with the Example record.',
-  getDefault: () => [],
-  validator: z.array(idSchema),
-  validationMessage: '* Required',
   inspectFormat: (val: string[]) => val?.join(', ') || '-',
+  getDefault: () => [],
+  desc: 'Tests that are associated with the Example record.',
+  schema: z.array(idSchema),
+  message: '* Required',
   component: defineAsyncComponent(() => import('@/components/inputs/InputTestIds.vue')),
 }
 
-const percentField: Readonly<FieldProps> = {
+const percentField: FieldProps = {
   field: allFields.Values.percent,
   label: 'Percentage',
-  getDefault: () => 0,
-  validator: percentSchema,
-  validationMessage: 'Percent must be between 0 and 100',
   inspectFormat: (val: number) => `${val}%`,
+  getDefault: () => 0,
+  schema: percentSchema,
+  message: 'Percent must be between 0 and 100',
   component: defineAsyncComponent(() => import('@/components/inputs/InputPercent.vue')),
 }
 
