@@ -1,11 +1,6 @@
 import { Icon } from '@/types/icons'
 import { uid } from 'quasar'
-import {
-  type AnyCoreRecord,
-  type AnySubRecord,
-  recordGroupSchema,
-  recordTypeSchema,
-} from '@/types/database'
+import { type AnyCoreRecord, type AnySubRecord, recordGroups, recordTypes } from '@/types/database'
 import { Milliseconds } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
@@ -78,22 +73,22 @@ export default function useDefaults() {
             const name = `${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
             coreRecords.push({
-              type: recordTypeSchema.Values.example,
-              group: recordGroupSchema.Values['core-record'],
+              type: recordTypes.Values.example,
+              group: recordGroups.Values.core,
               id: coreId,
               timestamp: Date.now(),
               name,
               desc: `${name} description.`,
-              enable: true,
-              favorite: randomBoolean(),
+              enabled: true,
+              favorited: randomBoolean(),
               lastSub: undefined,
               testIds: [uid(), uid(), uid()], // Not linked to any real child records
             } as AnyCoreRecord)
 
             for (let i = 0; i < count; i++) {
               subRecords.push({
-                type: recordTypeSchema.Values.example,
-                group: recordGroupSchema.Values['sub-record'],
+                type: recordTypes.Values.example,
+                group: recordGroups.Values.sub,
                 id: uid(),
                 coreId,
                 timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
@@ -107,21 +102,21 @@ export default function useDefaults() {
             const name = `${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
             coreRecords.push({
-              type: recordTypeSchema.Values.test,
-              group: recordGroupSchema.Values['core-record'],
+              type: recordTypes.Values.test,
+              group: recordGroups.Values.core,
               id: coreId,
               timestamp: Date.now(),
               name,
               desc: `${name} description.`,
-              enable: true,
-              favorite: randomBoolean(),
+              enabled: true,
+              favorited: randomBoolean(),
               lastSub: undefined,
             } as AnyCoreRecord)
 
             for (let i = 0; i < count; i++) {
               subRecords.push({
-                type: recordTypeSchema.Values.test,
-                group: recordGroupSchema.Values['sub-record'],
+                type: recordTypes.Values.test,
+                group: recordGroups.Values.sub,
                 id: uid(),
                 coreId,
                 timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
@@ -131,12 +126,12 @@ export default function useDefaults() {
             }
           }
 
-          buildExampleRecords(360)
+          buildExampleRecords(1)
           buildTestRecords(360)
 
           await Promise.all([
-            DB.importRecords(recordGroupSchema.Values['core-record'], coreRecords),
-            DB.importRecords(recordGroupSchema.Values['sub-record'], subRecords),
+            DB.importRecords(recordGroups.Values.core, coreRecords),
+            DB.importRecords(recordGroups.Values.sub, subRecords),
           ])
 
           log.info('Defaults loaded')

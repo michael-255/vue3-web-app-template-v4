@@ -4,15 +4,11 @@ import {
   type RecordProps,
   type RecordGroup,
   type RecordType,
-  recordGroupSchema,
-  recordTypeSchema,
-  exampleCoreFieldsSchema,
+  recordGroups,
+  recordTypes,
   exampleCoreSchema,
-  exampleSubFieldsSchema,
   exampleSubSchema,
-  testCoreFieldsSchema,
   testCoreSchema,
-  testSubFieldsSchema,
   testSubSchema,
 } from '@/types/database'
 import {
@@ -20,65 +16,66 @@ import {
   exampleSubColumns,
   testCoreColumns,
   testSubColumns,
-} from './table-columns'
+} from '@/services/table-columns'
+import {
+  exampleCoreFieldProps,
+  exampleSubFieldProps,
+  testCoreFieldProps,
+  testSubFieldProps,
+} from '@/services/field-props'
 
 export default class DataSchema {
   private static instance: DataSchema | null = null
   private static recordProps: RecordProps[] = [
     {
-      type: recordTypeSchema.Values.example,
-      group: recordGroupSchema.Values['core-record'],
+      type: recordTypes.Values.example,
+      group: recordGroups.Values.core,
       icon: Icon.EXAMPLES,
       singular: 'Core Example',
       plural: 'Core Examples',
       charts: [],
       tableColumns: exampleCoreColumns,
-      fields: exampleCoreFieldsSchema.options,
+      fields: exampleCoreFieldProps,
+      // fields: exampleCoreFields.options,
       schema: exampleCoreSchema,
     },
     {
-      type: recordTypeSchema.Values.example,
-      group: recordGroupSchema.Values['sub-record'],
+      type: recordTypes.Values.example,
+      group: recordGroups.Values.sub,
       icon: Icon.EXAMPLES,
       singular: 'Sub Example',
       plural: 'Sub Examples',
       charts: [],
       tableColumns: exampleSubColumns,
-      fields: exampleSubFieldsSchema.options,
+      fields: exampleSubFieldProps,
+      // fields: exampleSubFields.options,
       schema: exampleSubSchema,
     },
     {
-      type: recordTypeSchema.Values.test,
-      group: recordGroupSchema.Values['core-record'],
+      type: recordTypes.Values.test,
+      group: recordGroups.Values.core,
       icon: Icon.TESTS,
       singular: 'Core Test',
       plural: 'Core Tests',
       charts: [],
       tableColumns: testCoreColumns,
-      fields: testCoreFieldsSchema.options,
+      fields: testCoreFieldProps,
+      // fields: testCoreFields.options,
       schema: testCoreSchema,
     },
     {
-      type: recordTypeSchema.Values.test,
-      group: recordGroupSchema.Values['sub-record'],
+      type: recordTypes.Values.test,
+      group: recordGroups.Values.sub,
       icon: Icon.TESTS,
       singular: 'Sub Test',
       plural: 'Sub Tests',
       charts: [defineAsyncComponent(() => import('@/components/charts/ChartPercent.vue'))],
       tableColumns: testSubColumns,
-      fields: testSubFieldsSchema.options,
+      fields: testSubFieldProps,
+      // fields: testSubFields.options,
       schema: testSubSchema,
     },
   ]
-
-  constructor() {
-    // Singleton
-    if (DataSchema.instance) {
-      return DataSchema.instance
-    } else {
-      DataSchema.instance = this
-    }
-  }
 
   static getAllOptions() {
     return this.recordProps.map((p) => ({
@@ -106,7 +103,7 @@ export default class DataSchema {
 
   static getDashboardOptions() {
     return this.recordProps
-      .filter((p) => p.group === recordGroupSchema.Values['core-record'])
+      .filter((p) => p.group === recordGroups.Values.core)
       .map((p) => ({
         value: p.type,
         label: p.plural,
@@ -130,49 +127,15 @@ export default class DataSchema {
     return this.recordProps.find((p) => p.group === group && p.type === type)?.schema
   }
 
-  // static getParentTypeOptions() {
-  //   return this.dataSchema.map((s) => ({ value: s.type, label: s.parentLabelPlural, icon: s.icon }))
-  // }
+  // TODO - TEMP
+  static getFieldProps(group: RecordGroup, type: RecordType) {
+    return this.recordProps.find((p) => p.group === group && p.type === type)?.fields
+  }
 
-  // static getAllTypeOptions() {
-  //   const options = [
-  //     { value: ['internal', 'logs'], label: 'Logs', icon: Icon.LOGS },
-  //     { value: ['internal', 'settings'], label: 'Settings', icon: Icon.SETTINGS },
-  //   ]
-
-  //   this.dataSchema.forEach((s) => {
-  //     options.push({ value: ['parent', s.type], label: s.parentLabelPlural, icon: s.icon })
-  //     options.push({ value: ['child', s.type], label: s.childLabelPlural, icon: s.icon })
-  //   })
-
-  //   return options
-  // }
-
-  // static getParentValidator(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.parentValidator as AnySchema<any, any, any>
-  // }
-
-  // static getChildValidator(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.childValidator as AnySchema<any, any, any>
-  // }
-
-  // static getParentFieldProps(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.parentFieldProps as FieldProps[]
-  // }
-
-  // static getChildFieldProps(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.childFieldProps as FieldProps[]
-  // }
-
-  // static getParentTableColumns(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.parentTableColumns as QTableColumn[]
-  // }
-
-  // static getChildTableColumns(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.childTableColumns as QTableColumn[]
-  // }
-
-  // static getChartProps(type: Type) {
-  //   return this.dataSchema.find((s) => s.type === type)?.chartProps as ChartProps[]
-  // }
+  static getCharts(type: RecordType) {
+    return (
+      this.recordProps.find((p) => p.group === recordGroups.Values.core && p.type === type)
+        ?.charts ?? []
+    )
+  }
 }

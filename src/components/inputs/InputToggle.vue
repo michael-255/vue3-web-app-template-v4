@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { Field } from '@/types/database'
+import type { RecordField } from '@/types/database'
 import { onMounted } from 'vue'
 import useActionStore from '@/stores/action'
 
 const props = defineProps<{
-  field: Field
+  field: RecordField
   label: string
   desc: string
   getDefault: () => any
@@ -28,4 +28,3 @@ onMounted(() => {
     </QCardSection>
   </QCard>
 </template>
-@/types/data

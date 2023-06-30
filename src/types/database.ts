@@ -7,16 +7,16 @@ import { z } from 'zod'
 // SCHEMAS
 //
 
-export const recordTypeSchema = z.enum(['example', 'test']) // URL friendly slug
-export type RecordType = z.infer<typeof recordTypeSchema>
+export const recordTypes = z.enum(['example', 'test']) // URL friendly slug
+export type RecordType = z.infer<typeof recordTypes>
 
-export const recordGroupSchema = z.enum(['core-record', 'sub-record']) // URL friendly slug
-export type RecordGroup = z.infer<typeof recordGroupSchema>
+export const recordGroups = z.enum(['core', 'sub']) // URL friendly slug
+export type RecordGroup = z.infer<typeof recordGroups>
 
-export const logLevelSchema = z.enum(['DEBUG', 'INFO', 'WARN', 'ERROR'])
-export type LogLevel = z.infer<typeof logLevelSchema>
+export const logLevels = z.enum(['DEBUG', 'INFO', 'WARN', 'ERROR'])
+export type LogLevel = z.infer<typeof logLevels>
 
-export const settingkeySchema = z.enum([
+export const settingkeys = z.enum([
   'welcome-overlay',
   'dashboard-descriptions',
   'dark-mode',
@@ -24,7 +24,7 @@ export const settingkeySchema = z.enum([
   'info-messages',
   'log-retention-time',
 ])
-export type SettingKey = z.infer<typeof settingkeySchema>
+export type SettingKey = z.infer<typeof settingkeys>
 
 export const autoIdSchema = z.number().int().positive().optional() // Handled by Dexie
 export const textSchema = z.string().trim()
@@ -36,89 +36,88 @@ export const booleanSchema = z.boolean()
 export const percentSchema = z.number().min(0).max(100)
 
 export const settingSchema = z.object({
-  key: settingkeySchema,
+  key: settingkeys,
   value: z.any(),
 })
-
-export const settingFieldsSchema = settingSchema.keyof()
-export type SettingField = z.infer<typeof settingFieldsSchema>
 
 export const logSchema = z.object({
   autoId: autoIdSchema,
   timestamp: timestampSchema,
-  logLevel: logLevelSchema,
+  logLevel: logLevels,
   label: textSchema,
   details: z.any(),
   message: textSchema.optional(),
   stack: textSchema.optional(),
 })
 
-export const logFieldsSchema = logSchema.keyof()
-export type LogField = z.infer<typeof logFieldsSchema>
-
-export const exampleCoreSchema = z.object({
-  type: z.literal(recordTypeSchema.Values.example),
-  group: z.literal(recordGroupSchema.Values['core-record']),
+// Base, Sub, and Core
+const baseSchema = z.object({
+  type: recordTypes,
   id: idSchema,
   timestamp: timestampSchema,
-  name: nameSchema,
-  desc: textAreaSchema,
-  enable: booleanSchema,
-  favorite: booleanSchema,
-  lastSub: z.any(),
-  testIds: z.array(idSchema),
 })
 
-export const exampleCoreFieldsSchema = exampleCoreSchema.keyof()
-export type ExampleCoreField = z.infer<typeof exampleCoreFieldsSchema>
+const subSchema = baseSchema.merge(
+  z.object({
+    coreId: idSchema,
+    note: textAreaSchema,
+  })
+)
 
-export const exampleSubSchema = z.object({
-  type: z.literal(recordTypeSchema.Values.example),
-  group: z.literal(recordGroupSchema.Values['sub-record']),
-  id: idSchema,
-  timestamp: timestampSchema,
-  coreId: idSchema,
-  note: textAreaSchema,
-})
+const coreSchema = baseSchema.merge(
+  z.object({
+    name: nameSchema,
+    desc: textAreaSchema,
+    enabled: booleanSchema,
+    favorited: booleanSchema,
+    lastSub: subSchema.optional(),
+  })
+)
 
-export const exampleSubFieldsSchema = exampleSubSchema.keyof()
-export type ExampleSubField = z.infer<typeof exampleSubFieldsSchema>
+// Example
+export const exampleSubSchema = subSchema.merge(
+  z.object({
+    type: z.literal(recordTypes.Values.example),
+  })
+)
 
-export const testCoreSchema = z.object({
-  type: z.literal(recordTypeSchema.Values.test),
-  group: z.literal(recordGroupSchema.Values['core-record']),
-  id: idSchema,
-  timestamp: timestampSchema,
-  name: nameSchema,
-  desc: textAreaSchema,
-  enable: booleanSchema,
-  favorite: booleanSchema,
-  lastSub: z.any(),
-})
+export const exampleCoreSchema = coreSchema.merge(
+  z.object({
+    type: z.literal(recordTypes.Values.example),
+    lastSub: exampleSubSchema.optional(),
+    testIds: z.array(idSchema),
+  })
+)
 
-export const testCoreFieldsSchema = testCoreSchema.keyof()
-export type TestCoreField = z.infer<typeof testCoreFieldsSchema>
+// Test
+export const testSubSchema = subSchema.merge(
+  z.object({
+    type: z.literal(recordTypes.Values.test),
+    percent: percentSchema,
+  })
+)
 
-export const testSubSchema = z.object({
-  type: z.literal(recordTypeSchema.Values.test),
-  group: z.literal(recordGroupSchema.Values['sub-record']),
-  id: idSchema,
-  timestamp: timestampSchema,
-  coreId: idSchema,
-  note: textAreaSchema,
-  percent: percentSchema,
-})
+export const testCoreSchema = coreSchema.merge(
+  z.object({
+    type: z.literal(recordTypes.Values.test),
+    lastSub: testSubSchema.optional(),
+  })
+)
 
-export const testSubFieldsSchema = testSubSchema.keyof()
-export type TestSubField = z.infer<typeof testSubFieldsSchema>
+//
+// Fields
+//
 
-export const anyRecordSchema = exampleCoreSchema
+// Use this schema to collect all fields from all schemas
+const allSchema = settingSchema
+  .merge(logSchema)
+  .merge(exampleCoreSchema)
   .merge(exampleSubSchema)
   .merge(testCoreSchema)
   .merge(testSubSchema)
 
-export const recordFieldsSchema = anyRecordSchema.keyof()
-export type RecordField = z.infer<typeof recordFieldsSchema>
+export const allFields = allSchema.keyof()
+export type AnyField = z.infer<typeof allFields>
 
 //
 // MODELS
@@ -127,9 +126,13 @@ export type RecordField = z.infer<typeof recordFieldsSchema>
 export type Log = z.infer<typeof logSchema>
 export type Setting = z.infer<typeof settingSchema>
 
-export type AnyRecord = z.infer<typeof anyRecordSchema>
-export type AnyCoreRecord = z.infer<typeof exampleCoreSchema | typeof testCoreSchema>
-export type AnySubRecord = z.infer<typeof exampleSubSchema | typeof testSubSchema>
+export type AnyDatabaseRecord = {
+  [key: string]: any
+}
+
+export type AnyRecord = z.infer<typeof baseSchema> & AnyDatabaseRecord
+export type AnySubRecord = z.infer<typeof subSchema> & AnyDatabaseRecord
+export type AnyCoreRecord = z.infer<typeof coreSchema> & AnyDatabaseRecord
 
 export type ExampleCoreRecord = z.infer<typeof exampleCoreSchema>
 export type ExampleSubRecord = z.infer<typeof exampleSubSchema>
@@ -158,6 +161,18 @@ export type RecordProps = {
   plural: string
   charts: ReturnType<typeof defineAsyncComponent>[]
   tableColumns: QTableColumn[]
-  fields: RecordField[]
+  fields: FieldProps[]
+  // fields: RecordField[]
   schema: z.ZodObject<any, any, any>
+}
+
+export type FieldProps = {
+  field: AnyField
+  label: string
+  desc?: string
+  getDefault: () => any
+  validator: z.ZodType<any, any, any>
+  validationMessage: string
+  inspectFormat: (val: any) => string
+  component?: ReturnType<typeof defineAsyncComponent>
 }

@@ -6,13 +6,13 @@ import { AppHeaderColor, AppName } from '@/types/general'
 import DataSchema from '@/services/DataSchema'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
-import { recordGroupSchema } from '@/types/database'
+import { recordGroups } from '@/types/database'
 
 const { goBack } = useRoutables()
 const uiStore = useUIStore()
 const route = useRoute()
 
-const groupOptions = DataSchema.getGroupOptions(recordGroupSchema.Values['core-record'])
+const groupOptions = DataSchema.getGroupOptions(recordGroups.Values.core)
 </script>
 
 <template>

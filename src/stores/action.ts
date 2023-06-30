@@ -5,7 +5,7 @@ const useActionStore = defineStore({
   id: 'action',
 
   state: () => ({
-    record: {} as Record<keyof RecordField, string>,
+    record: {} as { [key in RecordField]: any },
   }),
 })
 

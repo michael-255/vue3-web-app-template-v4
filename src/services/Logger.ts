@@ -14,15 +14,6 @@ export default class Logger {
     error: `${Logger.baseStyle} #C10015;`,
   }
 
-  constructor() {
-    // Singleton
-    if (Logger.instance) {
-      return Logger.instance
-    } else {
-      Logger.instance = this
-    }
-  }
-
   static print(message: any, ...args: any) {
     console.log(this.loggerName, this.style.print, message, ...args)
   }

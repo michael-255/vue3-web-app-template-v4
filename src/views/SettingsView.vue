@@ -10,8 +10,8 @@ import {
   type SettingKey,
   type RecordGroup,
   type RecordType,
-  settingkeySchema,
-  recordGroupSchema,
+  settingkeys,
+  recordGroups,
 } from '@/types/database'
 import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
@@ -43,7 +43,7 @@ const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     settings.value = liveSettings
     const logRetentionTime = liveSettings.find(
-      (s) => s.key === settingkeySchema.Values['log-retention-time']
+      (s) => s.key === settingkeys.Values['log-retention-time']
     )?.value
     logRetentionIndex.value = Object.values(LogRetention).findIndex((i) => i === logRetentionTime)
   },
@@ -89,15 +89,15 @@ function onImportFile() {
         if (backupData.settings.length > 0) {
           await Promise.all(
             backupData.settings
-              .filter((s) => settingkeySchema.options.includes(s.key))
+              .filter((s) => settingkeys.options.includes(s.key))
               .map(async (s) => await DB.setSetting(s.key, s.value))
           )
         }
 
         // Logs are never imported
         await Promise.all([
-          DB.importRecords(recordGroupSchema.Values['core-record'], backupData.coreRecords),
-          DB.importRecords(recordGroupSchema.Values['sub-record'], backupData.subRecords),
+          DB.importRecords(recordGroups.Values.core, backupData.coreRecords),
+          DB.importRecords(recordGroups.Values.sub, backupData.subRecords),
         ])
 
         importFile.value = null // Clear input
@@ -155,7 +155,7 @@ function onExportRecords() {
 async function onChangeLogRetention(logRetentionIndex: number) {
   try {
     const logRetentionTime = Object.values(LogRetention)[logRetentionIndex]
-    await DB.setSetting(settingkeySchema.Values['log-retention-time'], logRetentionTime)
+    await DB.setSetting(settingkeys.Values['log-retention-time'], logRetentionTime)
     log.info('Updated log retention time', { time: logRetentionTime, index: logRetentionIndex })
   } catch (error) {
     log.error('Log retention update failed', error)
@@ -174,6 +174,23 @@ async function onResetSettings() {
         log.info('Successfully reset settings')
       } catch (error) {
         log.error('Error reseting settings', error)
+      }
+    }
+  )
+}
+
+async function onDeleteLogs() {
+  confirmDialog(
+    `Delete Logs`,
+    `Permanetly delete all Logs from the database?`,
+    Icon.CLEAR,
+    'negative',
+    async () => {
+      try {
+        await DB.clearLogs()
+        log.info('Successfully deleted logs data')
+      } catch (error) {
+        log.error(`Error deleting Logs`, error)
       }
     }
   )
@@ -252,8 +269,8 @@ function getSettingValue(key: SettingKey) {
           </p>
           <QToggle
             label="Show Welcome Overlay"
-            :model-value="getSettingValue(settingkeySchema.Values['welcome-overlay'])"
-            @update:model-value="DB.setSetting(settingkeySchema.Values['welcome-overlay'], $event)"
+            :model-value="getSettingValue(settingkeys.Values['welcome-overlay'])"
+            @update:model-value="DB.setSetting(settingkeys.Values['welcome-overlay'], $event)"
           />
         </div>
 
@@ -261,9 +278,9 @@ function getSettingValue(key: SettingKey) {
           <p>Show descriptions for records displayed on the Dashboard page.</p>
           <QToggle
             label="Show Dashboard Descriptions"
-            :model-value="getSettingValue(settingkeySchema.Values['dashboard-descriptions'])"
+            :model-value="getSettingValue(settingkeys.Values['dashboard-descriptions'])"
             @update:model-value="
-              DB.setSetting(settingkeySchema.Values['dashboard-descriptions'], $event)
+              DB.setSetting(settingkeys.Values['dashboard-descriptions'], $event)
             "
           />
         </div>
@@ -272,8 +289,8 @@ function getSettingValue(key: SettingKey) {
           <p>Dark mode allows you to switch between a light or dark theme for the app.</p>
           <QToggle
             label="Dark Mode"
-            :model-value="getSettingValue(settingkeySchema.Values['dark-mode'])"
-            @update:model-value="DB.setSetting(settingkeySchema.Values['dark-mode'], $event)"
+            :model-value="getSettingValue(settingkeys.Values['dark-mode'])"
+            @update:model-value="DB.setSetting(settingkeys.Values['dark-mode'], $event)"
           />
         </div>
       </QCardSection>
@@ -334,7 +351,7 @@ function getSettingValue(key: SettingKey) {
 
         <div class="q-mb-md">
           <p>View the app logs to troubleshoot issues.</p>
-          <QBtn label="App Logs" color="primary" @click="goToLogsData()" />
+          <QBtn label="Access Logs" color="primary" @click="goToLogsData()" />
         </div>
 
         <div class="q-mb-md">
@@ -367,8 +384,8 @@ function getSettingValue(key: SettingKey) {
           <p>Show Console Logs will display all log messages in the browser console.</p>
           <QToggle
             label="Show Console Logs"
-            :model-value="getSettingValue(settingkeySchema.Values['console-logs'])"
-            @update:model-value="DB.setSetting(settingkeySchema.Values['console-logs'], $event)"
+            :model-value="getSettingValue(settingkeys.Values['console-logs'])"
+            @update:model-value="DB.setSetting(settingkeys.Values['console-logs'], $event)"
           />
         </div>
 
@@ -376,8 +393,8 @@ function getSettingValue(key: SettingKey) {
           <p>Show Info Messages will display info level notifications.</p>
           <QToggle
             label="Show Info Messages"
-            :model-value="getSettingValue(settingkeySchema.Values['info-messages'])"
-            @update:model-value="DB.setSetting(settingkeySchema.Values['info-messages'], $event)"
+            :model-value="getSettingValue(settingkeys.Values['info-messages'])"
+            @update:model-value="DB.setSetting(settingkeys.Values['info-messages'], $event)"
           />
         </div>
 
@@ -422,6 +439,11 @@ function getSettingValue(key: SettingKey) {
         </p>
 
         <div class="q-mb-md">
+          <p>Delete the app logs from the database.</p>
+          <QBtn label="Delete Logs" color="negative" @click="onDeleteLogs()" />
+        </div>
+
+        <div class="q-mb-md">
           <p>Select a data type and permanently delete all of its records.</p>
           <QSelect
             v-model="deleteModel"
@@ -454,4 +476,3 @@ function getSettingValue(key: SettingKey) {
     </QCard>
   </ResponsivePage>
 </template>
-@/types/data

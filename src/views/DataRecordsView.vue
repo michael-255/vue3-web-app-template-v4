@@ -3,11 +3,17 @@ import type { QTableColumn } from 'quasar'
 import { type Ref, ref, onUnmounted } from 'vue'
 import type { Subscription } from 'dexie'
 import { Icon } from '@/types/icons'
-import { Field, Group } from '@/types/database'
 import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
 import { getRecordsCountDisplay } from '@/utils/common'
 import { hiddenColumnNames } from '@/services/table-columns'
+import {
+  recordGroups,
+  allFields,
+  type RecordGroup,
+  type AnyField,
+  type AnyDatabaseRecord,
+} from '@/types/database'
 import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
@@ -18,11 +24,11 @@ useMeta({ title: `${AppName} - Records Data` })
 
 const { log } = useLogger()
 const { routeGroup, routeType, goToCharts, goToEdit, goToCreate, goBack } = useRoutables()
-const { confirmDialog } = useDialogs()
+const { confirmDialog, inspectDialog } = useDialogs()
 
 const searchFilter: Ref<string> = ref('')
 const rows: Ref<any[]> = ref([])
-const visibleColumns: Ref<Field[]> = ref([])
+const visibleColumns: Ref<AnyField[]> = ref([])
 const columns: Ref<QTableColumn[]> = ref(
   DataSchema.getTableColumns(routeGroup, routeType) as QTableColumn[]
 )
@@ -31,10 +37,10 @@ const columnOptions: Ref<QTableColumn[]> = ref(
 )
 let subscription: Subscription | null = null
 
-if (routeGroup === Group.PARENT) {
-  visibleColumns.value = [Field.ID, Field.TIMESTAMP, Field.NAME]
+if (routeGroup === recordGroups.Values.core) {
+  visibleColumns.value = [allFields.Values.id, allFields.Values.timestamp, allFields.Values.name]
 
-  subscription = DB.liveParents(routeType).subscribe({
+  subscription = DB.liveCoreRecords(routeType).subscribe({
     next: (records) => {
       rows.value = records
     },
@@ -42,10 +48,10 @@ if (routeGroup === Group.PARENT) {
       log.error('Error fetching live parent data', error)
     },
   })
-} else if (routeGroup === Group.CHILD) {
-  visibleColumns.value = [Field.ID, Field.TIMESTAMP]
+} else {
+  visibleColumns.value = [allFields.Values.id, allFields.Values.timestamp]
 
-  subscription = DB.liveChildren(routeType).subscribe({
+  subscription = DB.liveSubRecords(routeType).subscribe({
     next: (records) => {
       rows.value = records
     },
@@ -53,31 +59,27 @@ if (routeGroup === Group.PARENT) {
       log.error('Error fetching live child data', error)
     },
   })
-} else {
-  log.error('Error fetching live data', { routeType })
 }
 
 onUnmounted(() => {
   subscription?.unsubscribe()
 })
 
-async function onDelete(group: Group, id: string) {
+async function onDelete(group: RecordGroup, id: string) {
   let dialogMessage = ''
 
-  if (group === Group.PARENT) {
+  if (group === recordGroups.Values.core) {
     dialogMessage = `Permanently delete ${DataSchema.getLabel(
       routeGroup,
       routeType,
       'singular'
-    )} with id ${id}? This will also delete accompanying child records.`
-  } else if (group === Group.CHILD) {
+    )} with id ${id}? This will also delete associated sub-records.`
+  } else {
     dialogMessage = `Permanently delete ${DataSchema.getLabel(
       routeGroup,
       routeType,
       'singular'
     )} with id ${id}?`
-  } else {
-    log.error('Error deleting record', { group, id })
   }
 
   confirmDialog('Delete', dialogMessage, Icon.DELETE, 'negative', async () => {
@@ -88,6 +90,12 @@ async function onDelete(group: Group, id: string) {
       log.error('Delete failed', error)
     }
   })
+}
+
+// TODO
+async function onInspect(id: string) {
+  const record = { id } as AnyDatabaseRecord
+  inspectDialog('Log', record as AnyDatabaseRecord)
 }
 </script>
 
@@ -107,7 +115,7 @@ async function onDelete(group: Group, id: string) {
       <QTr :props="props">
         <!-- Do not show hidden columns -->
         <QTh
-          v-for="col in (props.cols as any[])"
+          v-for="col in props.cols"
           v-show="!hiddenColumnNames.includes(col.name)"
           :key="col.name"
           :props="props"
@@ -121,7 +129,7 @@ async function onDelete(group: Group, id: string) {
     <!-- Rows -->
     <template v-slot:body="props">
       <QTr :props="props">
-        <QTd v-for="col in (props.cols as any[])" :key="col.name" :props="props">
+        <QTd v-for="col in props.cols" :key="col.name" :props="props">
           {{ col.value }}
         </QTd>
         <QTd auto-width>
@@ -143,7 +151,7 @@ async function onDelete(group: Group, id: string) {
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="goToInspect(routeGroup, routeType, props.cols[0].value)"
+            @click="onInspect(props.cols[0].value)"
           />
           <!-- EDIT -->
           <QBtn
@@ -237,4 +245,3 @@ async function onDelete(group: Group, id: string) {
     <template v-slot:bottom>{{ getRecordsCountDisplay(rows) }}</template>
   </QTable>
 </template>
-@/types/data

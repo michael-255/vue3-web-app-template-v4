@@ -14,7 +14,7 @@ const router = createRouter({
       path: '/logs-data',
       name: RouteName.DATA_LOGS,
       meta: { layout: 'MenuLayout' },
-      component: () => import('../views/DataRecordsView.vue'),
+      component: () => import('../views/DataLogsView.vue'),
     },
     {
       path: '/records-data/:group/:type',

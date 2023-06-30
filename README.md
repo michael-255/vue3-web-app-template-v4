@@ -6,14 +6,14 @@ structured.
 
 ## TODOS
 
-CLEAN-UP:
-
-- [ ] `DataLogsView`
-- [ ] `DataRecordsView`
-- [ ] `CreateView`
-- [ ] `EditView`
-- [ ] Build `InspectDialog.vue` component (figure out how you want to handle this)
+- [ ] See why charts aren't working
+- [ ] Have `Welcome` tell you that you can add defaults in the `Settings` menu
+- [ ] Seperate defaults for `Example` and `Test`
+- [ ] Add default button the dashboard page when no records are found
+- [ ] Refactor enums in `general.ts` if it makes sense
+- [ ] Fully implement `Inspect` feature with the new fullscreen dialog
 - [ ] Validate that `zod` schemas are working as expected
+- [ ] Consider `filed-props` refactor?
 
 ## Post Cloning Steps
 

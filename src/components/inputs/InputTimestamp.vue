@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { date } from 'quasar'
 import { onMounted, type Ref, ref } from 'vue'
-import type { Field } from '@/types/database'
+import type { RecordField } from '@/types/database'
 import { Icon } from '@/types/icons'
 import useActionStore from '@/stores/action'
 
 const props = defineProps<{
-  field: Field
+  field: RecordField
   label: string
   getDefault: () => any
 }>()
@@ -84,4 +84,3 @@ function onPickerUpdate() {
     </QCardSection>
   </QCard>
 </template>
-@/types/data

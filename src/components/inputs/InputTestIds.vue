@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import { truncateString } from '@/utils/common'
-import { Type, type Field, type ParentRecord } from '@/types/database'
-import type { ObjectSchema } from 'yup'
+import { recordGroups, type RecordField, recordTypes, type AnyCoreRecord } from '@/types/database'
+import type { z } from 'zod'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
 import DB from '@/services/Database'
 
 const props = defineProps<{
-  field: Field
+  field: RecordField
   label: string
   desc: string
   getDefault: () => any
-  validator: ObjectSchema<any, any, any>
+  validator: z.ZodType<any, any, any>
   validationMessage: string
 }>()
 
@@ -25,9 +25,12 @@ onMounted(async () => {
   try {
     actionStore.record[props.field] = actionStore.record[props.field] ?? props.getDefault()
 
-    const records = (await DB.getParentsByType(Type.TEST)) as ParentRecord[]
+    const records = (await DB.getRecords(
+      recordGroups.Values.core,
+      recordTypes.Values.test
+    )) as AnyCoreRecord[]
 
-    options.value = records.map((r: ParentRecord) => ({
+    options.value = records.map((r: AnyCoreRecord) => ({
       value: r.id,
       label: `${r.name} (${truncateString(r.id, 4, '*')})`,
     }))
@@ -37,7 +40,7 @@ onMounted(async () => {
 })
 
 function validationRule() {
-  return async (val: string) => (await props.validator.isValid(val)) || props.validationMessage
+  return (val: string) => props.validator.safeParse(val).success || props.validationMessage
 }
 </script>
 
@@ -64,4 +67,3 @@ function validationRule() {
     </QCardSection>
   </QCard>
 </template>
-@/types/data

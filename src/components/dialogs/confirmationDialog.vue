@@ -2,43 +2,20 @@
 import { useDialogPluginComponent } from 'quasar'
 import type { Icon } from '@/types/icons'
 
-/*
-Small dialogs used for confirming operations or providing information that can be dismissed.
-
-@example
-// You can hook into the methods below:
-$q.dialog({...})
-  .onOk(() => {
-    console.log('Called on OK')
-  })
-  .onCancel(() => {
-    console.log('Called on Cancel')
-  })
-  .onDismiss(() => {
-    console.log('Called on OK or Cancel')
-  })
-*/
-
 const props = defineProps<{
-  type: 'Confirm' | 'Dismiss'
-  icon: Icon
   title: string
   message: string
+  icon: Icon
   color: string
-  persistent: boolean
 }>()
 
 defineEmits([...useDialogPluginComponent.emits])
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
-
-function onOKClick() {
-  onDialogOK()
-}
 </script>
 
 <template>
-  <QDialog ref="dialogRef" :persistent="persistent" @hide="onDialogHide">
+  <QDialog ref="dialogRef" @hide="onDialogHide">
     <QCard class="q-dialog-plugin">
       <QCardSection :class="`bg-${props.color} text-white q-py-sm`">
         <QIcon :name="icon" size="sm" class="q-pb-sm q-mr-md" />
@@ -48,8 +25,8 @@ function onOKClick() {
       <QCardSection class="q-mt-md">{{ message }}</QCardSection>
 
       <QCardActions align="right">
-        <QBtn v-if="type === 'Confirm'" flat label="Cancel" @click="onDialogCancel" />
-        <QBtn flat :label="type" :color="color" @click="onOKClick" />
+        <QBtn flat label="Cancel" @click="onDialogCancel" />
+        <QBtn flat label="Confirm" :color="color" @click="onDialogOK" />
       </QCardActions>
     </QCard>
   </QDialog>

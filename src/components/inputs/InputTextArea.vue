@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import type { Field } from '@/types/database'
+import type { RecordField } from '@/types/database'
 import { Limit } from '@/types/general'
-import type { ObjectSchema } from 'yup'
+import type { z } from 'zod'
 import useActionStore from '@/stores/action'
 
 const props = defineProps<{
-  field: Field
+  field: RecordField
   label: string
   desc?: string
   getDefault: () => any
-  validator: ObjectSchema<any, any, any>
+  validator: z.ZodType<any, any, any>
   validationMessage: string
 }>()
 
@@ -21,7 +21,7 @@ onMounted(() => {
 })
 
 function validationRule() {
-  return async (val: string) => (await props.validator.isValid(val)) || props.validationMessage
+  return (val: string) => props.validator.safeParse(val).success || props.validationMessage
 }
 </script>
 
@@ -49,4 +49,3 @@ function validationRule() {
     </QCardSection>
   </QCard>
 </template>
-@/types/data

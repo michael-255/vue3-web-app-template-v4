@@ -3,7 +3,7 @@ import { Icon } from '@/types/icons'
 import { type Ref, ref, onUnmounted } from 'vue'
 import { RouteName } from '@/router/route-names'
 import { AppDescription, AppName } from '@/types/general'
-import { settingkeySchema } from '@/types/database'
+import { settingkeys } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDefaults from '@/composables/useDefaults'
 import DB from '@/services/Database'
@@ -17,7 +17,7 @@ const showWelcome: Ref<any> = ref(false)
 const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     showWelcome.value = liveSettings.find(
-      (s) => s.key === settingkeySchema.Values['welcome-overlay']
+      (s) => s.key === settingkeys.Values['welcome-overlay']
     )?.value
   },
   error: (error) => {
@@ -30,7 +30,7 @@ onUnmounted(() => {
 })
 
 async function onCloseWelcomeOverlay() {
-  await DB.setSetting(settingkeySchema.Values['welcome-overlay'], false)
+  await DB.setSetting(settingkeys.Values['welcome-overlay'], false)
 }
 </script>
 
@@ -117,4 +117,3 @@ async function onCloseWelcomeOverlay() {
     </QCard>
   </QDialog>
 </template>
-@/types/data

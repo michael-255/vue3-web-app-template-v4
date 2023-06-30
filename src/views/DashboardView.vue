@@ -9,9 +9,10 @@ import { getRecordsCountDisplay } from '@/utils/common'
 import {
   type AnyCoreRecord,
   type RecordType,
-  settingkeySchema,
-  recordGroupSchema,
-  recordTypeSchema,
+  type AnyRecord,
+  settingkeys,
+  recordGroups,
+  recordTypes,
 } from '@/types/database'
 import DataSchema from '@/services/DataSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
@@ -27,13 +28,13 @@ useMeta({ title: `${AppName} - Dashboard` })
 const uiStore = useUIStore()
 const { log } = useLogger()
 const { goToCreate, goToEdit, goToCharts } = useRoutables()
-const { confirmDialog, dismissDialog } = useDialogs()
+const { confirmDialog, dismissDialog, inspectDialog } = useDialogs()
 
 const showDescription: Ref<boolean> = ref(false)
 const dashboardOptions = DataSchema.getDashboardOptions()
 // Type is used as the key to access related parent records
 const dashboardRecords: Ref<{ [key in RecordType]: AnyCoreRecord[] }> = ref(
-  recordTypeSchema.options.reduce((acc, type) => {
+  recordTypes.options.reduce((acc, type) => {
     acc[type] = []
     return acc
   }, {} as { [key in RecordType]: AnyCoreRecord[] })
@@ -42,7 +43,7 @@ const dashboardRecords: Ref<{ [key in RecordType]: AnyCoreRecord[] }> = ref(
 const settingsSubscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     showDescription.value = liveSettings.find(
-      (s) => s.key === settingkeySchema.Values['dashboard-descriptions']
+      (s) => s.key === settingkeys.Values['dashboard-descriptions']
     )?.value
   },
   error: (error) => {
@@ -65,7 +66,7 @@ onUnmounted(() => {
 })
 
 async function viewLastNote(note: string) {
-  dismissDialog('Last Note', note, Icon.NOTE, 'info')
+  dismissDialog('Last Note', note, Icon.NOTE)
 }
 
 async function onFavorite(id: string, name: string) {
@@ -100,6 +101,12 @@ async function onUnfavorite(id: string, name: string) {
       }
     }
   )
+}
+
+async function onInspect(type: RecordType, id: string) {
+  const title = DataSchema.getLabel(recordGroups.Values.core, type, 'singular')
+  const record = await DB.getRecord(recordGroups.Values.core, id)
+  inspectDialog(title as string, record as AnyRecord)
 }
 </script>
 
@@ -146,7 +153,7 @@ async function onUnfavorite(id: string, name: string) {
 
             <!-- Favorite Star Icon -->
             <QIcon
-              v-show="record.favorite"
+              v-show="record.favorited"
               :name="Icon.FAVORITE_ON"
               color="warning"
               size="md"
@@ -154,7 +161,7 @@ async function onUnfavorite(id: string, name: string) {
               @click="onUnfavorite(record.id, record.name)"
             />
             <QIcon
-              v-show="!record.favorite"
+              v-show="!record.favorited"
               :name="Icon.FAVORITE_OFF"
               color="grey"
               size="md"
@@ -178,22 +185,16 @@ async function onUnfavorite(id: string, name: string) {
                     <QItemSection>Charts</QItemSection>
                   </QItem>
 
-                  <!-- TODO - Make inspect dialog -->
-                  <!-- <QItem
-                    clickable
-                    @click="goToParentInspect(record.type as Type, record.id as string)"
-                  >
+                  <QItem clickable @click="onInspect(record.type, record.id)">
                     <QItemSection avatar>
                       <QIcon color="primary" :name="Icon.INSPECT" />
                     </QItemSection>
                     <QItemSection>Inspect</QItemSection>
-                  </QItem> -->
+                  </QItem>
 
                   <QItem
                     clickable
-                    @click="
-                      goToEdit(recordGroupSchema.Values['core-record'], record?.type, record?.id)
-                    "
+                    @click="goToEdit(recordGroups.Values.core, record?.type, record?.id)"
                   >
                     <QItemSection avatar>
                       <QIcon color="warning" :name="Icon.EDIT" />
@@ -227,7 +228,7 @@ async function onUnfavorite(id: string, name: string) {
             label="Attach Record"
             color="primary"
             :icon="Icon.ADD_NOTE"
-            @click="goToCreate(recordGroupSchema.Values['sub-record'], record?.type, record?.id)"
+            @click="goToCreate(recordGroups.Values.sub, record?.type, record?.id)"
           />
         </QCardSection>
       </QCard>
@@ -247,13 +248,12 @@ async function onUnfavorite(id: string, name: string) {
         color="positive"
         :icon="Icon.CREATE"
         :label="`Create ${DataSchema.getLabel(
-          recordGroupSchema.Values['core-record'],
+          recordGroups.Values.core,
           uiStore.dashboardSelection,
           'singular'
         )}`"
-        @click="goToCreate(recordGroupSchema.Values['core-record'], uiStore.dashboardSelection)"
+        @click="goToCreate(recordGroups.Values.core, uiStore.dashboardSelection)"
       />
     </div>
   </ResponsivePage>
 </template>
-@/types/data

@@ -4,7 +4,7 @@ import { onMounted, type Ref, ref, watch, markRaw } from 'vue'
 import { Icon } from '@/types/icons'
 import { AppDescription } from '@/types/general'
 import { useMeta } from 'quasar'
-import ErrorLayout from '@/components/ErrorLayout.vue'
+import ErrorLayout from '@/components/layouts/ErrorLayout.vue'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
 import DB from '@/services/Database'
@@ -88,7 +88,7 @@ watch(
     try {
       if (!metaLayout) return
       // metaLayout must exist && the imported component
-      const component = metaLayout && (await import(`@/components/${metaLayout}.vue`))
+      const component = metaLayout && (await import(`@/components/layouts/${metaLayout}.vue`))
       // markRaw to avoid reactivity on component definition
       // Use the error layout if the component is missing
       layout.value = markRaw(component?.default || ErrorLayout)

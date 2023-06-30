@@ -12,12 +12,10 @@ import {
   type SettingKey,
   type RecordType,
   type RecordGroup,
-  logFieldsSchema,
-  settingFieldsSchema,
-  recordFieldsSchema,
-  settingkeySchema,
-  recordTypeSchema,
-  recordGroupSchema,
+  allFields,
+  settingkeys,
+  recordTypes,
+  recordGroups,
 } from '@/types/database'
 
 class Database extends Dexie {
@@ -31,10 +29,10 @@ class Database extends Dexie {
     super(name)
 
     this.version(1).stores({
-      Logs: `++${logFieldsSchema.Values.autoId}`,
-      Settings: `&${settingFieldsSchema.Values.key}`,
-      CoreRecords: `&${recordFieldsSchema.Values.id}, ${recordFieldsSchema.Values.type}`,
-      SubRecords: `&${recordFieldsSchema.Values.id}, ${recordFieldsSchema.Values.type}, ${recordFieldsSchema.Values.coreId}`,
+      Logs: `++${allFields.Values.autoId}`,
+      Settings: `&${allFields.Values.key}`,
+      CoreRecords: `&${allFields.Values.id}, ${allFields.Values.type}`,
+      SubRecords: `&${allFields.Values.id}, ${allFields.Values.type}, ${allFields.Values.coreId}`,
     })
   }
 
@@ -74,9 +72,8 @@ class Database extends Dexie {
   }
 
   async deleteExpiredLogs() {
-    const logRetentionTime = (
-      await this.Settings.get(settingkeySchema.Values['log-retention-time'])
-    )?.value as LogRetention
+    const logRetentionTime = (await this.Settings.get(settingkeys.Values['log-retention-time']))
+      ?.value as LogRetention
 
     if (!logRetentionTime || logRetentionTime === LogRetention.FOREVER) {
       return 0 // No logs purged
@@ -123,15 +120,15 @@ class Database extends Dexie {
     const defaultSettings: Readonly<{
       [key in SettingKey]: any
     }> = {
-      [settingkeySchema.Values['welcome-overlay']]: true,
-      [settingkeySchema.Values['dashboard-descriptions']]: true,
-      [settingkeySchema.Values['dark-mode']]: true,
-      [settingkeySchema.Values['console-logs']]: false,
-      [settingkeySchema.Values['info-messages']]: true,
-      [settingkeySchema.Values['log-retention-time']]: LogRetention.THREE_MONTHS,
+      [settingkeys.Values['welcome-overlay']]: true,
+      [settingkeys.Values['dashboard-descriptions']]: true,
+      [settingkeys.Values['dark-mode']]: true,
+      [settingkeys.Values['console-logs']]: false,
+      [settingkeys.Values['info-messages']]: true,
+      [settingkeys.Values['log-retention-time']]: LogRetention.THREE_MONTHS,
     }
 
-    const keys = settingkeySchema.options
+    const keys = settingkeys.options
 
     const settings = await Promise.all(
       keys.map(async (key) => {
@@ -145,13 +142,13 @@ class Database extends Dexie {
       })
     )
 
-    Dark.set(Boolean(settings.find((s) => s.key === settingkeySchema.Values['dark-mode'])?.value))
+    Dark.set(Boolean(settings.find((s) => s.key === settingkeys.Values['dark-mode'])?.value))
 
     await Promise.all(settings.map((s) => this.setSetting(s.key, s.value)))
   }
 
   async setSetting(key: SettingKey, value: any) {
-    if (key === settingkeySchema.Values['dark-mode']) {
+    if (key === settingkeys.Values['dark-mode']) {
       Dark.set(Boolean(value))
     }
 
@@ -169,69 +166,47 @@ class Database extends Dexie {
   //
 
   liveLogs() {
-    return liveQuery(() => this.Logs.orderBy(logFieldsSchema.Values.autoId).reverse().toArray())
+    return liveQuery(() => this.Logs.orderBy(allFields.Values.autoId).reverse().toArray())
   }
 
   liveSettings() {
-    return liveQuery(() => this.Settings.orderBy(settingFieldsSchema.Values.key).toArray())
+    return liveQuery(() => this.Settings.orderBy(allFields.Values.key).toArray())
   }
 
-  liveRecords(group: RecordGroup, type: RecordType) {
-    if (group === recordGroupSchema.Values['core-record']) {
-      return liveQuery(() =>
-        this.CoreRecords.where(recordFieldsSchema.Values.type)
-          .equals(type)
-          .sortBy(recordFieldsSchema.Values.name)
-      )
-    } else {
-      return liveQuery(async () =>
-        (
-          await this.SubRecords.where(recordFieldsSchema.Values.type)
-            .equals(type)
-            .sortBy(recordFieldsSchema.Values.timestamp)
-        ).reverse()
-      )
-    }
-  }
-
-  // TODO - remove?
   liveCoreRecords(type: RecordType) {
     return liveQuery(() =>
-      this.CoreRecords.where(recordFieldsSchema.Values.type)
-        .equals(type)
-        .sortBy(recordFieldsSchema.Values.name)
+      this.CoreRecords.where(allFields.Values.type).equals(type).sortBy(allFields.Values.name)
     )
   }
 
-  // TODO - remove?
   liveSubRecords(type: RecordType) {
     return liveQuery(async () =>
       (
-        await this.SubRecords.where(recordFieldsSchema.Values.type)
+        await this.SubRecords.where(allFields.Values.type)
           .equals(type)
-          .sortBy(recordFieldsSchema.Values.timestamp)
+          .sortBy(allFields.Values.timestamp)
       ).reverse()
     )
   }
 
   liveDashboard() {
     return liveQuery(async () => {
-      const parents = await this.CoreRecords.filter((p) => p.enable === true).sortBy(
-        recordFieldsSchema.Values.name
+      const parents = await this.CoreRecords.filter((p) => p.enabled === true).sortBy(
+        allFields.Values.name
       )
 
       const favorites: AnyCoreRecord[] = []
       const nonFavorites: AnyCoreRecord[] = []
 
       parents.forEach((p) => {
-        if (p.favorite === true) {
+        if (p.favorited === true) {
           favorites.push(p)
         } else {
           nonFavorites.push(p)
         }
       })
 
-      return recordTypeSchema.options.reduce((acc, type) => {
+      return recordTypes.options.reduce((acc, type) => {
         acc[type] = [
           ...favorites.filter((p) => p.type === type),
           ...nonFavorites.filter((p) => p.type === type),
@@ -254,21 +229,21 @@ class Database extends Dexie {
   }
 
   async getRecords(group: RecordGroup, type: RecordType) {
-    if (group === recordGroupSchema.Values['core-record']) {
-      return await this.CoreRecords.where(recordFieldsSchema.Values.type)
+    if (group === recordGroups.Values.core) {
+      return await this.CoreRecords.where(allFields.Values.type)
         .equals(type)
-        .sortBy(recordFieldsSchema.Values.name)
+        .sortBy(allFields.Values.name)
     } else {
       return (
-        await this.SubRecords.where(recordFieldsSchema.Values.type)
+        await this.SubRecords.where(allFields.Values.type)
           .equals(type)
-          .sortBy(recordFieldsSchema.Values.timestamp)
+          .sortBy(allFields.Values.timestamp)
       ).reverse()
     }
   }
 
   async getRecord(group: RecordGroup, id: string) {
-    if (group === recordGroupSchema.Values['core-record']) {
+    if (group === recordGroups.Values.core) {
       return await this.CoreRecords.get(id)
     } else {
       return await this.SubRecords.get(id)
@@ -276,9 +251,9 @@ class Database extends Dexie {
   }
 
   async getCoreSubRecords(coreId: string) {
-    return await this.SubRecords.where(recordFieldsSchema.Values.coreId)
+    return await this.SubRecords.where(allFields.Values.coreId)
       .equals(coreId)
-      .sortBy(recordFieldsSchema.Values.timestamp)
+      .sortBy(allFields.Values.timestamp)
   }
 
   //
@@ -294,7 +269,7 @@ class Database extends Dexie {
       )
     }
 
-    if (group === recordGroupSchema.Values['core-record']) {
+    if (group === recordGroups.Values.core) {
       const newRecord = schema.parse(record) as AnyCoreRecord
       const result = await this.CoreRecords.add(newRecord)
       await this.updateLastSub(newRecord.id)
@@ -307,9 +282,9 @@ class Database extends Dexie {
     }
   }
 
-  async importRecords(group: RecordGroup, records: (AnyCoreRecord | AnySubRecord)[]) {
-    const validRecords: (AnyCoreRecord | AnySubRecord)[] = []
-    const skippedRecords: (AnyCoreRecord | AnySubRecord)[] = []
+  async importRecords(group: RecordGroup, records: AnyRecord[]) {
+    const validRecords: AnyRecord[] = []
+    const skippedRecords: AnyRecord[] = []
 
     for await (const r of records) {
       const schema = DataSchema.getSchema(group, r.type)
@@ -321,7 +296,7 @@ class Database extends Dexie {
       }
     }
 
-    if (group === recordGroupSchema.Values['core-record']) {
+    if (group === recordGroups.Values.core) {
       await this.CoreRecords.bulkAdd(validRecords as AnyCoreRecord[])
     } else {
       await this.SubRecords.bulkAdd(validRecords as AnySubRecord[])
@@ -352,7 +327,7 @@ class Database extends Dexie {
       )
     }
 
-    if (group === recordGroupSchema.Values['core-record']) {
+    if (group === recordGroups.Values.core) {
       const result = await this.CoreRecords.update(id, schema.parse(updatedRecord))
       await this.updateLastSub(id)
       return result
@@ -365,9 +340,9 @@ class Database extends Dexie {
 
   async updateLastSub(coreId: string) {
     const lastSub = (
-      await this.SubRecords.where(recordFieldsSchema.Values.coreId)
+      await this.SubRecords.where(allFields.Values.coreId)
         .equals(coreId)
-        .sortBy(recordFieldsSchema.Values.timestamp)
+        .sortBy(allFields.Values.timestamp)
     ).reverse()[0]
     return await this.CoreRecords.update(coreId, { lastSub })
   }
@@ -391,9 +366,9 @@ class Database extends Dexie {
       throw new Error(`No record found to delete with: ${group}, ${id}`)
     }
 
-    if (group === recordGroupSchema.Values['core-record']) {
+    if (group === recordGroups.Values.core) {
       await this.CoreRecords.delete(id)
-      await this.SubRecords.where(recordFieldsSchema.Values.coreId).equals(id).delete()
+      await this.SubRecords.where(allFields.Values.coreId).equals(id).delete()
     } else {
       await this.SubRecords.delete(id)
       await this.updateLastSub(recordToDelete.coreId)
@@ -403,12 +378,12 @@ class Database extends Dexie {
   }
 
   async clearRecordsByType(group: RecordGroup, type: RecordType) {
-    if (group === recordGroupSchema.Values['core-record']) {
-      await this.CoreRecords.where(recordFieldsSchema.Values.type).equals(type).delete()
-      return await this.SubRecords.where(recordFieldsSchema.Values.type).equals(type).delete()
+    if (group === recordGroups.Values.core) {
+      await this.CoreRecords.where(allFields.Values.type).equals(type).delete()
+      return await this.SubRecords.where(allFields.Values.type).equals(type).delete()
     } else {
-      await this.SubRecords.where(recordFieldsSchema.Values.type).equals(type).delete()
-      const parentsToUpdate = await this.CoreRecords.where(recordFieldsSchema.Values.type)
+      await this.SubRecords.where(allFields.Values.type).equals(type).delete()
+      const parentsToUpdate = await this.CoreRecords.where(allFields.Values.type)
         .equals(type)
         .toArray()
       return await Promise.all(
