@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { ChartTime, Milliseconds } from '@/types/general'
-import type { Type } from '@/types/database'
+import { Duration } from '@/types/general'
 import DataSchema from '@/services/DataSchema'
 
 const useUIStore = defineStore({
@@ -8,21 +7,9 @@ const useUIStore = defineStore({
 
   state: () => ({
     drawer: false,
-    dashboardSelection: DataSchema.getParentTypeOptions()[0].value as Type,
-    chartTime: ChartTime.THREE_MONTHS,
+    dashboardSelection: DataSchema.getDashboardOptions()[0].value,
+    chartTime: Duration[Duration['Three Months']] as keyof typeof Duration,
   }),
-
-  getters: {
-    getChartTimeMilliseconds: (state: any) => {
-      return {
-        [ChartTime.ONE_MONTH]: Milliseconds.PER_MONTH,
-        [ChartTime.THREE_MONTHS]: Milliseconds.PER_THREE_MONTHS,
-        [ChartTime.SIX_MONTHS]: Milliseconds.PER_SIX_MONTHS,
-        [ChartTime.ONE_YEAR]: Milliseconds.PER_YEAR,
-        [ChartTime.ALL_TIME]: Milliseconds.FOREVER,
-      }[state.chartTime as ChartTime]
-    },
-  },
 })
 
 export default useUIStore

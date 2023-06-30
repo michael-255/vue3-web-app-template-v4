@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Icon } from '@/types/icons'
-import { AppName } from '@/types/general'
+import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
+import { AppName } from '@/constants/global'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 
 useMeta({ title: `${AppName} - Donate` })

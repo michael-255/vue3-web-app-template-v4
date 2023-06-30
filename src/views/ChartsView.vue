@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, type Ref } from 'vue'
-import { Icon } from '@/types/icons'
-import { AppName, ChartTime } from '@/types/general'
+import { Duration, Icon } from '@/types/general'
+import { AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
+import { recordGroups } from '@/types/core'
 import useUIStore from '@/stores/ui'
 import useRoutables from '@/composables/useRoutables'
 import ResponsivePage from '@/components/ResponsivePage.vue'
@@ -14,9 +15,16 @@ const uiStore = useUIStore()
 const { routeType } = useRoutables()
 
 const inputRef: Ref<any> = ref(null)
-const options: Ref<ChartTime[]> = ref(Object.values(ChartTime))
-const title = DataSchema.getParentLabelSingular(routeType)
-const chartProps = DataSchema.getChartProps(routeType)
+const options: Ref<string[]> = ref([
+  Duration[Duration['One Week']],
+  Duration[Duration['One Month']],
+  Duration[Duration['Three Months']],
+  Duration[Duration['Six Months']],
+  Duration[Duration['One Year']],
+  Duration[Duration['All Time']],
+])
+const title = DataSchema.getLabel(recordGroups.Values.core, routeType, 'singular')
+const charts = DataSchema.getCharts(routeType)
 
 function chartTimeRule(time: string) {
   return time !== undefined && time !== null && time !== ''
@@ -27,7 +35,7 @@ function chartTimeRule(time: string) {
   <ResponsivePage
     :bannerIcon="Icon.CHARTS"
     :bannerTitle="`${title} Charts`"
-    :showPageNoData="chartProps.length === 0"
+    :showPageNoData="charts.length === 0"
   >
     <!-- Chart Time used by UI store -->
     <QCard class="q-mb-md">
@@ -41,7 +49,7 @@ function chartTimeRule(time: string) {
           ref="inputRef"
           label="Chart Time"
           :options="options"
-          :rules="[(time: ChartTime) => chartTimeRule(time) || '* Required']"
+          :rules="[(chartTime: string) => chartTimeRule(chartTime) || '* Required']"
           emit-value
           map-options
           options-dense
@@ -54,8 +62,8 @@ function chartTimeRule(time: string) {
     </QCard>
 
     <!-- Chart components -->
-    <div v-for="(chartProp, i) in chartProps" :key="i" class="q-mb-md">
-      <component :is="chartProp.component" />
+    <div v-for="(chart, i) in charts" :key="i" class="q-mb-md">
+      <component :is="chart" />
     </div>
   </ResponsivePage>
 </template>

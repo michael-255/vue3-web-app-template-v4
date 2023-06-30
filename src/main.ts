@@ -16,7 +16,7 @@ app.use(router)
 app.use(Quasar, {
   plugins: {
     Meta,
-    Dialog, // Uses a custom component (SimpleDialog.vue)
+    Dialog, // Uses custom dialog components
     Notify,
   },
   config: {
@@ -53,7 +53,7 @@ app.use(Quasar, {
     // loadingBar: { ... }, // settings for LoadingBar Quasar plugin
     // // ..and many more (check Installation card on each Quasar component/directive/plugin)
   },
-})
+} as any)
 
 // Assumes you have a <div id="app"></div> in your index.html
 app.mount('#app')

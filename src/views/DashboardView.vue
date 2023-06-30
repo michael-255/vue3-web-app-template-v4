@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { useTimeAgo } from '@vueuse/core'
 import { getDisplayDate } from '@/utils/common'
-import { Icon } from '@/types/icons'
-import { AppName } from '@/types/general'
+import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
-import { SettingKey, Type, type ParentRecord } from '@/types/database'
 import { ref, type Ref, onUnmounted } from 'vue'
+import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
+import {
+  type AnyCoreRecord,
+  type RecordType,
+  type AnyRecord,
+  settingkeys,
+  recordGroups,
+  recordTypes,
+} from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
@@ -20,24 +27,24 @@ useMeta({ title: `${AppName} - Dashboard` })
 
 const uiStore = useUIStore()
 const { log } = useLogger()
-const { goToParentCreate, goToChildCreate, goToParentEdit, goToParentInspect, goToCharts } =
-  useRoutables()
-const { confirmDialog, dismissDialog } = useDialogs()
+const { goToCreate, goToEdit, goToCharts } = useRoutables()
+const { confirmDialog, dismissDialog, inspectDialog } = useDialogs()
 
 const showDescription: Ref<boolean> = ref(false)
-const dashboardOptions = DataSchema.getParentTypeOptions()
+const dashboardOptions = DataSchema.getDashboardOptions()
 // Type is used as the key to access related parent records
-const dashboardRecords: Ref<{ [key in Type]: ParentRecord[] }> = ref(
-  Object.values(Type).reduce((acc, type) => {
+const dashboardRecords: Ref<{ [key in RecordType]: AnyCoreRecord[] }> = ref(
+  recordTypes.options.reduce((acc, type) => {
     acc[type] = []
     return acc
-  }, {} as { [key in Type]: ParentRecord[] })
+  }, {} as { [key in RecordType]: AnyCoreRecord[] })
 )
 
 const settingsSubscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
-    showDescription.value = !!liveSettings.find((s) => s.key === SettingKey.SHOW_DESCRIPTIONS)
-      ?.value
+    showDescription.value = liveSettings.find(
+      (s) => s.key === settingkeys.Values['dashboard-descriptions']
+    )?.value
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)
@@ -59,7 +66,7 @@ onUnmounted(() => {
 })
 
 async function viewLastNote(note: string) {
-  dismissDialog('Last Note', note, Icon.NOTE, 'info')
+  dismissDialog('Last Note', note, Icon.NOTE)
 }
 
 async function onFavorite(id: string, name: string) {
@@ -70,7 +77,7 @@ async function onFavorite(id: string, name: string) {
     'info',
     async () => {
       try {
-        await DB.Parents.update(id, { favorited: true })
+        await DB.CoreRecords.update(id, { favorited: true })
         log.info(`${name} favorited`, { id, name })
       } catch (error) {
         log.error('Favorite update failed', error)
@@ -87,13 +94,19 @@ async function onUnfavorite(id: string, name: string) {
     'info',
     async () => {
       try {
-        await DB.Parents.update(id, { favorited: false })
+        await DB.CoreRecords.update(id, { favorited: false })
         log.info(`${name} unfavorited`, { id, name })
       } catch (error) {
         log.error('Unfavorite update failed', error)
       }
     }
   )
+}
+
+async function onInspect(type: RecordType, id: string) {
+  const title = DataSchema.getLabel(recordGroups.Values.core, type, 'singular')
+  const record = await DB.getRecord(recordGroups.Values.core, id)
+  inspectDialog(title as string, record as AnyRecord)
 }
 </script>
 
@@ -102,21 +115,23 @@ async function onUnfavorite(id: string, name: string) {
     <WelcomeOverlay />
 
     <section class="q-mb-lg">
-      <p class="text-h6 q-mb-sm">What would you like to work on?</p>
+      <p class="text-h6 q-mb-sm text-center">What would you like to work on?</p>
 
-      <QOptionGroup
-        color="primary"
-        :options="dashboardOptions"
-        :model-value="uiStore.dashboardSelection"
-        @update:model-value="uiStore.dashboardSelection = $event"
-      >
-        <template v-slot:label="opt">
-          <div class="row items-center">
-            <QIcon :name="opt.icon" size="xs" class="q-mr-sm" />
-            <span>{{ opt.label }}</span>
-          </div>
-        </template>
-      </QOptionGroup>
+      <div class="row justify-center">
+        <QOptionGroup
+          color="primary"
+          :options="dashboardOptions"
+          :model-value="uiStore.dashboardSelection"
+          @update:model-value="uiStore.dashboardSelection = $event"
+        >
+          <template v-slot:label="opt">
+            <div class="row items-center">
+              <QIcon :name="opt.icon" size="xs" class="q-mr-sm" />
+              <span>{{ opt.label }}</span>
+            </div>
+          </template>
+        </QOptionGroup>
+      </div>
     </section>
 
     <!-- Dashboard Cards -->
@@ -130,12 +145,12 @@ async function onUnfavorite(id: string, name: string) {
           <div class="absolute-top-right q-ma-xs">
             <!-- Note Icon -->
             <QIcon
-              v-show="record?.lastChild?.note"
+              v-show="record?.lastSub?.note"
               :name="Icon.NOTE"
               color="primary"
               size="md"
               class="cursor-pointer q-mr-xs"
-              @click="viewLastNote(record?.lastChild?.note || '')"
+              @click="viewLastNote(record?.lastSub?.note || '')"
             />
 
             <!-- Favorite Star Icon -->
@@ -145,7 +160,7 @@ async function onUnfavorite(id: string, name: string) {
               color="warning"
               size="md"
               class="cursor-pointer"
-              @click="onUnfavorite(record.id as string, record.name as string)"
+              @click="onUnfavorite(record.id, record.name)"
             />
             <QIcon
               v-show="!record.favorited"
@@ -153,7 +168,7 @@ async function onUnfavorite(id: string, name: string) {
               color="grey"
               size="md"
               class="cursor-pointer"
-              @click="onFavorite(record.id as string, record.name as string)"
+              @click="onFavorite(record.id, record.name)"
             />
 
             <!-- Vertical Actions Menu -->
@@ -165,17 +180,14 @@ async function onUnfavorite(id: string, name: string) {
                 transition-hide="flip-left"
               >
                 <QList>
-                  <QItem clickable @click="goToCharts(record.type as Type, record.id as string)">
+                  <QItem clickable @click="goToCharts(record.type, record.id)">
                     <QItemSection avatar>
                       <QIcon color="accent" :name="Icon.CHARTS" />
                     </QItemSection>
                     <QItemSection>Charts</QItemSection>
                   </QItem>
 
-                  <QItem
-                    clickable
-                    @click="goToParentInspect(record.type as Type, record.id as string)"
-                  >
+                  <QItem clickable @click="onInspect(record.type, record.id)">
                     <QItemSection avatar>
                       <QIcon color="primary" :name="Icon.INSPECT" />
                     </QItemSection>
@@ -184,7 +196,7 @@ async function onUnfavorite(id: string, name: string) {
 
                   <QItem
                     clickable
-                    @click="goToParentEdit(record.type as Type, record.id as string)"
+                    @click="goToEdit(recordGroups.Values.core, record?.type, record?.id)"
                   >
                     <QItemSection avatar>
                       <QIcon color="warning" :name="Icon.EDIT" />
@@ -201,15 +213,15 @@ async function onUnfavorite(id: string, name: string) {
             <QBadge rounded color="secondary" class="q-py-none">
               <QIcon :name="Icon.PREVIOUS" />
               <span class="text-caption q-ml-xs">
-                {{ useTimeAgo(record?.lastChild?.timestamp || '').value || 'No previous records' }}
+                {{ useTimeAgo(record?.lastSub?.timestamp || '').value || 'No previous records' }}
               </span>
             </QBadge>
 
             <!-- Previous Record Created Date -->
-            <div v-if="record?.lastChild?.timestamp">
+            <div v-if="record?.lastSub?.timestamp">
               <QIcon :name="Icon.CALENDAR_CHECK" />
               <span class="text-caption q-ml-xs">
-                {{ getDisplayDate(record?.lastChild?.timestamp) }}
+                {{ getDisplayDate(record?.lastSub?.timestamp) }}
               </span>
             </div>
           </div>
@@ -218,7 +230,7 @@ async function onUnfavorite(id: string, name: string) {
             label="Attach Record"
             color="primary"
             :icon="Icon.ADD_NOTE"
-            @click="goToChildCreate(record.type as Type, record.id as string)"
+            @click="goToCreate(recordGroups.Values.sub, record?.type, record?.id)"
           />
         </QCardSection>
       </QCard>
@@ -237,8 +249,12 @@ async function onUnfavorite(id: string, name: string) {
       <QBtn
         color="positive"
         :icon="Icon.CREATE"
-        :label="`Create ${DataSchema.getParentLabelSingular(uiStore.dashboardSelection)}`"
-        @click="goToParentCreate(uiStore.dashboardSelection)"
+        :label="`Create ${DataSchema.getLabel(
+          recordGroups.Values.core,
+          uiStore.dashboardSelection,
+          'singular'
+        )}`"
+        @click="goToCreate(recordGroups.Values.core, uiStore.dashboardSelection)"
       />
     </div>
   </ResponsivePage>

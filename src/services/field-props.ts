@@ -1,273 +1,204 @@
-import {
-  nameValidator,
-  textAreaValidator,
-  percentValidator,
-  timestampValidator,
-  idValidator,
-  booleanValidator,
-  autoIdValidator,
-  severityValidator,
-  labelValidator,
-  anyValidator,
-  textValidator,
-  keyValidator,
-  valueValidator,
-  testIdsValidator,
-} from '@/services/validators'
-import { Severity, type FieldProps, SettingKey, Field } from '@/types/database'
 import { Limit } from '@/types/general'
 import { getDisplayDate } from '@/utils/common'
 import { defineAsyncComponent } from 'vue'
-import { uid } from 'quasar'
+import {
+  type FieldProps,
+  type LogLevel,
+  allFields,
+  idSchema,
+  timestampSchema,
+  nameSchema,
+  textAreaSchema,
+  booleanSchema,
+  percentSchema,
+} from '@/types/core'
+import { z } from 'zod'
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     LOG                                                                   //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+//
+// LOG
+//
 
-const autoIdField: Readonly<FieldProps> = {
-  field: Field.AUTO_ID,
+const autoIdField: FieldProps = {
+  field: allFields.Values.autoId,
   label: 'Auto Id',
-  getDefault: () => undefined,
-  validator: autoIdValidator,
-  validationMessage: 'Invalid',
   inspectFormat: (val: number) => `${val || '-'}`,
-  // Not rendered
 }
 
-const severityField: Readonly<FieldProps> = {
-  field: Field.SEVERITY,
-  label: 'Severity',
-  getDefault: () => undefined,
-  validator: severityValidator,
-  validationMessage: 'Invalid',
-  inspectFormat: (val: Severity) => `${val || '-'}`,
-  // Not rendered
+const logLevelField: FieldProps = {
+  field: allFields.Values.logLevel,
+  label: 'Log Level',
+  inspectFormat: (val: LogLevel) => `${val || '-'}`,
 }
 
-const labelField: Readonly<FieldProps> = {
-  field: Field.LABEL,
+const labelField: FieldProps = {
+  field: allFields.Values.label,
   label: 'Label',
-  getDefault: () => undefined,
-  validator: labelValidator,
-  validationMessage: 'Invalid',
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
 }
 
-const detailsField: Readonly<FieldProps> = {
-  field: Field.DETAILS,
+const detailsField: FieldProps = {
+  field: allFields.Values.details,
   label: 'Details',
-  getDefault: () => undefined,
-  validator: anyValidator,
-  validationMessage: 'Invalid',
   inspectFormat: (val: any) =>
     val
       ? Object.entries(val)
           .map(([key, value]) => `${key}: ${value}`)
           .join(', ')
       : '-',
-  // Not rendered
 }
 
-const messageField: Readonly<FieldProps> = {
-  field: Field.MESSAGE,
+const messageField: FieldProps = {
+  field: allFields.Values.message,
   label: 'Message',
-  getDefault: () => undefined,
-  validator: textValidator,
-  validationMessage: 'Invalid',
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
 }
 
-const stackField: Readonly<FieldProps> = {
-  field: Field.STACK,
+const stackField: FieldProps = {
+  field: allFields.Values.stack,
   label: 'Stack',
-  getDefault: () => undefined,
-  validator: textValidator,
-  validationMessage: 'Invalid',
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     SETTING                                                               //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+//
+// BASE
+//
 
-const keyField: Readonly<FieldProps> = {
-  field: Field.KEY,
-  label: 'Key',
-  getDefault: () => undefined,
-  validator: keyValidator,
-  validationMessage: 'Invalid',
-  inspectFormat: (val: SettingKey) => `${val || '-'}`,
-  // Not rendered
-}
-
-const valueField: Readonly<FieldProps> = {
-  field: Field.VALUE,
-  label: 'Value',
-  getDefault: () => undefined,
-  validator: valueValidator,
-  validationMessage: 'Invalid',
-  inspectFormat: (val: any) => `${val ?? '-'}`, // ?? so booleans won't be '-' when false
-  // Not rendered
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     CORE                                                                  //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
-const idField: Readonly<FieldProps> = {
-  field: Field.ID,
+const idField: FieldProps = {
+  field: allFields.Values.id,
   label: 'Id',
-  getDefault: () => uid(),
-  validator: idValidator,
-  validationMessage: 'Invalid',
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
 }
 
-const timestampField: Readonly<FieldProps> = {
-  field: Field.TIMESTAMP,
+const timestampField: FieldProps = {
+  field: allFields.Values.timestamp,
   label: 'Created Date',
-  getDefault: () => Date.now(),
-  validator: timestampValidator,
-  validationMessage: 'Must be a valid number',
   inspectFormat: (val: number) => getDisplayDate(val) || '-',
+  getDefault: () => Date.now(),
+  schema: timestampSchema,
+  message: 'Must be a valid number',
   component: defineAsyncComponent(() => import('@/components/inputs/InputTimestamp.vue')),
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     PARENT                                                                //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+//
+// CORE RECORD
+//
 
-const nameField: Readonly<FieldProps> = {
-  field: Field.NAME,
+const nameField: FieldProps = {
+  field: allFields.Values.name,
   label: 'Name',
-  getDefault: () => '',
-  validator: nameValidator,
-  validationMessage: `Name must be between ${Limit.MIN_NAME_LENGTH} and ${Limit.MAX_NAME_LENGTH} characters`,
   inspectFormat: (val: string) => `${val || '-'}`,
+  getDefault: () => '',
+  schema: nameSchema,
+  message: `Name must be between ${Limit.MIN_NAME} and ${Limit.MAX_NAME} characters`,
   component: defineAsyncComponent(() => import('@/components/inputs/InputName.vue')),
 }
 
-const descField: Readonly<FieldProps> = {
-  field: Field.DESC,
+const descField: FieldProps = {
+  field: allFields.Values.desc,
   label: 'Description',
-  getDefault: () => '',
-  validator: textAreaValidator,
-  validationMessage: `Description cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   inspectFormat: (val: string) => `${val || '-'}`,
+  getDefault: () => '',
+  schema: textAreaSchema,
+  message: `Description cannot exceed ${Limit.MAX_TEXT_AREA} characters`,
   component: defineAsyncComponent(() => import('@/components/inputs/InputTextArea.vue')),
 }
 
-const enabledField: Readonly<FieldProps> = {
-  field: Field.ENABLED,
+const enabledField: FieldProps = {
+  field: allFields.Values.enabled,
   label: 'Enabled',
-  desc: 'Whether the record is enabled and shows up on the Dashboard and in other lists.',
+  inspectFormat: (val: boolean) => (val ? 'Yes' : 'No'),
   getDefault: () => true,
-  validator: booleanValidator,
-  validationMessage: '* Required',
-  inspectFormat: (val: boolean) => (val ? 'Yes' : 'No'),
+  desc: 'Whether the record is enabled and shows up on the Dashboard and in other lists.',
+  schema: booleanSchema,
+  message: '* Required',
   component: defineAsyncComponent(() => import('@/components/inputs/InputToggle.vue')),
 }
 
-const favoritedField: Readonly<FieldProps> = {
-  field: Field.FAVORITED,
+const favoritedField: FieldProps = {
+  field: allFields.Values.favorited,
   label: 'Favorited',
-  desc: 'Whether the record is favorited and is prioritized on the Dashboard.',
-  getDefault: () => false,
-  validator: booleanValidator,
-  validationMessage: '* Required',
   inspectFormat: (val: boolean) => (val ? 'Yes' : 'No'),
+  getDefault: () => false,
+  desc: 'Whether the record is favorited and is prioritized on the Dashboard.',
+  schema: booleanSchema,
+  message: '* Required',
   component: defineAsyncComponent(() => import('@/components/inputs/InputToggle.vue')),
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     CHILD                                                                 //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+//
+// SUB RECORD
+//
 
-const parentIdField: Readonly<FieldProps> = {
-  field: Field.PARENT_ID,
-  label: 'Parent Id',
-  getDefault: () => undefined,
-  validator: idValidator,
-  validationMessage: `Invalid`,
+const coreIdField: FieldProps = {
+  field: allFields.Values.coreId,
+  label: 'Core Id',
   inspectFormat: (val: string) => `${val || '-'}`,
-  // Not rendered
+  getDefault: () => undefined,
+  schema: idSchema,
+  message: `Invalid`,
+  // TODO
 }
 
-const noteField: Readonly<FieldProps> = {
-  field: Field.NOTE,
+const noteField: FieldProps = {
+  field: allFields.Values.note,
   label: 'Note',
   desc: 'Text note about the record that can be viewed on the Dashboard.',
-  getDefault: () => '',
-  validator: textAreaValidator,
-  validationMessage: `Note cannot exceed ${Limit.MAX_TEXT_AREA_LENGTH} characters`,
   inspectFormat: (val: string) => `${val || '-'}`,
+  getDefault: () => '',
+  schema: textAreaSchema,
+  message: `Note cannot exceed ${Limit.MAX_TEXT_AREA} characters`,
   component: defineAsyncComponent(() => import('@/components/inputs/InputTextArea.vue')),
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     RECORD SPECIFIC                                                       //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+//
+// RECORD SPECIFIC
+//
 
-const testIdsField: Readonly<FieldProps> = {
-  field: Field.TEST_IDS,
+const testIdsField: FieldProps = {
+  field: allFields.Values.testIds,
   label: 'Tests',
-  desc: 'Tests that are associated with the Example record.',
-  getDefault: () => [],
-  validator: testIdsValidator,
-  validationMessage: '* Required',
   inspectFormat: (val: string[]) => val?.join(', ') || '-',
+  getDefault: () => [],
+  desc: 'Tests that are associated with the Example record.',
+  schema: z.array(idSchema),
+  message: '* Required',
   component: defineAsyncComponent(() => import('@/components/inputs/InputTestIds.vue')),
 }
 
-const percentField: Readonly<FieldProps> = {
-  field: Field.PERCENT,
+const percentField: FieldProps = {
+  field: allFields.Values.percent,
   label: 'Percentage',
-  getDefault: () => 0,
-  validator: percentValidator,
-  validationMessage: 'Percent must be between 0 and 100',
   inspectFormat: (val: number) => `${val}%`,
+  getDefault: () => 0,
+  schema: percentSchema,
+  message: 'Percent must be between 0 and 100',
   component: defineAsyncComponent(() => import('@/components/inputs/InputPercent.vue')),
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//     APP SCHEMA FIELD CARDS                                                //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+//
+// FIELD PROPS
+//
 
-const coreFields: FieldProps[] = [idField, timestampField]
-const parentFields: FieldProps[] = [nameField, descField, enabledField, favoritedField]
-const childFields: FieldProps[] = [parentIdField, noteField]
+const baseFieldProps: FieldProps[] = [idField, timestampField]
+const coreFieldProps: FieldProps[] = [nameField, descField, enabledField, favoritedField]
+const subFieldProps: FieldProps[] = [coreIdField, noteField]
 
-export const logFields: FieldProps[] = [
+export const logFieldProps: FieldProps[] = [
   autoIdField,
   timestampField,
-  severityField,
+  logLevelField,
   labelField,
   detailsField,
   messageField,
   stackField,
 ]
-export const settingFields: FieldProps[] = [keyField, valueField]
 
-export const exampleParentFields: FieldProps[] = [...coreFields, ...parentFields, testIdsField]
-export const testParentFields: FieldProps[] = [...coreFields, ...parentFields]
+export const exampleCoreFieldProps: FieldProps[] = [
+  ...baseFieldProps,
+  ...coreFieldProps,
+  testIdsField,
+]
+export const testCoreFieldProps: FieldProps[] = [...baseFieldProps, ...coreFieldProps]
 
-export const exampleChildFields: FieldProps[] = [...coreFields, ...childFields]
-export const testChildFields: FieldProps[] = [...coreFields, ...childFields, percentField]
+export const exampleSubFieldProps: FieldProps[] = [...baseFieldProps, ...subFieldProps]
+export const testSubFieldProps: FieldProps[] = [...baseFieldProps, ...subFieldProps, percentField]

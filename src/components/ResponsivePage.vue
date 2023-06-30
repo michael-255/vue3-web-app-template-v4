@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 
 defineProps<{
   bannerIcon?: Icon
@@ -14,7 +14,7 @@ defineProps<{
     <div class="row justify-center">
       <div class="col-md-8 col-sm-10 col-xs-12">
         <!-- Optional Banner -->
-        <div v-if="bannerIcon && bannerTitle" class="text-h5 text-bold q-mb-lg">
+        <div v-if="bannerIcon && bannerTitle" class="text-h5 text-bold q-mb-md q-mr-xs text-center">
           <QIcon class="q-pb-xs q-pr-xs" :name="bannerIcon" />
           {{ bannerTitle }}
         </div>

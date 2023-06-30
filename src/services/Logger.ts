@@ -1,7 +1,6 @@
-import { AppName } from '@/types/general'
+import { AppName } from '@/constants/global'
 
 export default class Logger {
-  private static instance: Logger | null = null
   private static loggerName: string = `%c${AppName}`
   private static baseStyle = 'border-radius: 3px; padding: 2px 4px; color: white; background-color:'
   // Was unable to get Quasar getPaletteColor() to work for this
@@ -12,15 +11,6 @@ export default class Logger {
     info: `${Logger.baseStyle} #0d47a1;`,
     warn: `${Logger.baseStyle} #ff6f00;`,
     error: `${Logger.baseStyle} #C10015;`,
-  }
-
-  constructor() {
-    // Singleton
-    if (Logger.instance) {
-      return Logger.instance
-    } else {
-      Logger.instance = this
-    }
   }
 
   static print(message: any, ...args: any) {

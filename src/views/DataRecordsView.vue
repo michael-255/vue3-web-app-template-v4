@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { Icon } from '@/types/icons'
-import { Field } from '@/types/database'
-import { AppName } from '@/types/general'
+import type { Subscription } from 'dexie'
+import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
+import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
 import { hiddenColumnNames } from '@/services/table-columns'
+import {
+  recordGroups,
+  allFields,
+  type RecordGroup,
+  type AnyField,
+  type AnyDatabaseRecord,
+} from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
@@ -16,44 +23,79 @@ import DB from '@/services/Database'
 useMeta({ title: `${AppName} - Records Data` })
 
 const { log } = useLogger()
-const { routeType, goToCharts, goToParentInspect, goToParentEdit, goToParentCreate, goBack } =
-  useRoutables()
-const { confirmDialog } = useDialogs()
+const { routeGroup, routeType, goToCharts, goToEdit, goToCreate, goBack } = useRoutables()
+const { confirmDialog, inspectDialog } = useDialogs()
 
 const searchFilter: Ref<string> = ref('')
 const rows: Ref<any[]> = ref([])
-const visibleColumns: Ref<Field[]> = ref([Field.ID, Field.TIMESTAMP, Field.NAME])
-const columns: Ref<QTableColumn[]> = ref(DataSchema.getParentTableColumns(routeType))
+const visibleColumns: Ref<AnyField[]> = ref([])
+const columns: Ref<QTableColumn[]> = ref(
+  DataSchema.getTableColumns(routeGroup, routeType) as QTableColumn[]
+)
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
 )
+let subscription: Subscription | null = null
 
-const subscription = DB.liveParents(routeType).subscribe({
-  next: (records) => {
-    rows.value = records
-  },
-  error: (error) => {
-    log.error('Error fetching live parent records', error)
-  },
-})
+if (routeGroup === recordGroups.Values.core) {
+  visibleColumns.value = [allFields.Values.id, allFields.Values.timestamp, allFields.Values.name]
+
+  subscription = DB.liveCoreRecords(routeType).subscribe({
+    next: (records) => {
+      rows.value = records
+    },
+    error: (error) => {
+      log.error('Error fetching live parent data', error)
+    },
+  })
+} else {
+  visibleColumns.value = [allFields.Values.id, allFields.Values.timestamp]
+
+  subscription = DB.liveSubRecords(routeType).subscribe({
+    next: (records) => {
+      rows.value = records
+    },
+    error: (error) => {
+      log.error('Error fetching live child data', error)
+    },
+  })
+}
 
 onUnmounted(() => {
-  subscription.unsubscribe()
+  subscription?.unsubscribe()
 })
 
-async function onParentDelete(id: string) {
-  let dialogMessage = `Permanently delete ${DataSchema.getParentLabelSingular(
-    routeType
-  )} with id ${id}? This will also delete accompanying child records.`
+async function onDelete(group: RecordGroup, id: string) {
+  let dialogMessage = ''
+
+  if (group === recordGroups.Values.core) {
+    dialogMessage = `Permanently delete ${DataSchema.getLabel(
+      routeGroup,
+      routeType,
+      'singular'
+    )} with id ${id}? This will also delete associated sub-records.`
+  } else {
+    dialogMessage = `Permanently delete ${DataSchema.getLabel(
+      routeGroup,
+      routeType,
+      'singular'
+    )} with id ${id}?`
+  }
 
   confirmDialog('Delete', dialogMessage, Icon.DELETE, 'negative', async () => {
     try {
-      await DB.deleteParent(id)
+      await DB.deleteRecord(group, id)
       log.info('Successfully deleted record', { type: routeType, id })
     } catch (error) {
       log.error('Delete failed', error)
     }
   })
+}
+
+// TODO
+async function onInspect(id: string) {
+  const record = { id } as AnyDatabaseRecord
+  inspectDialog('Log', record as AnyDatabaseRecord)
 }
 </script>
 
@@ -73,7 +115,7 @@ async function onParentDelete(id: string) {
       <QTr :props="props">
         <!-- Do not show hidden columns -->
         <QTh
-          v-for="col in (props.cols as any[])"
+          v-for="col in props.cols"
           v-show="!hiddenColumnNames.includes(col.name)"
           :key="col.name"
           :props="props"
@@ -87,7 +129,7 @@ async function onParentDelete(id: string) {
     <!-- Rows -->
     <template v-slot:body="props">
       <QTr :props="props">
-        <QTd v-for="col in (props.cols as any[])" :key="col.name" :props="props">
+        <QTd v-for="col in props.cols" :key="col.name" :props="props">
           {{ col.value }}
         </QTd>
         <QTd auto-width>
@@ -109,7 +151,7 @@ async function onParentDelete(id: string) {
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="goToParentInspect(routeType, props.cols[0].value)"
+            @click="onInspect(props.cols[0].value)"
           />
           <!-- EDIT -->
           <QBtn
@@ -119,7 +161,7 @@ async function onParentDelete(id: string) {
             class="q-ml-xs"
             color="orange-9"
             :icon="Icon.EDIT"
-            @click="goToParentEdit(routeType, props.cols[0].value)"
+            @click="goToEdit(routeGroup, routeType, props.cols[0].value)"
           />
           <!-- DELETE -->
           <QBtn
@@ -128,7 +170,7 @@ async function onParentDelete(id: string) {
             dense
             class="q-ml-xs"
             color="negative"
-            @click="onParentDelete(props.cols[0].value)"
+            @click="onDelete(routeGroup, props.cols[0].value)"
             :icon="Icon.DELETE"
           />
         </QTd>
@@ -139,7 +181,7 @@ async function onParentDelete(id: string) {
       <div class="row justify-start full-width q-mb-md">
         <!-- Table Title -->
         <div class="col-10 text-h6 text-bold ellipsis">
-          {{ DataSchema.getParentLabelPlural(routeType) }}
+          {{ DataSchema.getLabel(routeGroup, routeType, 'plural') }}
         </div>
         <!-- Go Back Button -->
         <QBtn
@@ -169,7 +211,7 @@ async function onParentDelete(id: string) {
                 color="positive"
                 class="q-px-sm q-mr-xs"
                 :icon="Icon.ADD"
-                @click="goToParentCreate(routeType)"
+                @click="goToCreate(routeGroup, routeType)"
               />
               <!-- COLUMN OPTIONS (Visible Columns) -->
               <QSelect

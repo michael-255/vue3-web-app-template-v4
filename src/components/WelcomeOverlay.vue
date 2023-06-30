@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { Icon } from '@/types/icons'
+import { Icon, routeNames } from '@/types/general'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { RouteName } from '@/router/route-names'
-import { AppDescription, AppName } from '@/types/general'
-import { SettingKey } from '@/types/database'
+import { settingkeys } from '@/types/core'
+import { AppDescription, AppName } from '@/constants/global'
 import useLogger from '@/composables/useLogger'
-import useDefaults from '@/composables/useDefaults'
 import DB from '@/services/Database'
 
-const { onDefaults } = useDefaults()
 const { log } = useLogger()
 
 const exampleFavorite: Ref<number> = ref(0)
@@ -16,7 +13,9 @@ const showWelcome: Ref<any> = ref(false)
 
 const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
-    showWelcome.value = liveSettings.find((s) => s.key === SettingKey.SHOW_WELCOME)?.value
+    showWelcome.value = liveSettings.find(
+      (s) => s.key === settingkeys.Values['welcome-overlay']
+    )?.value
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)
@@ -28,7 +27,7 @@ onUnmounted(() => {
 })
 
 async function onCloseWelcomeOverlay() {
-  await DB.setSetting(SettingKey.SHOW_WELCOME, false)
+  await DB.setSetting(settingkeys.Values['welcome-overlay'], false)
 }
 </script>
 
@@ -72,16 +71,7 @@ async function onCloseWelcomeOverlay() {
             tables, Frequently Asked Questions (FAQ), Settings, and more. More advanced operations
             for the app are available on the Settings page.
           </p>
-          <QBtn color="primary" class="q-px-sm" :icon="Icon.MENU_STANDARD" />
-        </div>
-
-        <!-- Defaults -->
-        <div class="q-mb-md">
-          <p>
-            You can load default demostration data into the database to get started with the app
-            right away by clicking the button below. This action can be repeated.
-          </p>
-          <QBtn color="primary" label="Add Defaults" :icon="Icon.ADD_NOTE" @click="onDefaults()" />
+          <QBtn disable color="primary" class="q-px-sm" :icon="Icon.MENU_STANDARD" />
         </div>
 
         <!-- Donation -->
@@ -93,7 +83,7 @@ async function onCloseWelcomeOverlay() {
           <QBtn
             color="warning"
             label="Donate"
-            :to="{ name: RouteName.DONATE }"
+            :to="{ name: routeNames.Values.Donate }"
             :icon="Icon.DONATE"
           />
         </div>

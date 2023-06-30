@@ -4,6 +4,11 @@ This Vue 3 Typescript project can be used as a web application template to help 
 developing. Read through this README to have a better understanding of how this project is
 structured.
 
+## TODOS
+
+- [ ] Convert `Charts` route to a fullscreen dialog like inspect?
+- [ ] Fully implement `Inspect` feature with the new fullscreen dialog
+
 ## Post Cloning Steps
 
 - [ ] Update `package.json`

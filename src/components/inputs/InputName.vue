@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import type { Field } from '@/types/database'
+import type { AnyField } from '@/types/core'
 import { Limit } from '@/types/general'
-import type { ObjectSchema } from 'yup'
+import type { z } from 'zod'
 import useActionStore from '@/stores/action'
 
 const props = defineProps<{
-  field: Field
+  field: AnyField
   label: string
   getDefault: () => any
-  validator: ObjectSchema<any, any, any>
-  validationMessage: string
+  schema: z.ZodType<any, any, any>
+  message: string
 }>()
 
 const actionStore = useActionStore()
@@ -20,7 +20,7 @@ onMounted(() => {
 })
 
 function validationRule() {
-  return async (val: string) => (await props.validator.isValid(val)) || props.validationMessage
+  return (val: string) => props.schema.safeParse(val).success || props.message
 }
 </script>
 
@@ -32,7 +32,7 @@ function validationRule() {
       <QInput
         v-model="actionStore.record[field]"
         :rules="[validationRule()]"
-        :maxlength="Limit.MAX_NAME_LENGTH"
+        :maxlength="Limit.MAX_NAME"
         type="text"
         lazy-rules
         counter

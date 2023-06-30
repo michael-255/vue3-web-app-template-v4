@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import { exportFile } from 'quasar'
-import { Icon } from '@/types/icons'
-import { type BackupData, AppName, Limit, LogRetention } from '@/types/general'
-import { type Setting, Type, SettingKey } from '@/types/database'
+import { Duration, Icon, Limit } from '@/types/general'
 import { type Ref, ref, onUnmounted } from 'vue'
+import { AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
+import {
+  type Setting,
+  type BackupData,
+  type SettingKey,
+  type RecordGroup,
+  type RecordType,
+  settingkeys,
+  recordGroups,
+} from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
@@ -19,25 +27,37 @@ useMeta({ title: `${AppName} - Settings` })
 const { log } = useLogger()
 const { notify } = useNotifications()
 const { confirmDialog } = useDialogs()
-const { onDefaults } = useDefaults()
-const { goToLogsData, goToSettingsData, goToParentData, goToChildData } = useRoutables()
+const { onDefaultExamples, onDefaultTests } = useDefaults()
+const { goToRecordsData, goToLogsData } = useRoutables()
 
-const tableOptions = DataSchema.getAllTypeOptions()
+const allOptions = DataSchema.getAllOptions()
 const settings: Ref<Setting[]> = ref([])
-const logRetentionIndex: Ref<number> = ref(0)
+const logDurationIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
-const accessOptions = ref([...tableOptions])
+const accessOptions = ref([...allOptions])
 const accessModel = ref(accessOptions.value[0])
-const deleteOptions = ref([...tableOptions])
+const deleteOptions = ref([...allOptions])
 const deleteModel = ref(deleteOptions.value[0])
+const logDurationKeys = [
+  // Duration[Duration.Now], // For testing log purges
+  Duration[Duration['One Week']],
+  Duration[Duration['One Month']],
+  Duration[Duration['Three Months']],
+  Duration[Duration['Six Months']],
+  Duration[Duration['One Year']],
+  Duration[Duration['Forever']],
+]
 
 const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     settings.value = liveSettings
-    const logRetentionTime = liveSettings.find(
-      (s) => s.key === SettingKey.LOG_RETENTION_TIME
+
+    let logDuration = liveSettings.find(
+      (s) => s.key === settingkeys.Values['log-retention-duration']
     )?.value
-    logRetentionIndex.value = Object.values(LogRetention).findIndex((i) => i === logRetentionTime)
+
+    logDuration = Duration[logDuration]
+    logDurationIndex.value = logDurationKeys.findIndex((i) => i === logDuration)
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)
@@ -81,18 +101,16 @@ function onImportFile() {
         if (backupData.settings.length > 0) {
           await Promise.all(
             backupData.settings
-              .filter((s) => Object.values(SettingKey).includes(s.key as SettingKey))
-              .map(async (s) => await DB.setSetting(s.key as SettingKey, s.value))
+              .filter((s) => settingkeys.options.includes(s.key))
+              .map(async (s) => await DB.setSetting(s.key, s.value))
           )
         }
 
         // Logs are never imported
         await Promise.all([
-          DB.importParents(backupData.parents),
-          DB.importChildren(backupData.children),
+          DB.importRecords(recordGroups.Values.core, backupData.coreRecords),
+          DB.importRecords(recordGroups.Values.sub, backupData.subRecords),
         ])
-
-        await DB.updateAllParentLastChild()
 
         importFile.value = null // Clear input
         log.info('Successfully imported available data')
@@ -120,11 +138,11 @@ function onExportRecords() {
           backupTimestamp: Date.now(),
           logs: await DB.getLogs(),
           settings: await DB.getSettings(),
-          parents: (await DB.getParents()).map((p) => {
-            delete p.lastChild
+          coreRecords: (await DB.getAllCoreRecords()).map((p) => {
+            delete p.lastSub
             return p
           }),
-          children: await DB.getChildren(),
+          subRecords: await DB.getAllSubRecords(),
         } as BackupData
 
         log.silentDebug('backupData:', backupData)
@@ -146,13 +164,20 @@ function onExportRecords() {
   )
 }
 
-async function onChangeLogRetention(logRetentionIndex: number) {
+async function onChangeLogRetention(logDurationIndex: number) {
   try {
-    const logRetentionTime = Object.values(LogRetention)[logRetentionIndex]
-    await DB.setSetting(SettingKey.LOG_RETENTION_TIME, logRetentionTime)
-    log.info('Updated log retention time', { time: logRetentionTime, index: logRetentionIndex })
+    const logDurationKey = logDurationKeys[logDurationIndex]
+    const logDuration = Duration[logDurationKey as keyof typeof Duration]
+
+    await DB.setSetting(settingkeys.Values['log-retention-duration'], logDuration)
+
+    log.info('Updated log retention duration', {
+      logDurationKey,
+      logDuration,
+      index: logDurationIndex,
+    })
   } catch (error) {
-    log.error('Log retention update failed', error)
+    log.error('Log retention duration update failed', error)
   }
 }
 
@@ -164,7 +189,7 @@ async function onResetSettings() {
     'primary',
     async () => {
       try {
-        await DB.resetSettings()
+        await DB.clearSettings()
         log.info('Successfully reset settings')
       } catch (error) {
         log.error('Error reseting settings', error)
@@ -173,7 +198,24 @@ async function onResetSettings() {
   )
 }
 
-async function onDeleteBy(label: string, optionValue: string[]) {
+async function onDeleteLogs() {
+  confirmDialog(
+    `Delete Logs`,
+    `Permanetly delete all Logs from the database?`,
+    Icon.CLEAR,
+    'negative',
+    async () => {
+      try {
+        await DB.clearLogs()
+        log.info('Successfully deleted logs data')
+      } catch (error) {
+        log.error(`Error deleting Logs`, error)
+      }
+    }
+  )
+}
+
+async function onDeleteBy(label: string, optionValue: { group: RecordGroup; type: RecordType }) {
   confirmDialog(
     `Delete ${label}`,
     `Permanetly delete all ${label} from the database?`,
@@ -181,26 +223,7 @@ async function onDeleteBy(label: string, optionValue: string[]) {
     'negative',
     async () => {
       try {
-        switch (optionValue[0]) {
-          case 'internal':
-            if (optionValue[1] === 'logs') {
-              await DB.clearLogs()
-            } else if (optionValue[1] === 'settings') {
-              await DB.resetSettings()
-            } else {
-              throw new Error(`Unknown internal type ${optionValue[1]}`)
-            }
-            break
-          case 'parent':
-            await DB.clearParentsByType(optionValue[1] as Type)
-            break
-          case 'child':
-            await DB.clearChildrenByType(optionValue[1] as Type)
-            break
-          default:
-            throw new Error(`Unknown type ${optionValue[0]}`)
-        }
-
+        await DB.clearRecordsByType(optionValue.group, optionValue.type)
         log.info('Successfully deleted selected data')
       } catch (error) {
         log.error(`Error deleting ${label}`, error)
@@ -217,10 +240,7 @@ async function onDeleteAll() {
     'negative',
     async () => {
       try {
-        await DB.clearLogs()
-        await DB.resetSettings()
-        await DB.clearParents()
-        await DB.clearChildren()
+        await DB.clearAll()
         log.info('All data successfully deleted')
       } catch (error) {
         log.error('Error deleting all data', error)
@@ -246,32 +266,6 @@ async function onDeleteDatabase() {
   )
 }
 
-function onAccessData(optionValue: string[]) {
-  try {
-    switch (optionValue[0]) {
-      case 'internal':
-        if (optionValue[1] === 'logs') {
-          goToLogsData()
-        } else if (optionValue[1] === 'settings') {
-          goToSettingsData()
-        } else {
-          throw new Error(`Unknown internal type ${optionValue[1]}`)
-        }
-        break
-      case 'parent':
-        goToParentData(optionValue[1] as Type)
-        break
-      case 'child':
-        goToChildData(optionValue[1] as Type)
-        break
-      default:
-        throw new Error(`Unknown type ${optionValue[0]}`)
-    }
-  } catch (error) {
-    log.error('Error accessing data table', error)
-  }
-}
-
 function getSettingValue(key: SettingKey) {
   return settings.value.find((s) => s.key === key)?.value
 }
@@ -294,8 +288,8 @@ function getSettingValue(key: SettingKey) {
           </p>
           <QToggle
             label="Show Welcome Overlay"
-            :model-value="getSettingValue(SettingKey.SHOW_WELCOME)"
-            @update:model-value="DB.setSetting(SettingKey.SHOW_WELCOME, $event)"
+            :model-value="getSettingValue(settingkeys.Values['welcome-overlay'])"
+            @update:model-value="DB.setSetting(settingkeys.Values['welcome-overlay'], $event)"
           />
         </div>
 
@@ -303,8 +297,10 @@ function getSettingValue(key: SettingKey) {
           <p>Show descriptions for records displayed on the Dashboard page.</p>
           <QToggle
             label="Show Dashboard Descriptions"
-            :model-value="getSettingValue(SettingKey.SHOW_DESCRIPTIONS)"
-            @update:model-value="DB.setSetting(SettingKey.SHOW_DESCRIPTIONS, $event)"
+            :model-value="getSettingValue(settingkeys.Values['dashboard-descriptions'])"
+            @update:model-value="
+              DB.setSetting(settingkeys.Values['dashboard-descriptions'], $event)
+            "
           />
         </div>
 
@@ -312,8 +308,8 @@ function getSettingValue(key: SettingKey) {
           <p>Dark mode allows you to switch between a light or dark theme for the app.</p>
           <QToggle
             label="Dark Mode"
-            :model-value="getSettingValue(SettingKey.DARK_MODE)"
-            @update:model-value="DB.setSetting(SettingKey.DARK_MODE, $event)"
+            :model-value="getSettingValue(settingkeys.Values['dark-mode'])"
+            @update:model-value="DB.setSetting(settingkeys.Values['dark-mode'], $event)"
           />
         </div>
       </QCardSection>
@@ -325,7 +321,14 @@ function getSettingValue(key: SettingKey) {
 
         <div>
           <p>Load default demostration records into the database. This action can be repeated.</p>
-          <QBtn label="Load Examples" color="primary" @click="onDefaults()" />
+
+          <div class="q-mb-md">
+            <QBtn label="Load Examples" color="primary" @click="onDefaultExamples()" />
+          </div>
+
+          <div>
+            <QBtn label="Load Tests" color="primary" @click="onDefaultTests()" />
+          </div>
         </div>
       </QCardSection>
     </QCard>
@@ -373,7 +376,12 @@ function getSettingValue(key: SettingKey) {
         </div>
 
         <div class="q-mb-md">
-          <p>Access any app data types to view the records or troubleshoot issues.</p>
+          <p>View the app logs to troubleshoot issues.</p>
+          <QBtn label="Access Logs" color="primary" @click="goToLogsData()" />
+        </div>
+
+        <div class="q-mb-md">
+          <p>Access any app data tables to view your records.</p>
           <QSelect
             v-model="accessModel"
             outlined
@@ -386,7 +394,7 @@ function getSettingValue(key: SettingKey) {
                 :disable="!accessModel"
                 label="Access Data"
                 color="primary"
-                @click="onAccessData(accessModel.value)"
+                @click="goToRecordsData(accessModel?.value?.group, accessModel?.value?.type)"
               />
             </template>
           </QSelect>
@@ -402,8 +410,8 @@ function getSettingValue(key: SettingKey) {
           <p>Show Console Logs will display all log messages in the browser console.</p>
           <QToggle
             label="Show Console Logs"
-            :model-value="getSettingValue(SettingKey.SHOW_CONSOLE_LOGS)"
-            @update:model-value="DB.setSetting(SettingKey.SHOW_CONSOLE_LOGS, $event)"
+            :model-value="getSettingValue(settingkeys.Values['console-logs'])"
+            @update:model-value="DB.setSetting(settingkeys.Values['console-logs'], $event)"
           />
         </div>
 
@@ -411,8 +419,8 @@ function getSettingValue(key: SettingKey) {
           <p>Show Info Messages will display info level notifications.</p>
           <QToggle
             label="Show Info Messages"
-            :model-value="getSettingValue(SettingKey.SHOW_INFO_MESSAGES)"
-            @update:model-value="DB.setSetting(SettingKey.SHOW_INFO_MESSAGES, $event)"
+            :model-value="getSettingValue(settingkeys.Values['info-messages'])"
+            @update:model-value="DB.setSetting(settingkeys.Values['info-messages'], $event)"
           />
         </div>
 
@@ -426,21 +434,22 @@ function getSettingValue(key: SettingKey) {
 
         <div class="q-mb-md">
           <p>
-            Change log retention time below. Logs older than the selected time will be deleted. This
-            functions retroactivley, so if you change the time to 3 months, all logs older than 3
-            months will be deleted. Expired log processing occurs every time the app is loaded.
+            Change log retention duration below. Logs older than the selected time will be deleted.
+            This functions retroactivley. Change the time to three months will cause all logs older
+            than three months to be deleted. Expired log processing occurs every time the app is
+            loaded.
           </p>
 
           <div class="q-mx-lg">
             <QSlider
-              v-model="logRetentionIndex"
-              :label-value="Object.values(LogRetention)[logRetentionIndex]"
+              v-model="logDurationIndex"
+              :label-value="logDurationKeys[logDurationIndex]"
               color="primary"
               markers
               label-always
               switch-label-side
               :min="0"
-              :max="Object.values(LogRetention).length - 1"
+              :max="logDurationKeys.length - 1"
               @change="(index) => onChangeLogRetention(index)"
             />
           </div>
@@ -455,6 +464,11 @@ function getSettingValue(key: SettingKey) {
         <p>
           The following operations cannot be undone. Consider exporting your data before proceeding.
         </p>
+
+        <div class="q-mb-md">
+          <p>Delete the app logs from the database.</p>
+          <QBtn label="Delete Logs" color="negative" @click="onDeleteLogs()" />
+        </div>
 
         <div class="q-mb-md">
           <p>Select a data type and permanently delete all of its records.</p>

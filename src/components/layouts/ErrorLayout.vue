@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import { AppHeaderColor, AppName } from '@/types/general'
+import { AppHeaderColor, AppName } from '@/constants/global'
 </script>
 
 <template>

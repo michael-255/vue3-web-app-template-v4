@@ -13,14 +13,13 @@ import {
   LineElement,
 } from 'chart.js'
 import { onMounted, ref, type Ref } from 'vue'
-import { Field, type Type } from '@/types/database'
-import { typeValidator, idValidator } from '@/services/validators'
-import DataSchema from '@/services/DataSchema'
+import { idSchema, allFields, recordTypes } from '@/types/core'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
 import useChartTimeWatcher from '@/composables/useChartTimeWatcher'
 import DB from '@/services/Database'
+import { Duration } from '@/types/general'
 
 ChartJS.register(
   Title,
@@ -44,6 +43,8 @@ const chartLabel = 'Percentages'
 const chartOptions = {
   reactive: true,
   responsive: true,
+  maintainAspectRatio: true,
+  aspectRatio: 1.75,
   radius: 2,
   plugins: {
     legend: {
@@ -94,31 +95,31 @@ function downwardTrend(ctx: any, color: any) {
 async function recalculateChart() {
   try {
     // Get all records for the current route type and id
-    const isTypeValid = await typeValidator.isValid(routeType)
-    const isIdValid = await idValidator.isValid(routeId)
+    const isTypeValid = recordTypes.safeParse(routeType).success
+    const isIdValid = idSchema.safeParse(routeId).success
 
     if (isTypeValid && isIdValid) {
-      const chartingRecords = await DB.getParentChildren(routeId as string)
+      const chartingRecords = await DB.getCoreSubRecords(routeId as string)
 
       // Continue if there are records
       if (chartingRecords.length > 0) {
-        const chartMilliseconds = uiStore.getChartTimeMilliseconds
-
         // Filter records to only include those within the chart time
         const timeRestrictedRecords = chartingRecords.filter((record: any) => {
-          const timeDifference = new Date().getTime() - record[Field.TIMESTAMP]
-          return timeDifference <= chartMilliseconds
+          const timeDifference = new Date().getTime() - record[allFields.Values.timestamp]
+          return timeDifference <= Duration[uiStore.chartTime]
         })
 
         recordCount.value = timeRestrictedRecords.length
 
         // Create chart label dates from the created timestamps
         const chartLabels = timeRestrictedRecords.map((record: any) =>
-          date.formatDate(record[Field.TIMESTAMP], 'YYYY MMM D')
+          date.formatDate(record[allFields.Values.timestamp], 'YYYY MMM D')
         )
 
         // Create chart data from the number fields
-        const chartDataItems = timeRestrictedRecords.map((record: any) => record[Field.PERCENT])
+        const chartDataItems = timeRestrictedRecords.map(
+          (record: any) => record[allFields.Values.percent]
+        )
 
         // Set chart data with the labels and data
         chartData.value = {

@@ -1,18 +1,12 @@
 import { useQuasar } from 'quasar'
-import { Icon } from '@/types/icons'
-import SimpleDialog from '@/components/SimpleDialog.vue'
+import { Icon } from '@/types/general'
+import confirmationDialog from '@/components/dialogs/confirmationDialog.vue'
+import dismissalDialog from '@/components/dialogs/dismissalDialog.vue'
+import inspectionDialog from '@/components/dialogs/inspectionDialog.vue'
 
 export default function useDialogs() {
   const $q = useQuasar()
 
-  /**
-   * Confirmation dialog.
-   * @param title
-   * @param message
-   * @param onOkFunc Non-returning function
-   * @param icon
-   * @param color
-   */
   function confirmDialog(
     title: string,
     message: string,
@@ -21,27 +15,18 @@ export default function useDialogs() {
     onOkFunc: () => void
   ) {
     $q.dialog({
-      component: SimpleDialog,
+      component: confirmationDialog,
       componentProps: {
-        type: 'Confirm',
-        icon,
         title,
         message,
+        icon,
         color,
-        persistent: false,
       },
     }).onOk(() => {
       onOkFunc()
     })
   }
 
-  /**
-   * Dismiss dialog.
-   * @param title
-   * @param message
-   * @param icon
-   * @param color
-   */
   function dismissDialog(
     title: string,
     message: string,
@@ -49,14 +34,22 @@ export default function useDialogs() {
     color: string = 'info'
   ) {
     $q.dialog({
-      component: SimpleDialog,
+      component: dismissalDialog,
       componentProps: {
-        type: 'Dismiss',
-        icon,
         title,
         message,
+        icon,
         color,
-        persistent: false,
+      },
+    })
+  }
+
+  function inspectDialog(title: string, record: { [key: string]: any }) {
+    $q.dialog({
+      component: inspectionDialog,
+      componentProps: {
+        title,
+        record,
       },
     })
   }
@@ -64,5 +57,6 @@ export default function useDialogs() {
   return {
     confirmDialog,
     dismissDialog,
+    inspectDialog,
   }
 }

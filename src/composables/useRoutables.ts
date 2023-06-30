@@ -1,6 +1,6 @@
-import type { Type } from '@/types/database'
-import { RouteName } from '@/router/route-names'
+import type { RecordGroup, RecordType } from '@/types/core'
 import { useRoute, useRouter } from 'vue-router'
+import { routeNames } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 
 export default function useRoutables() {
@@ -10,141 +10,64 @@ export default function useRoutables() {
 
   // Possible route params
   const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-  const autoId = Array.isArray(route.params.autoId) ? route.params.autoId[0] : route.params.autoId
-  const parentId = Array.isArray(route.params.parentId)
-    ? route.params.parentId[0]
-    : route.params.parentId
+  const coreId = Array.isArray(route.params.coreId) ? route.params.coreId[0] : route.params.coreId
   const type = Array.isArray(route.params.type) ? route.params.type[0] : route.params.type
+  const group = Array.isArray(route.params.group) ? route.params.group[0] : route.params.group
+
   // Cleaned route params
   const routeId = String(id) || undefined
-  const routeAutoId = Number(autoId) || undefined
-  const routeParentId = String(parentId) || undefined
-  const routeType = (String(type) as Type) || undefined
+  const routeCoreId = String(coreId) || undefined
+  const routeType = (String(type) as RecordType) || undefined
+  const routeGroup = (String(group) as RecordGroup) || undefined
 
   function goToLogsData() {
     try {
       router.push({
-        name: RouteName.DATA_LOGS,
+        name: routeNames.Values.DataLogs,
       })
     } catch (error) {
       log.error('Error accessing logs data route', error)
     }
   }
 
-  function goToSettingsData() {
+  function goToRecordsData(group: RecordGroup, type: RecordType) {
     try {
       router.push({
-        name: RouteName.DATA_SETTINGS,
+        name: routeNames.Values.DataRecords,
+        params: { group, type },
       })
     } catch (error) {
-      log.error('Error accessing settings data route', error)
+      log.error('Error accessing records data route', error)
     }
   }
 
-  function goToParentData(type: Type) {
+  function goToCreate(group: RecordGroup, type: RecordType, coreId?: string) {
     try {
       router.push({
-        name: RouteName.DATA_PARENTS,
-        params: { type },
+        name: routeNames.Values.Create,
+        params: { group, type, coreId },
       })
     } catch (error) {
-      log.error('Error accessing parent data route', error)
+      log.error('Error accessing create route', error)
     }
   }
 
-  function goToChildData(type: Type) {
+  function goToEdit(group: RecordGroup, type: RecordType, id: string) {
     try {
       router.push({
-        name: RouteName.DATA_CHILDREN,
-        params: { type },
+        name: routeNames.Values.Edit,
+        params: { group, type, id },
       })
     } catch (error) {
-      log.error('Error accessing child data route', error)
+      log.error('Error accessing edit route', error)
     }
   }
 
-  function goToParentCreate(type: Type) {
+  // Charts can only be accessed from parents, so no group parameter is needed
+  function goToCharts(type: RecordType, id: string) {
     try {
       router.push({
-        name: RouteName.CREATE_PARENT,
-        params: { type },
-      })
-    } catch (error) {
-      log.error('Error accessing parent create route', error)
-    }
-  }
-
-  function goToChildCreate(type: Type, parentId: string) {
-    try {
-      router.push({
-        name: RouteName.CREATE_CHILD,
-        params: { type, parentId },
-      })
-    } catch (error) {
-      log.error('Error accessing child create route', error)
-    }
-  }
-
-  function goToParentEdit(type: Type, id: string) {
-    try {
-      router.push({
-        name: RouteName.EDIT_PARENT,
-        params: { type, id },
-      })
-    } catch (error) {
-      log.error('Error accessing parent edit route', error)
-    }
-  }
-
-  function goToChildEdit(type: Type, id: string) {
-    try {
-      router.push({
-        name: RouteName.EDIT_CHILD,
-        params: { type, id },
-      })
-    } catch (error) {
-      log.error('Error accessing child edit route', error)
-    }
-  }
-
-  function goToLogInspect(autoId: number) {
-    try {
-      router.push({
-        name: RouteName.INSPECT_LOG,
-        params: { autoId },
-      })
-    } catch (error) {
-      log.error('Error accessing logs inspect route', error)
-    }
-  }
-
-  function goToParentInspect(type: Type, id: string) {
-    try {
-      router.push({
-        name: RouteName.INSPECT_PARENT,
-        params: { type, id },
-      })
-    } catch (error) {
-      log.error('Error accessing parent inspect route', error)
-    }
-  }
-
-  function goToChildInspect(type: Type, id: string) {
-    try {
-      router.push({
-        name: RouteName.INSPECT_CHILD,
-        params: { type, id },
-      })
-    } catch (error) {
-      log.error('Error accessing child inspect route', error)
-    }
-  }
-
-  // Charts can only be accessed from parents
-  function goToCharts(type: Type, id: string) {
-    try {
-      router.push({
-        name: RouteName.CHARTS,
+        name: routeNames.Values.Charts,
         params: { type, id },
       })
     } catch (error) {
@@ -160,7 +83,7 @@ export default function useRoutables() {
       if (router?.options?.history?.state?.back) {
         router.back()
       } else {
-        router.push({ name: RouteName.DASHBOARD })
+        router.push({ name: routeNames.Values.Dashboard })
       }
     } catch (error) {
       log.error('Error accessing go back route', error)
@@ -169,20 +92,13 @@ export default function useRoutables() {
 
   return {
     routeId,
-    routeAutoId,
-    routeParentId,
+    routeCoreId,
     routeType,
+    routeGroup,
     goToLogsData,
-    goToSettingsData,
-    goToParentData,
-    goToChildData,
-    goToParentCreate,
-    goToChildCreate,
-    goToParentEdit,
-    goToChildEdit,
-    goToLogInspect,
-    goToParentInspect,
-    goToChildInspect,
+    goToRecordsData,
+    goToCreate,
+    goToEdit,
     goToCharts,
     goBack,
   }

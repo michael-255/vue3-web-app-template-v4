@@ -1,4 +1,4 @@
-import type { ChartTime } from '@/types/general'
+import type { Duration } from '@/types/general'
 import { watch } from 'vue'
 import useUIStore from '@/stores/ui'
 import useLogger from '@/composables/useLogger'
@@ -12,7 +12,7 @@ export default function useChartTimeWatcher(chartUpdateFunc: () => Promise<void>
    * The provided function is called when the property changes.
    */
   watch(
-    () => uiStore.chartTime as ChartTime,
+    () => uiStore.chartTime as Duration,
     async () => {
       try {
         await chartUpdateFunc()

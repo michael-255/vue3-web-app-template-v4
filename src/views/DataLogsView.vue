@@ -1,29 +1,34 @@
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar'
-import { Icon } from '@/types/icons'
-import { Field } from '@/types/database'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { AppName } from '@/types/general'
+import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
+import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
 import { hiddenColumnNames, logColumns } from '@/services/table-columns'
+import { allFields, type AnyDatabaseRecord, type AnyField, type Log } from '@/types/core'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
+import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Logs Data` })
 
 const { log } = useLogger()
-const { goToLogInspect, goBack } = useRoutables()
+const { goBack } = useRoutables()
+const { inspectDialog } = useDialogs()
 
 const searchFilter: Ref<string> = ref('')
-const rows: Ref<any[]> = ref([])
-const visibleColumns: Ref<Field[]> = ref([Field.TIMESTAMP, Field.SEVERITY, Field.LABEL])
+const rows: Ref<Log[]> = ref([])
+const visibleColumns: Ref<AnyField[]> = ref([
+  allFields.Values.timestamp,
+  allFields.Values.logLevel,
+  allFields.Values.label,
+])
 const columns: Ref<QTableColumn[]> = ref(logColumns)
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
 )
-
 const subscription = DB.liveLogs().subscribe({
   next: (records) => {
     rows.value = records
@@ -34,8 +39,13 @@ const subscription = DB.liveLogs().subscribe({
 })
 
 onUnmounted(() => {
-  subscription.unsubscribe()
+  subscription?.unsubscribe()
 })
+
+async function onInspect(autoId: number) {
+  const record = (await DB.getLog(Number(autoId))) as AnyDatabaseRecord
+  inspectDialog('Log', record)
+}
 </script>
 
 <template>
@@ -54,7 +64,7 @@ onUnmounted(() => {
       <QTr :props="props">
         <!-- Do not show hidden columns -->
         <QTh
-          v-for="col in (props.cols as any[])"
+          v-for="col in props.cols"
           v-show="!hiddenColumnNames.includes(col.name)"
           :key="col.name"
           :props="props"
@@ -68,7 +78,7 @@ onUnmounted(() => {
     <!-- Rows -->
     <template v-slot:body="props">
       <QTr :props="props">
-        <QTd v-for="col in (props.cols as any[])" :key="col.name" :props="props">
+        <QTd v-for="col in props.cols" :key="col.name" :props="props">
           {{ col.value }}
         </QTd>
         <QTd auto-width>
@@ -80,7 +90,7 @@ onUnmounted(() => {
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="goToLogInspect(props.cols[0].value)"
+            @click="onInspect(props.cols[0].value)"
           />
         </QTd>
       </QTr>

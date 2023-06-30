@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { AppName } from '@/types/general'
 import { useMeta } from 'quasar'
+import { AppName } from '@/constants/global'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 
 useMeta({ title: `${AppName} - 404` })

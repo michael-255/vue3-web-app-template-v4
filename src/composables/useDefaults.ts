@@ -1,7 +1,14 @@
-import { Icon } from '@/types/icons'
+import { Icon } from '@/types/general'
 import { uid } from 'quasar'
-import { Type, type ParentRecord, type ChildRecord } from '@/types/database'
-import { Milliseconds } from '@/types/general'
+import {
+  recordGroups,
+  recordTypes,
+  type ExampleCoreRecord,
+  type ExampleSubRecord,
+  type TestCoreRecord,
+  type TestSubRecord,
+} from '@/types/core'
+import { Duration } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/Database'
@@ -10,125 +17,100 @@ export default function useDefaults() {
   const { log } = useLogger()
   const { confirmDialog } = useDialogs()
 
-  async function onDefaults() {
+  function randomGreekAlpha() {
+    const greekLetters = [
+      'Alpha',
+      'Beta',
+      'Gamma',
+      'Delta',
+      'Epsilon',
+      'Zeta',
+      'Eta',
+      'Theta',
+      'Iota',
+      'Kappa',
+      'Lambda',
+      'Mu',
+      'Nu',
+      'Xi',
+      'Omicron',
+      'Pi',
+      'Rho',
+      'Sigma',
+      'Tau',
+      'Upsilon',
+      'Phi',
+      'Chi',
+      'Psi',
+      'Omega',
+    ]
+    return greekLetters[Math.floor(Math.random() * greekLetters.length)]
+  }
+
+  function randomEnglishAlpha() {
+    const englishLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+    return englishLetters[Math.floor(Math.random() * englishLetters.length)]
+  }
+
+  function randomBoolean() {
+    return Math.random() >= 0.5
+  }
+
+  function randomPercent() {
+    return Math.floor(Math.random() * 100)
+  }
+
+  function previousDateMilliseconds() {
+    return Date.now() - Duration['One Year']
+  }
+
+  async function onDefaultExamples() {
     confirmDialog(
-      'Load Defaults',
-      `Would you like the load defaults into the database?`,
+      'Load Default Examples',
+      `Would you like the load default Examples into the database?`,
       Icon.INFO,
       'info',
       async () => {
         try {
-          const randomGreekAlpha = () => {
-            const greekLetters = [
-              'Alpha',
-              'Beta',
-              'Gamma',
-              'Delta',
-              'Epsilon',
-              'Zeta',
-              'Eta',
-              'Theta',
-              'Iota',
-              'Kappa',
-              'Lambda',
-              'Mu',
-              'Nu',
-              'Xi',
-              'Omicron',
-              'Pi',
-              'Rho',
-              'Sigma',
-              'Tau',
-              'Upsilon',
-              'Phi',
-              'Chi',
-              'Psi',
-              'Omega',
-            ]
-            return greekLetters[Math.floor(Math.random() * greekLetters.length)]
-          }
+          const coreRecords: ExampleCoreRecord[] = []
+          const subRecords: ExampleSubRecord[] = []
 
-          const randomEnglishAlpha = () => {
-            const englishLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-            return englishLetters[Math.floor(Math.random() * englishLetters.length)]
-          }
+          const buildRecords = (count: number) => {
+            const coreId = uid()
+            const name = `Example - ${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
-          const randomBoolean = () => {
-            return Math.random() >= 0.5
-          }
-
-          const randomPercent = () => {
-            return Math.floor(Math.random() * 100)
-          }
-
-          const previousDateMilliseconds = () => {
-            return Date.now() - Milliseconds.PER_YEAR
-          }
-
-          const parentRecords: ParentRecord[] = []
-          const childRecords: ChildRecord[] = []
-
-          const buildExampleRecords = (count: number) => {
-            const parentId = uid()
-            const name = `${randomGreekAlpha()} ${randomEnglishAlpha()}`
-
-            parentRecords.push({
-              id: parentId,
-              type: Type.EXAMPLE,
+            coreRecords.push({
+              type: recordTypes.Values.example,
+              id: coreId,
               timestamp: Date.now(),
               name,
               desc: `${name} description.`,
               enabled: true,
               favorited: randomBoolean(),
-              lastChild: undefined,
-              testIds: [uid(), uid(), uid()], // Not linked to any real child records
-            } as ParentRecord)
+              lastSub: undefined,
+              testIds: [uid(), uid(), uid()], // Fake test ids
+            })
 
             for (let i = 0; i < count; i++) {
-              childRecords.push({
+              subRecords.push({
+                type: recordTypes.Values.example,
                 id: uid(),
-                type: Type.EXAMPLE,
-                parentId,
-                timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
-                note: `Note ${i}`,
-              } as ChildRecord)
-            }
-          }
-
-          const buildTestRecords = (count: number) => {
-            const parentId = uid()
-            const name = `${randomGreekAlpha()} ${randomEnglishAlpha()}`
-
-            parentRecords.push({
-              id: parentId,
-              type: Type.TEST,
-              timestamp: Date.now(),
-              name,
-              desc: `${name} description.`,
-              enabled: true,
-              favorited: randomBoolean(),
-              lastChild: undefined,
-            } as ParentRecord)
-
-            for (let i = 0; i < count; i++) {
-              childRecords.push({
-                id: uid(),
-                type: Type.TEST,
-                parentId,
-                timestamp: previousDateMilliseconds() + Milliseconds.PER_DAY * i,
-                note: `Note ${i}`,
+                coreId,
+                timestamp: previousDateMilliseconds() + Duration['One Day'] * i,
+                note: `Example sub-record note ${i}`,
                 percent: randomPercent(),
-              } as ChildRecord)
+              })
             }
           }
 
-          buildExampleRecords(360)
-          buildTestRecords(360)
+          buildRecords(360)
 
-          await Promise.all([DB.importParents(parentRecords), DB.importChildren(childRecords)])
-          await DB.updateAllParentLastChild()
+          await Promise.all([
+            DB.importRecords(recordGroups.Values.core, coreRecords),
+            DB.importRecords(recordGroups.Values.sub, subRecords),
+          ])
 
-          log.info('Defaults loaded')
+          log.info('Default examples loaded')
         } catch (error) {
           log.error('Failed to load defaults', error)
         }
@@ -136,5 +118,57 @@ export default function useDefaults() {
     )
   }
 
-  return { onDefaults }
+  async function onDefaultTests() {
+    confirmDialog(
+      'Load Default Tests',
+      `Would you like the load default Tests into the database?`,
+      Icon.INFO,
+      'info',
+      async () => {
+        try {
+          const coreRecords: TestCoreRecord[] = []
+          const subRecords: TestSubRecord[] = []
+
+          const buildRecords = (count: number) => {
+            const coreId = uid()
+            const name = `Test - ${randomGreekAlpha()} ${randomEnglishAlpha()}`
+
+            coreRecords.push({
+              type: recordTypes.Values.test,
+              id: coreId,
+              timestamp: Date.now(),
+              name,
+              desc: `${name} description.`,
+              enabled: true,
+              favorited: randomBoolean(),
+              lastSub: undefined,
+            })
+
+            for (let i = 0; i < count; i++) {
+              subRecords.push({
+                type: recordTypes.Values.test,
+                id: uid(),
+                coreId,
+                timestamp: previousDateMilliseconds() + Duration['One Day'] * i,
+                note: `Test sub-record note ${i}`,
+              })
+            }
+          }
+
+          buildRecords(0)
+
+          await Promise.all([
+            DB.importRecords(recordGroups.Values.core, coreRecords),
+            DB.importRecords(recordGroups.Values.sub, subRecords),
+          ])
+
+          log.info('Default tests loaded')
+        } catch (error) {
+          log.error('Failed to load defaults', error)
+        }
+      }
+    )
+  }
+
+  return { onDefaultExamples, onDefaultTests }
 }

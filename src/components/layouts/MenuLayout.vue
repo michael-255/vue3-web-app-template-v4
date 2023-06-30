@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
-import { Icon } from '@/types/icons'
-import { RouteName } from '@/router/route-names'
-import { AppHeaderColor, AppName } from '@/types/general'
+import { recordGroups } from '@/types/core'
+import { AppHeaderColor, AppName } from '@/constants/global'
+import { Icon, routeNames } from '@/types/general'
 import DataSchema from '@/services/DataSchema'
 import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
@@ -11,7 +11,7 @@ const { goBack } = useRoutables()
 const uiStore = useUIStore()
 const route = useRoute()
 
-const parentOptions = DataSchema.getParentTypeOptions()
+const groupOptions = DataSchema.getGroupOptions(recordGroups.Values.core)
 </script>
 
 <template>
@@ -24,7 +24,7 @@ const parentOptions = DataSchema.getParentTypeOptions()
         <QToolbarTitle>{{ AppName }}</QToolbarTitle>
 
         <QBtn
-          v-if="route.name !== RouteName.DASHBOARD"
+          v-if="route.name !== routeNames.Values.Dashboard"
           flat
           round
           :icon="Icon.BACK"
@@ -43,7 +43,7 @@ const parentOptions = DataSchema.getParentTypeOptions()
 
       <QList>
         <!-- Dashboard Link -->
-        <QItem clickable v-ripple :to="{ name: RouteName.DASHBOARD }">
+        <QItem clickable v-ripple :to="{ name: routeNames.Values.Dashboard }">
           <QItemSection avatar>
             <QIcon color="primary" :name="Icon.DASHBOARD" />
           </QItemSection>
@@ -54,46 +54,51 @@ const parentOptions = DataSchema.getParentTypeOptions()
 
         <!-- Parent Data Table Links -->
         <QItem
-          v-for="(parent, i) in parentOptions"
+          v-for="(opt, i) in groupOptions"
           :key="i"
           clickable
           v-ripple
           :to="{
-            name: RouteName.DATA_PARENTS,
-            params: { type: parent.value },
+            name: routeNames.Values.DataRecords,
+            params: { group: opt?.value?.group, type: opt?.value?.type },
           }"
         >
           <QItemSection avatar>
-            <QIcon color="primary" :name="parent.icon" />
+            <QIcon color="primary" :name="opt.icon" />
           </QItemSection>
-          <QItemSection>{{ parent.label }}</QItemSection>
+          <QItemSection>{{ opt.label }}</QItemSection>
         </QItem>
 
         <QSeparator spaced="md" inset />
 
         <!-- Common App Links -->
-        <QItem clickable v-ripple :to="{ name: RouteName.SETTINGS }">
+        <QItem clickable v-ripple :to="{ name: routeNames.Values.Settings }">
           <QItemSection avatar>
             <QIcon color="primary" :name="Icon.SETTINGS" />
           </QItemSection>
           <QItemSection>Settings</QItemSection>
         </QItem>
 
-        <QItem clickable v-ripple :to="{ name: RouteName.FAQ }">
+        <QItem clickable v-ripple :to="{ name: routeNames.Values.FAQ }">
           <QItemSection avatar>
             <QIcon color="primary" :name="Icon.HELP" />
           </QItemSection>
           <QItemSection>FAQ</QItemSection>
         </QItem>
 
-        <QItem clickable v-ripple :to="{ name: RouteName.ABOUT }">
+        <QItem clickable v-ripple :to="{ name: routeNames.Values.About }">
           <QItemSection avatar>
             <QIcon color="primary" :name="Icon.INFO" />
           </QItemSection>
           <QItemSection>About</QItemSection>
         </QItem>
 
-        <QItem clickable v-ripple active-class="text-warning" :to="{ name: RouteName.DONATE }">
+        <QItem
+          clickable
+          v-ripple
+          active-class="text-warning"
+          :to="{ name: routeNames.Values.Donate }"
+        >
           <QItemSection avatar>
             <QIcon color="warning" :name="Icon.DONATE" />
           </QItemSection>

@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { type Ref, ref, onMounted } from 'vue'
-import type { ParentRecord } from '@/types/database'
+import { recordGroups, type AnyCoreRecord } from '@/types/core'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/Database'
 
 const props = defineProps<{
-  parentId: string
+  coreId: string
 }>()
 
 const { log } = useLogger()
 
-const parent: Ref<ParentRecord> = ref({} as ParentRecord)
+const record: Ref<AnyCoreRecord | undefined> = ref(undefined)
 const isVisible = ref(false)
 
 onMounted(async () => {
   try {
-    const parentRecord = await DB.getParent(props.parentId)
+    const coreRecord = (await DB.getRecord(recordGroups.Values.core, props.coreId)) as AnyCoreRecord
 
-    if (parentRecord) {
-      parent.value = parentRecord
+    if (coreRecord) {
+      record.value = coreRecord
       isVisible.value = true
     }
   } catch (error) {
@@ -30,11 +30,11 @@ onMounted(async () => {
 <template>
   <QCard v-if="isVisible" class="q-mb-md">
     <QCardSection>
-      <p class="text-h6">Record for {{ parent.name }}</p>
+      <p class="text-h6">Record for {{ record?.name }}</p>
 
-      <p>{{ parent.desc }}</p>
+      <p>{{ record?.desc }}</p>
 
-      <p class="q-my-none q-py-none text-grey text-caption">{{ parent.id }}</p>
+      <p class="q-my-none q-py-none text-grey text-caption">{{ record?.id }}</p>
     </QCardSection>
   </QCard>
 </template>

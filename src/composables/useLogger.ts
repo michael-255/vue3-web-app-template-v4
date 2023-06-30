@@ -1,5 +1,5 @@
-import { Icon } from '@/types/icons'
-import { SettingKey, Severity } from '@/types/database'
+import { Icon } from '@/types/general'
+import { logLevels, settingkeys } from '@/types/core'
 import useNotifications from '@/composables/useNotifications'
 import Logger from '@/services/Logger'
 import DB from '@/services/Database'
@@ -11,49 +11,48 @@ export default function useLogger() {
     print: (message: any, ...args: any) => {
       Logger.print(message, ...args)
     },
+
     silentDebug: async (name: string, details?: any) => {
       if (import.meta.env.DEV) {
-        Logger.debug(`[${Severity.DEBUG}]`, name, details)
+        Logger.debug(`[${logLevels.Values.DEBUG}]`, name, details)
       }
     },
+
     debug: async (name: string, details?: any) => {
       if (import.meta.env.DEV) {
-        Logger.debug(`[${Severity.DEBUG}]`, name, details)
+        Logger.debug(`[${logLevels.Values.DEBUG}]`, name, details)
         notify(name, Icon.DEBUG, 'accent')
       }
     },
-    info: async (name: string, details?: any) => {
-      const severity = Severity.INFO
 
-      if ((await DB.getSetting(SettingKey.SHOW_CONSOLE_LOGS))?.value) {
-        Logger.info(`[${severity}]`, name, details)
+    info: async (name: string, details?: any) => {
+      if ((await DB.getSetting(settingkeys.Values['console-logs']))?.value) {
+        Logger.info(`[${logLevels.Values.INFO}]`, name, details)
       }
 
-      await DB.addLog(severity, name, details)
+      await DB.addLog(logLevels.Values.INFO, name, details)
 
-      if ((await DB.getSetting(SettingKey.SHOW_INFO_MESSAGES))?.value) {
+      if ((await DB.getSetting(settingkeys.Values['info-messages']))?.value) {
         notify(name, Icon.INFO, 'info')
       }
     },
-    warn: async (name: string, details?: any) => {
-      const severity = Severity.WARN
 
-      if ((await DB.getSetting(SettingKey.SHOW_CONSOLE_LOGS))?.value) {
-        Logger.warn(`[${severity}]`, name, details)
+    warn: async (name: string, details?: any) => {
+      if ((await DB.getSetting(settingkeys.Values['console-logs']))?.value) {
+        Logger.warn(`[${logLevels.Values.WARN}]`, name, details)
       }
 
-      await DB.addLog(severity, name, details)
+      await DB.addLog(logLevels.Values.WARN, name, details)
 
       notify(name, Icon.WARN, 'warning')
     },
-    error: async (name: string, details?: any) => {
-      const severity = Severity.ERROR
 
-      if ((await DB.getSetting(SettingKey.SHOW_CONSOLE_LOGS))?.value) {
-        Logger.error(`[${severity}]`, name, details)
+    error: async (name: string, details?: any) => {
+      if ((await DB.getSetting(settingkeys.Values['console-logs']))?.value) {
+        Logger.error(`[${logLevels.Values.ERROR}]`, name, details)
       }
 
-      await DB.addLog(severity, name, details)
+      await DB.addLog(logLevels.Values.ERROR, name, details)
 
       notify(name, Icon.ERROR, 'negative')
     },

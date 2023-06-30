@@ -1,84 +1,45 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
 import { Dark } from 'quasar'
-import type { ChildRecord, Log, ParentRecord, Setting } from '@/types/database'
-import { Milliseconds, AppName, LogRetention } from '@/types/general'
-import { Severity, Type, Field, SettingKey } from '@/types/database'
+import { Duration } from '@/types/general'
+import { AppName } from '@/constants/global'
+import {
+  type Log,
+  type Setting,
+  type AnyRecord,
+  type AnyCoreRecord,
+  type AnySubRecord,
+  type LogLevel,
+  type SettingKey,
+  type RecordType,
+  type RecordGroup,
+  allFields,
+  settingkeys,
+  recordTypes,
+  recordGroups,
+} from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 
 class Database extends Dexie {
   // Required for easier TypeScript usage
   Logs!: Table<Log>
   Settings!: Table<Setting>
-  Parents!: Table<ParentRecord>
-  Children!: Table<ChildRecord>
+  CoreRecords!: Table<AnyCoreRecord>
+  SubRecords!: Table<AnySubRecord>
 
   constructor(name: string) {
     super(name)
 
     this.version(1).stores({
-      Logs: `++${Field.AUTO_ID}`,
-      Settings: `&${Field.KEY}`,
-      Parents: `&${Field.ID}, ${Field.TYPE}`,
-      Children: `&${Field.ID}, ${Field.TYPE}, ${Field.PARENT_ID}`,
+      Logs: `++${allFields.Values.autoId}`,
+      Settings: `&${allFields.Values.key}`,
+      CoreRecords: `&${allFields.Values.id}, ${allFields.Values.type}`,
+      SubRecords: `&${allFields.Values.id}, ${allFields.Values.type}, ${allFields.Values.coreId}`,
     })
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  //                                                                         //
-  //     LIVE QUERIES                                                        //
-  //                                                                         //
-  /////////////////////////////////////////////////////////////////////////////
-
-  liveSettings() {
-    return liveQuery(() => this.Settings.toArray())
-  }
-
-  liveLogs() {
-    return liveQuery(() => this.Logs.orderBy(Field.AUTO_ID).reverse().toArray())
-  }
-
-  liveDashboard() {
-    return liveQuery(async () => {
-      const parents = await this.Parents.filter((p) => p.enabled === true).sortBy(Field.NAME)
-
-      const favorites: ParentRecord[] = []
-      const nonFavorites: ParentRecord[] = []
-
-      parents.forEach((p) => {
-        if (p.favorited === true) {
-          favorites.push(p)
-        } else {
-          nonFavorites.push(p)
-        }
-      })
-
-      return Object.values(Type).reduce((acc, type) => {
-        acc[type] = [
-          ...favorites.filter((p) => p.type === type),
-          ...nonFavorites.filter((p) => p.type === type),
-        ]
-        return acc
-      }, {} as { [key in Type]: ParentRecord[] })
-    })
-  }
-
-  liveParents(type: Type) {
-    return liveQuery(async () => {
-      return await this.Parents.where(Field.TYPE).equals(type).sortBy(Field.NAME)
-    })
-  }
-
-  liveChildren(type: Type) {
-    return liveQuery(async () => {
-      return (await this.Children.where(Field.TYPE).equals(type).sortBy(Field.TIMESTAMP)).reverse()
-    })
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  //                                                                         //
-  //     LOGS                                                                //
-  //                                                                         //
-  /////////////////////////////////////////////////////////////////////////////
+  //
+  // LOGS
+  //
 
   async getLogs() {
     return await this.Logs.toArray()
@@ -88,11 +49,11 @@ class Database extends Dexie {
     return await this.Logs.get(autoId)
   }
 
-  async addLog(severity: Severity, label: string, details?: any) {
+  async addLog(logLevel: LogLevel, label: string, details?: any) {
     const log: Log = {
       // Auto Id handled by Dexie
       timestamp: Date.now(),
-      severity,
+      logLevel,
       label,
     }
 
@@ -112,30 +73,21 @@ class Database extends Dexie {
   }
 
   async deleteExpiredLogs() {
-    const logRetentionTime = (await this.getSetting(SettingKey.LOG_RETENTION_TIME))
-      ?.value as LogRetention
+    const logDuration = (await this.Settings.get(settingkeys.Values['log-retention-duration']))
+      ?.value as Duration
 
-    if (!logRetentionTime || logRetentionTime === LogRetention.FOREVER) {
+    if (!logDuration || logDuration === Duration.Forever) {
       return 0 // No logs purged
     }
 
-    const lookupMilliseconds: Readonly<{
-      [key in LogRetention]: number
-    }> = {
-      [LogRetention.ONE_WEEK]: Milliseconds.PER_WEEK,
-      [LogRetention.THREE_MONTHS]: Milliseconds.PER_THREE_MONTHS,
-      [LogRetention.ONE_YEAR]: Milliseconds.PER_YEAR,
-      [LogRetention.FOREVER]: Milliseconds.FOREVER,
-    }
-
-    const logs = await this.getLogs()
+    const logs = await this.Logs.toArray()
 
     // Find Logs that are older than the retention time and map them to their keys
     const removableLogs = logs
       .filter((log: Log) => {
         const logTimestamp = log.timestamp ?? 0
-        const logAgeMilliseconds = Date.now() - logTimestamp
-        return logAgeMilliseconds > lookupMilliseconds[logRetentionTime]
+        const logAge = Date.now() - logTimestamp
+        return logAge > logDuration
       })
       .map((log: Log) => log.autoId as number) // Map remaining Log ids for removal
 
@@ -144,46 +96,9 @@ class Database extends Dexie {
     return removableLogs.length // Number of logs deleted
   }
 
-  async clearLogs() {
-    await this.Logs.clear()
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  //                                                                         //
-  //     SETTINGS                                                            //
-  //                                                                         //
-  /////////////////////////////////////////////////////////////////////////////
-
-  async initSettings() {
-    const defaultSettings: Readonly<{
-      [key in SettingKey]: any
-    }> = {
-      // Supports "null" as a value to indicate that the setting has no value yet
-      [SettingKey.SHOW_WELCOME]: true,
-      [SettingKey.SHOW_DESCRIPTIONS]: true,
-      [SettingKey.DARK_MODE]: true,
-      [SettingKey.SHOW_CONSOLE_LOGS]: false,
-      [SettingKey.SHOW_INFO_MESSAGES]: true,
-      [SettingKey.LOG_RETENTION_TIME]: LogRetention.THREE_MONTHS,
-    }
-
-    const keys = Object.values(SettingKey)
-
-    // Replace Setting value with default if needed
-    const settings = await Promise.all(
-      keys.map(async (key) => {
-        const settingValue = (await this.Settings.get(key))?.value
-        return {
-          key,
-          value: settingValue === undefined ? defaultSettings[key] : settingValue,
-        }
-      })
-    )
-
-    Dark.set(!!settings.find((s) => s.key === SettingKey.DARK_MODE)?.value)
-
-    await Promise.all(settings.map((s) => this.setSetting(s.key, s.value)))
-  }
+  //
+  // SETTINGS
+  //
 
   async getSettings() {
     return await this.Settings.toArray()
@@ -193,255 +108,298 @@ class Database extends Dexie {
     return await this.Settings.get(key)
   }
 
+  async initSettings() {
+    const defaultSettings: Readonly<{
+      [key in SettingKey]: any
+    }> = {
+      [settingkeys.Values['welcome-overlay']]: true,
+      [settingkeys.Values['dashboard-descriptions']]: true,
+      [settingkeys.Values['dark-mode']]: true,
+      [settingkeys.Values['console-logs']]: false,
+      [settingkeys.Values['info-messages']]: true,
+      [settingkeys.Values['log-retention-duration']]: Duration['Three Months'],
+    }
+
+    const keys = settingkeys.options
+
+    const settings = await Promise.all(
+      keys.map(async (key) => {
+        const setting = await this.Settings.get(key)
+
+        if (setting) {
+          return setting
+        } else {
+          return { key, value: defaultSettings[key] }
+        }
+      })
+    )
+
+    Dark.set(Boolean(settings.find((s) => s.key === settingkeys.Values['dark-mode'])?.value))
+
+    await Promise.all(settings.map((s) => this.setSetting(s.key, s.value)))
+  }
+
   async setSetting(key: SettingKey, value: any) {
-    if (key === SettingKey.DARK_MODE) {
-      Dark.set(!!value)
+    if (key === settingkeys.Values['dark-mode']) {
+      Dark.set(Boolean(value))
     }
 
-    const setting: Setting = { key, value }
-    const settingValue = await this.Settings.get(setting.key)
+    const currentSetting = await this.Settings.get(key)
 
-    if (settingValue === undefined) {
-      // Create Setting if it doesn't exist (undefined only)
-      return await this.Settings.add(setting)
+    if (!currentSetting) {
+      return await this.Settings.add({ key, value })
     } else {
-      // Update Setting if it does exist
-      return await this.Settings.update(setting.key, { value: setting.value })
+      return await this.Settings.update(key, { value })
     }
   }
 
-  async resetSettings() {
-    await this.Settings.clear()
-    await this.initSettings()
+  //
+  // LIVE QUERIES
+  //
+
+  liveLogs() {
+    return liveQuery(() => this.Logs.orderBy(allFields.Values.autoId).reverse().toArray())
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  //                                                                         //
-  //     PARENTS                                                             //
-  //                                                                         //
-  /////////////////////////////////////////////////////////////////////////////
-
-  async getParents() {
-    return await this.Parents.toArray()
+  liveSettings() {
+    return liveQuery(() => this.Settings.orderBy(allFields.Values.key).toArray())
   }
 
-  async getParentsByType(type: Type) {
-    return await this.Parents.where(Field.TYPE).equals(type).toArray()
-  }
-
-  async getParent(id: string) {
-    return await this.Parents.get(id)
-  }
-
-  async getParentChildren(parentId: string) {
-    return await this.Children.where(Field.PARENT_ID).equals(parentId).sortBy(Field.TIMESTAMP)
-  }
-
-  async addParent(record: ParentRecord) {
-    const recordValidator = DataSchema.getParentValidator(record?.type as Type)
-
-    if (recordValidator && (await recordValidator.isValid(record))) {
-      return await this.Parents.add(await recordValidator.validate(record))
-    } else {
-      throw new Error(`Invalid record or validator: ${JSON.stringify(record)}`)
-    }
-  }
-
-  async importParents(records: ParentRecord[]) {
-    const validRecords: ParentRecord[] = []
-    const skippedRecords: ParentRecord[] = []
-
-    for await (const r of records) {
-      const recordValidator = DataSchema.getParentValidator(r?.type as Type)
-
-      if (recordValidator && (await recordValidator.isValid(r))) {
-        // Valid records get cleaned and pushed to valid records
-        validRecords.push(await recordValidator.validate(r))
-      } else {
-        skippedRecords.push(r)
-      }
-    }
-
-    await this.Parents.bulkAdd(validRecords) // Only valid records are imported
-
-    if (skippedRecords.length > 0) {
-      // Error for the frontend to report if any records were skipped
-      throw new Error(
-        `Records skipped due to validation failures (${
-          skippedRecords.length
-        }): ${skippedRecords.map((r) => String(r.id))}`
-      )
-    }
-  }
-
-  async updateParent(oldId: string, updatedRecord: ParentRecord) {
-    const oldRecord = await this.Parents.get(oldId)
-
-    if (!oldRecord) {
-      throw new Error(`Record with old id ${oldId} does not exist.`)
-    }
-
-    const recordValidator = DataSchema.getParentValidator(updatedRecord?.type as Type)
-
-    if (recordValidator && (await recordValidator.isValid(updatedRecord))) {
-      return await this.Parents.update(oldId, await recordValidator.validate(updatedRecord))
-    } else {
-      throw new Error(`Invalid record or validator: ${JSON.stringify(updatedRecord)}`)
-    }
-  }
-
-  async updateParentLastChild(parentId: string) {
-    const lastChild = await this.getLastChild(parentId)
-    return await this.Parents.update(parentId, { lastChild })
-  }
-
-  /**
-   * Must call at the end of bulk imports to update the lastChild property of all parents
-   */
-  async updateAllParentLastChild() {
-    const parents = await this.Parents.toArray()
-    await Promise.all(parents.map((p) => this.updateParentLastChild(p.id as string)))
-  }
-
-  async deleteParent(id: string) {
-    const recordToDelete = await this.getParent(id)
-
-    if (!recordToDelete) {
-      throw new Error(`Record with id ${id} does not exist.`)
-    }
-
-    await this.Parents.delete(id)
-    await this.Children.where(Field.PARENT_ID).equals(id).delete()
-
-    return recordToDelete
-  }
-
-  // Also deletes accompanying child records
-  async clearParentsByType(type: Type) {
-    await this.Parents.where(Field.TYPE).equals(type).delete()
-    await this.Children.where(Field.TYPE).equals(type).delete()
-  }
-
-  async clearParents() {
-    await this.Parents.clear()
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  //                                                                         //
-  //     CHILDREN                                                            //
-  //                                                                         //
-  /////////////////////////////////////////////////////////////////////////////
-
-  async getChildren() {
-    return await this.Children.toArray()
-  }
-
-  async getChildrenByType(type: Type) {
-    return await this.Children.where(Field.TYPE).equals(type).toArray()
-  }
-
-  async getChild(id: string) {
-    return await this.Children.get(id)
-  }
-
-  async getLastChild(parentId: string) {
-    return (
-      await this.Children.where(Field.PARENT_ID).equals(parentId).sortBy(Field.TIMESTAMP)
-    ).reverse()[0]
-  }
-
-  async addChild(record: ChildRecord) {
-    const recordValidator = DataSchema.getChildValidator(record?.type as Type)
-
-    if (recordValidator && (await recordValidator.isValid(record))) {
-      const addResult = await this.Children.add(await recordValidator.validate(record))
-      await this.updateParentLastChild(record.parentId as string)
-      return addResult
-    } else {
-      throw new Error(`Invalid record or validator: ${JSON.stringify(record)}`)
-    }
-  }
-
-  async importChildren(records: ChildRecord[]) {
-    const validRecords: ChildRecord[] = []
-    const skippedRecords: ChildRecord[] = []
-
-    for await (const r of records) {
-      const recordValidator = DataSchema.getChildValidator(r?.type as Type)
-
-      if (recordValidator && (await recordValidator.isValid(r))) {
-        // Valid records get cleaned and pushed to valid records
-        validRecords.push(await recordValidator.validate(r))
-      } else {
-        skippedRecords.push(r)
-      }
-    }
-
-    await this.Children.bulkAdd(validRecords) // Only valid records are imported
-
-    if (skippedRecords.length > 0) {
-      // Error for the frontend to report if any records were skipped
-      throw new Error(
-        `Records skipped due to validation failures (${
-          skippedRecords.length
-        }): ${skippedRecords.map((r) => String(r.id))}`
-      )
-    }
-  }
-
-  async updateChild(oldId: string, updatedRecord: ChildRecord) {
-    const oldRecord = await this.Children.get(oldId)
-
-    if (!oldRecord) {
-      throw new Error(`Record with old id ${oldId} does not exist.`)
-    }
-
-    const recordValidator = DataSchema.getChildValidator(updatedRecord?.type as Type)
-
-    if (recordValidator && (await recordValidator.isValid(updatedRecord))) {
-      const updateResult = await this.Children.update(
-        oldId,
-        await recordValidator.validate(updatedRecord)
-      )
-      await this.updateParentLastChild(updatedRecord.parentId as string)
-      return updateResult
-    } else {
-      throw new Error(`Invalid record or validator: ${JSON.stringify(updatedRecord)}`)
-    }
-  }
-
-  async deleteChild(id: string) {
-    const recordToDelete = await this.getChild(id)
-
-    if (!recordToDelete) {
-      throw new Error(`Record with id ${id} does not exist.`)
-    }
-
-    await this.Children.delete(id)
-    await this.updateParentLastChild(recordToDelete.parentId as string)
-    return recordToDelete
-  }
-
-  async clearChildrenByType(type: Type) {
-    // Get all child records to be deleted
-    const records = await this.Children.where(Field.TYPE).equals(type).toArray()
-    // Delete all child records of the given type
-    await this.Children.where(Field.TYPE).equals(type).delete()
-    // Update parent records lastChild property to undefined
-    await Promise.all(
-      records.map((r) => this.Parents.update(r.parentId as string, { lastChild: undefined }))
+  liveCoreRecords(type: RecordType) {
+    return liveQuery(() =>
+      this.CoreRecords.where(allFields.Values.type).equals(type).sortBy(allFields.Values.name)
     )
   }
 
-  async clearChildren() {
-    await this.Children.clear()
+  liveSubRecords(type: RecordType) {
+    return liveQuery(async () =>
+      (
+        await this.SubRecords.where(allFields.Values.type)
+          .equals(type)
+          .sortBy(allFields.Values.timestamp)
+      ).reverse()
+    )
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  //                                                                         //
-  //     MISCELLANEOUS                                                       //
-  //                                                                         //
-  /////////////////////////////////////////////////////////////////////////////
+  liveDashboard() {
+    return liveQuery(async () => {
+      const parents = await this.CoreRecords.filter((p) => p.enabled === true).sortBy(
+        allFields.Values.name
+      )
+
+      const favorites: AnyCoreRecord[] = []
+      const nonFavorites: AnyCoreRecord[] = []
+
+      parents.forEach((p) => {
+        if (p.favorited === true) {
+          favorites.push(p)
+        } else {
+          nonFavorites.push(p)
+        }
+      })
+
+      return recordTypes.options.reduce((acc, type) => {
+        acc[type] = [
+          ...favorites.filter((p) => p.type === type),
+          ...nonFavorites.filter((p) => p.type === type),
+        ]
+        return acc
+      }, {} as { [key in RecordType]: AnyCoreRecord[] })
+    })
+  }
+
+  //
+  // RECORD GETS
+  //
+
+  async getAllCoreRecords() {
+    return await this.CoreRecords.toArray()
+  }
+
+  async getAllSubRecords() {
+    return await this.SubRecords.toArray()
+  }
+
+  async getRecords(group: RecordGroup, type: RecordType) {
+    if (group === recordGroups.Values.core) {
+      return await this.CoreRecords.where(allFields.Values.type)
+        .equals(type)
+        .sortBy(allFields.Values.name)
+    } else {
+      return (
+        await this.SubRecords.where(allFields.Values.type)
+          .equals(type)
+          .sortBy(allFields.Values.timestamp)
+      ).reverse()
+    }
+  }
+
+  async getRecord(group: RecordGroup, id: string) {
+    if (group === recordGroups.Values.core) {
+      return await this.CoreRecords.get(id)
+    } else {
+      return await this.SubRecords.get(id)
+    }
+  }
+
+  async getCoreSubRecords(coreId: string) {
+    return await this.SubRecords.where(allFields.Values.coreId)
+      .equals(coreId)
+      .sortBy(allFields.Values.timestamp)
+  }
+
+  //
+  // RECORD CREATES
+  //
+
+  async addRecord(group: RecordGroup, type: RecordType, record: AnyRecord) {
+    const schema = DataSchema.getSchema(group, type)
+
+    if (!schema || !schema.safeParse(record).success) {
+      throw new Error(
+        `Invalid schema with parameters: ${group}, ${type}, ${JSON.stringify(record)}`
+      )
+    }
+
+    if (group === recordGroups.Values.core) {
+      const newRecord = schema.parse(record) as AnyCoreRecord
+      const result = await this.CoreRecords.add(newRecord)
+      await this.updateLastSub(newRecord.id)
+      return result
+    } else {
+      const newRecord = schema.parse(record) as AnySubRecord
+      const result = await this.SubRecords.add(newRecord)
+      await this.updateLastSub(newRecord.coreId)
+      return result
+    }
+  }
+
+  async importRecords(group: RecordGroup, records: AnyRecord[]) {
+    const validRecords: AnyRecord[] = []
+    const skippedRecords: AnyRecord[] = []
+
+    for await (const r of records) {
+      const schema = DataSchema.getSchema(group, r.type)
+
+      if (schema && schema.safeParse(r).success) {
+        validRecords.push(schema.parse(r) as AnyRecord)
+      } else {
+        skippedRecords.push(r)
+      }
+    }
+
+    if (group === recordGroups.Values.core) {
+      await this.CoreRecords.bulkAdd(validRecords as AnyCoreRecord[])
+    } else {
+      await this.SubRecords.bulkAdd(validRecords as AnySubRecord[])
+    }
+
+    await this.updateAllLastSub()
+
+    if (skippedRecords.length > 0) {
+      // Error for the frontend to report if any records were skipped
+      throw new Error(
+        `Records skipped due to validation failures (${
+          skippedRecords.length
+        }): ${skippedRecords.map((r) => String(r.id))}`
+      )
+    }
+  }
+
+  //
+  // RECORD UPDATES
+  //
+
+  async updateRecord(group: RecordGroup, type: RecordType, id: string, updatedRecord: AnyRecord) {
+    const schema = DataSchema.getSchema(group, type)
+
+    if (!schema || !schema.safeParse(updatedRecord).success) {
+      throw new Error(
+        `Invalid schema with parameters: ${group}, ${type}, ${id}, ${JSON.stringify(updatedRecord)}`
+      )
+    }
+
+    if (group === recordGroups.Values.core) {
+      const result = await this.CoreRecords.update(id, schema.parse(updatedRecord))
+      await this.updateLastSub(id)
+      return result
+    } else {
+      const result = await this.SubRecords.update(id, schema.parse(updatedRecord))
+      await this.updateLastSub(updatedRecord.coreId)
+      return result
+    }
+  }
+
+  async updateLastSub(coreId: string) {
+    const lastSub = (
+      await this.SubRecords.where(allFields.Values.coreId)
+        .equals(coreId)
+        .sortBy(allFields.Values.timestamp)
+    ).reverse()[0]
+    return await this.CoreRecords.update(coreId, { lastSub })
+  }
+
+  /**
+   * - Call after imports to update the lastSub property of all core records
+   */
+  async updateAllLastSub() {
+    const coreRecords = await this.CoreRecords.toArray()
+    return await Promise.all(coreRecords.map((p) => this.updateLastSub(p.id)))
+  }
+
+  //
+  // RECORD DELETES
+  //
+
+  async deleteRecord(group: RecordGroup, id: string) {
+    const recordToDelete = (await this.getRecord(group, id)) as AnyRecord | undefined
+
+    if (!recordToDelete) {
+      throw new Error(`No record found to delete with: ${group}, ${id}`)
+    }
+
+    if (group === recordGroups.Values.core) {
+      await this.CoreRecords.delete(id)
+      await this.SubRecords.where(allFields.Values.coreId).equals(id).delete()
+    } else {
+      await this.SubRecords.delete(id)
+      await this.updateLastSub(recordToDelete.coreId)
+    }
+
+    return recordToDelete
+  }
+
+  async clearRecordsByType(group: RecordGroup, type: RecordType) {
+    if (group === recordGroups.Values.core) {
+      await this.CoreRecords.where(allFields.Values.type).equals(type).delete()
+      return await this.SubRecords.where(allFields.Values.type).equals(type).delete()
+    } else {
+      await this.SubRecords.where(allFields.Values.type).equals(type).delete()
+      const parentsToUpdate = await this.CoreRecords.where(allFields.Values.type)
+        .equals(type)
+        .toArray()
+      return await Promise.all(
+        parentsToUpdate.map((r) => this.CoreRecords.update(r.id, { lastChild: undefined }))
+      )
+    }
+  }
+
+  async clearLogs() {
+    return await this.Logs.clear()
+  }
+
+  async clearSettings() {
+    await this.Settings.clear()
+    return await this.initSettings()
+  }
+
+  async clearAll() {
+    await this.Logs.clear()
+    await this.Settings.clear()
+    await this.CoreRecords.clear()
+    await this.SubRecords.clear()
+    return await this.initSettings()
+  }
 
   // Deletes entire database. Require app reload to reinitialize the database.
   async deleteDatabase() {
