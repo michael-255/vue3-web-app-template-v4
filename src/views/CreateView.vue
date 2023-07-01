@@ -21,7 +21,7 @@ const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
 
 const label = DataSchema.getLabel(routeGroup as RecordGroup, routeType as RecordType, 'singular')
-const fieldProps = DataSchema.getFieldProps(routeGroup as RecordGroup, routeType as RecordType)
+const fields = DataSchema.getFields(routeGroup as RecordGroup, routeType as RecordType)
 const isFormValid = ref(true)
 
 onMounted(async () => {
@@ -64,7 +64,7 @@ async function onSubmit() {
 <template>
   <ResponsivePage :bannerIcon="Icon.CREATE" :bannerTitle="`Create ${label}`">
     <!-- Error Render -->
-    <div v-if="!label || !fieldProps">
+    <div v-if="!label || !fields">
       <QCard class="q-mb-md">
         <QCardSection>
           <QIcon :name="Icon.WARN" size="md" color="warning" />
@@ -83,16 +83,8 @@ async function onSubmit() {
         <ParentInfoCard v-if="actionStore.record?.coreId" :coreId="actionStore.record.coreId" />
 
         <!-- Dynamic Async Components -->
-        <div v-for="(fieldProp, i) in fieldProps" :key="i" class="q-mb-md">
-          <component
-            :is="fieldProp.component"
-            :field="fieldProp.field"
-            :label="fieldProp.label"
-            :desc="fieldProp.desc"
-            :getDefault="fieldProp.getDefault"
-            :schema="fieldProp.schema"
-            :message="fieldProp.message"
-          />
+        <div v-for="(field, i) in fields" :key="i" class="q-mb-md">
+          <component :is="field" :inspecting="false" />
         </div>
 
         <!-- Submit -->

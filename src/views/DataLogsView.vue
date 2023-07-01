@@ -7,11 +7,11 @@ import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
 import { hiddenColumnNames, logColumns } from '@/services/table-columns'
 import { allFields, type AnyDatabaseRecord, type AnyField, type Log } from '@/types/core'
-import { logFieldProps } from '@/services/field-props'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/Database'
+import DataSchema from '@/services/DataSchema'
 
 useMeta({ title: `${AppName} - Logs Data` })
 
@@ -24,7 +24,7 @@ const rows: Ref<Log[]> = ref([])
 const visibleColumns: Ref<AnyField[]> = ref([
   allFields.Values.timestamp,
   allFields.Values.logLevel,
-  allFields.Values.label,
+  allFields.Values.logLabel,
 ])
 const columns: Ref<QTableColumn[]> = ref(logColumns)
 const columnOptions: Ref<QTableColumn[]> = ref(
@@ -45,7 +45,8 @@ onUnmounted(() => {
 
 async function onInspect(autoId: number) {
   const record = (await DB.getLog(Number(autoId))) as AnyDatabaseRecord
-  inspectDialog('Log', logFieldProps, record)
+  const fields = DataSchema.getLogFields()
+  inspectDialog('Log', record, fields)
 }
 </script>
 

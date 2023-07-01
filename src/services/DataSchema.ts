@@ -17,12 +17,6 @@ import {
   testCoreColumns,
   testSubColumns,
 } from '@/services/table-columns'
-import {
-  exampleCoreFieldProps,
-  exampleSubFieldProps,
-  testCoreFieldProps,
-  testSubFieldProps,
-} from '@/services/field-props'
 
 export default class DataSchema {
   private static recordProps: RecordProps[] = [
@@ -33,8 +27,16 @@ export default class DataSchema {
       singular: 'Core Example',
       plural: 'Core Examples',
       charts: [defineAsyncComponent(() => import('@/components/charts/ChartPercent.vue'))],
+      fields: [
+        defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldTimestamp.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldName.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldDesc.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldEnabled.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldFavorited.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldTestIds.vue')),
+      ],
       tableColumns: exampleCoreColumns,
-      fieldProps: exampleCoreFieldProps,
       schema: exampleCoreSchema,
     },
     {
@@ -44,8 +46,14 @@ export default class DataSchema {
       singular: 'Sub Example',
       plural: 'Sub Examples',
       charts: [],
+      fields: [
+        defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldTimestamp.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldCoreId.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldNote.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldPercent.vue')),
+      ],
       tableColumns: exampleSubColumns,
-      fieldProps: exampleSubFieldProps,
       schema: exampleSubSchema,
     },
     {
@@ -55,8 +63,15 @@ export default class DataSchema {
       singular: 'Core Test',
       plural: 'Core Tests',
       charts: [],
+      fields: [
+        defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldTimestamp.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldName.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldDesc.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldEnabled.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldFavorited.vue')),
+      ],
       tableColumns: testCoreColumns,
-      fieldProps: testCoreFieldProps,
       schema: testCoreSchema,
     },
     {
@@ -66,11 +81,30 @@ export default class DataSchema {
       singular: 'Sub Test',
       plural: 'Sub Tests',
       charts: [],
+      fields: [
+        defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldTimestamp.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldCoreId.vue')),
+        defineAsyncComponent(() => import('@/components/fields/FieldNote.vue')),
+      ],
       tableColumns: testSubColumns,
-      fieldProps: testSubFieldProps,
       schema: testSubSchema,
     },
   ]
+
+  private static logFields: ReturnType<typeof defineAsyncComponent>[] = [
+    defineAsyncComponent(() => import('@/components/fields/FieldAutoId.vue')),
+    defineAsyncComponent(() => import('@/components/fields/FieldTimestamp.vue')),
+    defineAsyncComponent(() => import('@/components/fields/FieldLogLevel.vue')),
+    defineAsyncComponent(() => import('@/components/fields/FieldLogLabel.vue')),
+    defineAsyncComponent(() => import('@/components/fields/FieldDetails.vue')),
+    defineAsyncComponent(() => import('@/components/fields/FieldErrorMessage.vue')),
+    defineAsyncComponent(() => import('@/components/fields/FieldStackTrace.vue')),
+  ]
+
+  static getLogFields() {
+    return this.logFields
+  }
 
   static getAllOptions(): {
     value: { type: RecordType; group: RecordGroup }
@@ -130,8 +164,8 @@ export default class DataSchema {
     return this.recordProps.find((p) => p.group === group && p.type === type)?.schema
   }
 
-  static getFieldProps(group: RecordGroup, type: RecordType) {
-    return this.recordProps.find((p) => p.group === group && p.type === type)?.fieldProps ?? []
+  static getFields(group: RecordGroup, type: RecordType) {
+    return this.recordProps.find((p) => p.group === group && p.type === type)?.fields ?? []
   }
 
   static getCharts(type: RecordType) {

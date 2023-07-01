@@ -1,17 +1,57 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar'
 import { Icon } from '@/types/general'
-import type { AnyDatabaseRecord, FieldProps } from '@/types/core'
+import {
+  recordGroups,
+  type AnyDatabaseRecord,
+  type AnyCoreRecord,
+  type AnyField,
+} from '@/types/core'
+import { defineAsyncComponent, onMounted, onUnmounted, ref, type Ref } from 'vue'
+import useActionStore from '@/stores/action'
+import DataSchema from '@/services/DataSchema'
+import DB from '@/services/Database'
 
-defineProps<{
+const props = defineProps<{
   title: string
-  fieldProps: FieldProps[]
   record: AnyDatabaseRecord
+  fields: ReturnType<typeof defineAsyncComponent>[]
 }>()
 
 defineEmits([...useDialogPluginComponent.emits])
 
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
+const actionStore = useActionStore()
+
+// Setup action store record with all the record values
+Object.keys(props.record).map((key) => {
+  actionStore.record[key as AnyField] = props.record[key as AnyField]
+})
+
+const coreRecordInfo: Ref<string> = ref('')
+
+onMounted(async () => {
+  if (props?.record?.coreId) {
+    const coreRecord = (await DB.getRecord(
+      recordGroups.Values.core,
+      props?.record?.coreId
+    )) as AnyCoreRecord
+
+    if (coreRecord) {
+      const recordDetails = DataSchema.getLabel(
+        recordGroups.Values.core,
+        coreRecord.type,
+        'singular'
+      )
+      const recordName = coreRecord.name
+      coreRecordInfo.value = `${recordDetails}, ${recordName}`
+    }
+  }
+})
+
+onUnmounted(() => {
+  actionStore.$reset()
+})
 </script>
 
 <template>
@@ -31,9 +71,9 @@ const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
     <QCard class="q-dialog-plugin">
       <QCardSection>
         <p class="text-h5">{{ title }}</p>
-        <div v-for="(fieldProp, i) in fieldProps" :key="i" class="q-mb-md">
-          <div class="text-weight-bold">{{ fieldProp.label }}</div>
-          <div>{{ fieldProp.inspectFormat(record?.[fieldProp?.field]) }}</div>
+
+        <div v-for="(field, i) in fields" :key="i" class="q-mb-md">
+          <component :is="field" :inspecting="true" />
         </div>
       </QCardSection>
     </QCard>

@@ -48,8 +48,8 @@ const logLevelColumn: Readonly<QTableColumn> = {
 }
 
 const labelColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(allFields.Values.label),
-  label: 'Label',
+  ...makeStandardColumn(allFields.Values.logLabel),
+  label: 'Log Label',
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
@@ -60,13 +60,13 @@ const detailsColumn: Readonly<QTableColumn> = {
 }
 
 const messageColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(allFields.Values.message),
+  ...makeStandardColumn(allFields.Values.errorMessage),
   label: 'Message',
   format: (val: string) => truncateString(val, 30, '...'),
 }
 
 const stackColumn: Readonly<QTableColumn> = {
-  ...makeStandardColumn(allFields.Values.stack),
+  ...makeStandardColumn(allFields.Values.stackTrace),
   label: 'Stack',
   format: (val: string) => truncateString(val, 30, '...'),
 }

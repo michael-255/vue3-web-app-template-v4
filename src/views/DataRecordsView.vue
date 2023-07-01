@@ -74,7 +74,7 @@ async function onDelete(group: RecordGroup, id: string) {
       routeGroup as RecordGroup,
       routeType as RecordType,
       'singular'
-    )} with id ${id}? This will also delete associated sub-records.`
+    )} with id ${id}? This will also delete all associated sub-records.`
   } else {
     dialogMessage = `Permanently delete ${DataSchema.getLabel(
       routeGroup as RecordGroup,
@@ -95,9 +95,9 @@ async function onDelete(group: RecordGroup, id: string) {
 
 async function onInspect(type: RecordType, id: string) {
   const title = DataSchema.getLabel(routeGroup as RecordGroup, type, 'singular') as string
-  const fieldProps = DataSchema.getFieldProps(routeGroup as RecordGroup, type)
   const record = (await DB.getRecord(routeGroup as RecordGroup, id)) as AnyRecord
-  inspectDialog(title, fieldProps, record)
+  const fields = DataSchema.getFields(routeGroup as RecordGroup, type)
+  inspectDialog(title, record, fields)
 }
 
 async function onCharts(type: RecordType, id: string) {

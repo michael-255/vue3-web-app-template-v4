@@ -49,20 +49,20 @@ class Database extends Dexie {
     return await this.Logs.get(autoId)
   }
 
-  async addLog(logLevel: LogLevel, label: string, details?: any) {
+  async addLog(logLevel: LogLevel, logLabel: string, details?: any) {
     const log: Log = {
       // Auto Id handled by Dexie
       timestamp: Date.now(),
       logLevel,
-      label,
+      logLabel,
     }
 
     // Remaining properties determined by details
     if (details && typeof details === 'object') {
       if ('message' in details || 'stack' in details) {
         // An object with a message or stack property is a JS Error
-        log.message = details?.message
-        log.stack = details?.stack
+        log.errorMessage = details?.message
+        log.stackTrace = details?.stack
       } else {
         // Should be safe to store most other objects into the details property
         // Details only used with non-error logs

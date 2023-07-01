@@ -26,17 +26,20 @@ export const settingkeys = z.enum([
 ])
 export type SettingKey = z.infer<typeof settingkeys>
 
-// Validators
+export const settingValueSchema = z.boolean().or(z.string()).or(z.number()).optional()
 export const autoIdSchema = z.number().int().positive().optional() // Handled by Dexie
-export const textSchema = z.string().trim()
-export const idSchema = z.string().uuid()
 export const timestampSchema = z.number().int()
+export const logLabelSchema = z.string().trim()
+export const textSchema = z.string().trim().optional()
+export const detailsSchema = z.record(z.any()).optional()
+export type Details = z.infer<typeof detailsSchema>
+
+export const idSchema = z.string().uuid()
 export const nameSchema = z.string().min(Limit.MIN_NAME).max(Limit.MAX_NAME).trim()
-export const textAreaSchema = z.string().max(Limit.MAX_TEXT_AREA).trim().optional()
+export const textAreaSchema = z.string().max(Limit.MAX_TEXT_AREA).trim()
 export const booleanSchema = z.boolean()
 export const percentSchema = z.number().min(0).max(100)
-export const settingValueSchema = z.boolean().or(z.string()).or(z.number()).optional()
-export const objectSchema = z.record(z.any()).optional()
+export const testIdsSchema = z.array(idSchema)
 
 // Non-exported schemas
 const settingSchema = z.object({
@@ -48,10 +51,10 @@ const logSchema = z.object({
   autoId: autoIdSchema,
   timestamp: timestampSchema,
   logLevel: logLevels,
-  label: textSchema,
-  details: objectSchema,
-  message: textSchema.optional(),
-  stack: textSchema.optional(),
+  logLabel: logLabelSchema,
+  details: detailsSchema,
+  errorMessage: textSchema,
+  stackTrace: textSchema,
 })
 
 const baseSchema = z.object({
@@ -89,7 +92,7 @@ export const exampleCoreSchema = coreSchema.merge(
   z.object({
     type: z.literal(recordTypes.Values.example),
     lastSub: exampleSubSchema.optional(),
-    testIds: z.array(idSchema),
+    testIds: testIdsSchema,
   })
 )
 
@@ -161,18 +164,7 @@ export type RecordProps = {
   singular: string
   plural: string
   charts: ReturnType<typeof defineAsyncComponent>[]
+  fields: ReturnType<typeof defineAsyncComponent>[]
   tableColumns: QTableColumn[]
-  fieldProps: FieldProps[]
   schema: z.ZodObject<any, any, any>
-}
-
-export type FieldProps = {
-  field: AnyField
-  label: string
-  inspectFormat: (val: any) => string
-  getDefault?: () => any
-  desc?: string
-  schema?: z.ZodType<any, any, any>
-  message?: string
-  component?: ReturnType<typeof defineAsyncComponent>
 }

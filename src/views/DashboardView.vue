@@ -104,9 +104,9 @@ async function onUnfavorite(id: string, name: string) {
 
 async function onInspect(type: RecordType, id: string) {
   const title = DataSchema.getLabel(recordGroups.Values.core, type, 'singular') as string
-  const fieldProps = DataSchema.getFieldProps(recordGroups.Values.core, type)
   const record = (await DB.getRecord(recordGroups.Values.core, id)) as AnyCoreRecord
-  inspectDialog(title, fieldProps, record)
+  const fields = DataSchema.getFields(recordGroups.Values.core, type)
+  inspectDialog(title, record, fields)
 }
 
 async function onCharts(type: RecordType, id: string) {
