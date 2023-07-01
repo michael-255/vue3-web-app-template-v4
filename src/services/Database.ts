@@ -65,6 +65,7 @@ class Database extends Dexie {
         log.stack = details?.stack
       } else {
         // Should be safe to store most other objects into the details property
+        // Details only used with non-error logs
         log.details = details
       }
     }

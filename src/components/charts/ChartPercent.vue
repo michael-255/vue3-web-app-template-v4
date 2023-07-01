@@ -13,13 +13,17 @@ import {
   LineElement,
 } from 'chart.js'
 import { onMounted, ref, type Ref } from 'vue'
-import { idSchema, allFields, recordTypes } from '@/types/core'
+import { idSchema, allFields, recordTypes, type RecordType } from '@/types/core'
 import useLogger from '@/composables/useLogger'
-import useRoutables from '@/composables/useRoutables'
 import useUIStore from '@/stores/ui'
 import useChartTimeWatcher from '@/composables/useChartTimeWatcher'
 import DB from '@/services/Database'
 import { Duration } from '@/types/general'
+
+const props = defineProps<{
+  type: RecordType
+  id: string
+}>()
 
 ChartJS.register(
   Title,
@@ -35,7 +39,6 @@ ChartJS.register(
 const uiStore = useUIStore()
 const { getPaletteColor } = colors
 const { log } = useLogger()
-const { routeType, routeId } = useRoutables()
 useChartTimeWatcher(recalculateChart)
 
 const recordCount: Ref<number> = ref(0)
@@ -44,7 +47,7 @@ const chartOptions = {
   reactive: true,
   responsive: true,
   maintainAspectRatio: true,
-  aspectRatio: 1.75,
+  aspectRatio: 1.7,
   radius: 2,
   plugins: {
     legend: {
@@ -95,11 +98,11 @@ function downwardTrend(ctx: any, color: any) {
 async function recalculateChart() {
   try {
     // Get all records for the current route type and id
-    const isTypeValid = recordTypes.safeParse(routeType).success
-    const isIdValid = idSchema.safeParse(routeId).success
+    const isTypeValid = recordTypes.safeParse(props.type).success
+    const isIdValid = idSchema.safeParse(props.id).success
 
     if (isTypeValid && isIdValid) {
-      const chartingRecords = await DB.getCoreSubRecords(routeId as string)
+      const chartingRecords = await DB.getCoreSubRecords(props.id)
 
       // Continue if there are records
       if (chartingRecords.length > 0) {
@@ -146,24 +149,20 @@ async function recalculateChart() {
 </script>
 
 <template>
-  <QCard class="q-mb-md">
-    <QCardSection>
-      <p class="text-h6">{{ chartLabel }}</p>
+  <p class="text-h6">{{ chartLabel }}</p>
 
-      <!-- Chart -->
-      <div v-if="recordCount > 0">
-        <Line :options="chartOptions" :data="chartData" />
+  <!-- Chart -->
+  <div v-if="recordCount > 0">
+    <Line :options="chartOptions" :data="chartData" />
 
-        <QBadge rounded color="secondary" class="q-py-none">
-          <span class="text-caption">{{ recordCount }} in time frame</span>
-        </QBadge>
-      </div>
+    <QBadge rounded color="secondary" class="q-py-none">
+      <span class="text-caption">{{ recordCount }} in time frame</span>
+    </QBadge>
+  </div>
 
-      <!-- No Data -->
-      <div v-else>
-        <div class="text-bold q-my-md">No Records Found</div>
-        <div>This item may not have any records created for it yet.</div>
-      </div>
-    </QCardSection>
-  </QCard>
+  <!-- No Data -->
+  <div v-else>
+    <div class="text-bold q-my-md">No Records Found</div>
+    <div>This item may not have any records created for it yet.</div>
+  </div>
 </template>

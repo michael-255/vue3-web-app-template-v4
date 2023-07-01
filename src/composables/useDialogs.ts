@@ -1,8 +1,10 @@
 import { useQuasar } from 'quasar'
 import { Icon } from '@/types/general'
+import type { AnyDatabaseRecord, FieldProps, RecordType } from '@/types/core'
 import ConfirmationDialog from '@/components/dialogs/ConfirmationDialog.vue'
 import DismissalDialog from '@/components/dialogs/DismissalDialog.vue'
 import InspectionDialog from '@/components/dialogs/InspectionDialog.vue'
+import ChartingDialog from '@/components/dialogs/ChartingDialog.vue'
 
 export default function useDialogs() {
   const $q = useQuasar()
@@ -44,12 +46,24 @@ export default function useDialogs() {
     })
   }
 
-  function inspectDialog(title: string, record: { [key: string]: any }) {
+  function inspectDialog(title: string, fieldProps: FieldProps[], record: AnyDatabaseRecord) {
     $q.dialog({
       component: InspectionDialog,
       componentProps: {
         title,
+        fieldProps,
         record,
+      },
+    })
+  }
+
+  function chartsDialog(title: string, type: RecordType, id: string) {
+    $q.dialog({
+      component: ChartingDialog,
+      componentProps: {
+        title,
+        type,
+        id,
       },
     })
   }
@@ -58,5 +72,6 @@ export default function useDialogs() {
     confirmDialog,
     dismissDialog,
     inspectDialog,
+    chartsDialog,
   }
 }

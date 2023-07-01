@@ -52,12 +52,11 @@ const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     settings.value = liveSettings
 
-    let logDuration = liveSettings.find(
+    const logDuration = liveSettings.find(
       (s) => s.key === settingkeys.Values['log-retention-duration']
-    )?.value
+    )?.value as number
 
-    logDuration = Duration[logDuration]
-    logDurationIndex.value = logDurationKeys.findIndex((i) => i === logDuration)
+    logDurationIndex.value = logDurationKeys.findIndex((i) => i === Duration[logDuration])
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)

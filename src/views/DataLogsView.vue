@@ -7,6 +7,7 @@ import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
 import { hiddenColumnNames, logColumns } from '@/services/table-columns'
 import { allFields, type AnyDatabaseRecord, type AnyField, type Log } from '@/types/core'
+import { logFieldProps } from '@/services/field-props'
 import useLogger from '@/composables/useLogger'
 import useRoutables from '@/composables/useRoutables'
 import useDialogs from '@/composables/useDialogs'
@@ -44,7 +45,7 @@ onUnmounted(() => {
 
 async function onInspect(autoId: number) {
   const record = (await DB.getLog(Number(autoId))) as AnyDatabaseRecord
-  inspectDialog('Log', record)
+  inspectDialog('Log', logFieldProps, record)
 }
 </script>
 

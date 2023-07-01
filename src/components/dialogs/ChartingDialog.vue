@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { ref, type Ref } from 'vue'
+import { useDialogPluginComponent } from 'quasar'
 import { Duration, Icon } from '@/types/general'
-import { AppName } from '@/constants/global'
-import { useMeta } from 'quasar'
-import { recordGroups, type RecordType } from '@/types/core'
+import type { RecordType } from '@/types/core'
 import useUIStore from '@/stores/ui'
-import useRoutables from '@/composables/useRoutables'
-import ResponsivePage from '@/components/ResponsivePage.vue'
 import DataSchema from '@/services/DataSchema'
 
-useMeta({ title: `${AppName} - Charts` })
+const props = defineProps<{
+  title: string
+  type: RecordType
+  id: string
+}>()
 
+defineEmits([...useDialogPluginComponent.emits])
+
+const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
 const uiStore = useUIStore()
-const { routeType } = useRoutables()
 
 const inputRef: Ref<any> = ref(null)
 const options: Ref<string[]> = ref([
@@ -23,8 +26,7 @@ const options: Ref<string[]> = ref([
   Duration[Duration['One Year']],
   Duration[Duration['All Time']],
 ])
-const title = DataSchema.getLabel(recordGroups.Values.core, routeType as RecordType, 'singular')
-const charts = DataSchema.getCharts(routeType as RecordType)
+const charts = DataSchema.getCharts(props.type)
 
 function chartTimeRule(time: string) {
   return time !== undefined && time !== null && time !== ''
@@ -32,15 +34,22 @@ function chartTimeRule(time: string) {
 </script>
 
 <template>
-  <ResponsivePage
-    :bannerIcon="Icon.CHARTS"
-    :bannerTitle="`${title} Charts`"
-    :showPageNoData="charts.length === 0"
+  <QDialog
+    ref="dialogRef"
+    transition-show="slide-up"
+    transition-hide="slide-down"
+    maximized
+    @hide="onDialogHide"
   >
-    <!-- Chart Time used by UI store -->
-    <QCard class="q-mb-md">
+    <QToolbar class="bg-info text-white" style="max-height: 50px">
+      <QIcon :name="Icon.CHARTS" size="sm" class="q-mx-sm" />
+      <QToolbarTitle>Charts</QToolbarTitle>
+      <QBtn flat round :icon="Icon.CLOSE" @click="onDialogOK" />
+    </QToolbar>
+
+    <QCard class="q-dialog-plugin">
       <QCardSection>
-        <p class="text-h6">Chart Time</p>
+        <p class="text-h5">{{ title }}</p>
 
         <p>Select how far back you want the charts to display record data.</p>
 
@@ -58,12 +67,12 @@ function chartTimeRule(time: string) {
           color="primary"
           @blur="!!inputRef?.value?.validate()"
         />
+
+        <!-- Chart components -->
+        <div v-for="(chart, i) in charts" :key="i" class="q-mb-md">
+          <component :is="chart" :type="type" :id="id" />
+        </div>
       </QCardSection>
     </QCard>
-
-    <!-- Chart components -->
-    <div v-for="(chart, i) in charts" :key="i" class="q-mb-md">
-      <component :is="chart" />
-    </div>
-  </ResponsivePage>
+  </QDialog>
 </template>

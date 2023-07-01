@@ -23,7 +23,6 @@ import {
   testCoreFieldProps,
   testSubFieldProps,
 } from '@/services/field-props'
-import type { type } from 'os'
 
 export default class DataSchema {
   private static recordProps: RecordProps[] = [
@@ -124,7 +123,7 @@ export default class DataSchema {
   }
 
   static getTableColumns(group: RecordGroup, type: RecordType) {
-    return this.recordProps.find((p) => p.group === group && p.type === type)?.tableColumns
+    return this.recordProps.find((p) => p.group === group && p.type === type)?.tableColumns ?? []
   }
 
   static getSchema(group: RecordGroup, type: RecordType) {
@@ -132,7 +131,7 @@ export default class DataSchema {
   }
 
   static getFieldProps(group: RecordGroup, type: RecordType) {
-    return this.recordProps.find((p) => p.group === group && p.type === type)?.fieldProps
+    return this.recordProps.find((p) => p.group === group && p.type === type)?.fieldProps ?? []
   }
 
   static getCharts(type: RecordType) {

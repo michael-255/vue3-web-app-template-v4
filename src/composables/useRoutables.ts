@@ -12,7 +12,6 @@ export default function useRoutables(): {
   goToRecordsData: (group: RecordGroup, type: RecordType) => void
   goToCreate: (group: RecordGroup, type: RecordType, coreId?: string) => void
   goToEdit: (group: RecordGroup, type: RecordType, id: string) => void
-  goToCharts: (type: RecordType, id: string) => void
   goBack: () => void
 } {
   const route = useRoute()
@@ -74,18 +73,6 @@ export default function useRoutables(): {
     }
   }
 
-  // Charts can only be accessed from parents, so no group parameter is needed
-  function goToCharts(type: RecordType, id: string) {
-    try {
-      router.push({
-        name: routeNames.Values.Charts,
-        params: { type, id },
-      })
-    } catch (error) {
-      log.error('Error accessing charts route', error)
-    }
-  }
-
   /**
    * Go back if previous route state is part of the app history, otherwise go to Dashboard.
    */
@@ -110,7 +97,6 @@ export default function useRoutables(): {
     goToRecordsData,
     goToCreate,
     goToEdit,
-    goToCharts,
     goBack,
   }
 }
