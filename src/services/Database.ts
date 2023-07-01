@@ -136,7 +136,7 @@ class Database extends Dexie {
 
     Dark.set(Boolean(settings.find((s) => s.key === settingkeys.Values['dark-mode'])?.value))
 
-    await Promise.all(settings.map((s) => this.setSetting(s.key, s.value)))
+    await Promise.all(settings.map((s) => this.setSetting(s.key as SettingKey, s.value)))
   }
 
   async setSetting(key: SettingKey, value: any) {

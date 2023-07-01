@@ -3,7 +3,7 @@ import { ref, type Ref } from 'vue'
 import { Duration, Icon } from '@/types/general'
 import { AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
-import { recordGroups } from '@/types/core'
+import { recordGroups, type RecordType } from '@/types/core'
 import useUIStore from '@/stores/ui'
 import useRoutables from '@/composables/useRoutables'
 import ResponsivePage from '@/components/ResponsivePage.vue'
@@ -23,8 +23,8 @@ const options: Ref<string[]> = ref([
   Duration[Duration['One Year']],
   Duration[Duration['All Time']],
 ])
-const title = DataSchema.getLabel(recordGroups.Values.core, routeType, 'singular')
-const charts = DataSchema.getCharts(routeType)
+const title = DataSchema.getLabel(recordGroups.Values.core, routeType as RecordType, 'singular')
+const charts = DataSchema.getCharts(routeType as RecordType)
 
 function chartTimeRule(time: string) {
   return time !== undefined && time !== null && time !== ''

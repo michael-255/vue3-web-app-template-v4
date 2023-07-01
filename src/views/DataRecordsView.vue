@@ -13,6 +13,7 @@ import {
   type RecordGroup,
   type AnyField,
   type AnyDatabaseRecord,
+  type RecordType,
 } from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
@@ -30,7 +31,7 @@ const searchFilter: Ref<string> = ref('')
 const rows: Ref<any[]> = ref([])
 const visibleColumns: Ref<AnyField[]> = ref([])
 const columns: Ref<QTableColumn[]> = ref(
-  DataSchema.getTableColumns(routeGroup, routeType) as QTableColumn[]
+  DataSchema.getTableColumns(routeGroup as RecordGroup, routeType as RecordType) as QTableColumn[]
 )
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
@@ -40,7 +41,7 @@ let subscription: Subscription | null = null
 if (routeGroup === recordGroups.Values.core) {
   visibleColumns.value = [allFields.Values.id, allFields.Values.timestamp, allFields.Values.name]
 
-  subscription = DB.liveCoreRecords(routeType).subscribe({
+  subscription = DB.liveCoreRecords(routeType as RecordType).subscribe({
     next: (records) => {
       rows.value = records
     },
@@ -51,7 +52,7 @@ if (routeGroup === recordGroups.Values.core) {
 } else {
   visibleColumns.value = [allFields.Values.id, allFields.Values.timestamp]
 
-  subscription = DB.liveSubRecords(routeType).subscribe({
+  subscription = DB.liveSubRecords(routeType as RecordType).subscribe({
     next: (records) => {
       rows.value = records
     },
@@ -70,14 +71,14 @@ async function onDelete(group: RecordGroup, id: string) {
 
   if (group === recordGroups.Values.core) {
     dialogMessage = `Permanently delete ${DataSchema.getLabel(
-      routeGroup,
-      routeType,
+      routeGroup as RecordGroup,
+      routeType as RecordType,
       'singular'
     )} with id ${id}? This will also delete associated sub-records.`
   } else {
     dialogMessage = `Permanently delete ${DataSchema.getLabel(
-      routeGroup,
-      routeType,
+      routeGroup as RecordGroup,
+      routeType as RecordType,
       'singular'
     )} with id ${id}?`
   }
@@ -141,7 +142,7 @@ async function onInspect(id: string) {
             class="q-ml-xs"
             color="accent"
             :icon="Icon.CHARTS"
-            @click="goToCharts(routeType, props.cols[0].value)"
+            @click="goToCharts(routeType as RecordType, props.cols[0].value)"
           />
           <!-- INSPECT -->
           <QBtn
@@ -161,7 +162,9 @@ async function onInspect(id: string) {
             class="q-ml-xs"
             color="orange-9"
             :icon="Icon.EDIT"
-            @click="goToEdit(routeGroup, routeType, props.cols[0].value)"
+            @click="
+              goToEdit(routeGroup as RecordGroup, routeType as RecordType, props.cols[0].value)
+            "
           />
           <!-- DELETE -->
           <QBtn
@@ -170,7 +173,7 @@ async function onInspect(id: string) {
             dense
             class="q-ml-xs"
             color="negative"
-            @click="onDelete(routeGroup, props.cols[0].value)"
+            @click="onDelete(routeGroup as RecordGroup, props.cols[0].value)"
             :icon="Icon.DELETE"
           />
         </QTd>
@@ -181,7 +184,7 @@ async function onInspect(id: string) {
       <div class="row justify-start full-width q-mb-md">
         <!-- Table Title -->
         <div class="col-10 text-h6 text-bold ellipsis">
-          {{ DataSchema.getLabel(routeGroup, routeType, 'plural') }}
+          {{ DataSchema.getLabel(routeGroup as RecordGroup, routeType as RecordType, 'plural') }}
         </div>
         <!-- Go Back Button -->
         <QBtn
@@ -211,7 +214,7 @@ async function onInspect(id: string) {
                 color="positive"
                 class="q-px-sm q-mr-xs"
                 :icon="Icon.ADD"
-                @click="goToCreate(routeGroup, routeType)"
+                @click="goToCreate(routeGroup as RecordGroup, routeType as RecordType)"
               />
               <!-- COLUMN OPTIONS (Visible Columns) -->
               <QSelect

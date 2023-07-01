@@ -12,7 +12,7 @@ export default function useChartTimeWatcher(chartUpdateFunc: () => Promise<void>
    * The provided function is called when the property changes.
    */
   watch(
-    () => uiStore.chartTime as Duration,
+    () => uiStore.chartTime as keyof typeof Duration,
     async () => {
       try {
         await chartUpdateFunc()

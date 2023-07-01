@@ -1,8 +1,8 @@
 import { useQuasar } from 'quasar'
 import { Icon } from '@/types/general'
-import confirmationDialog from '@/components/dialogs/confirmationDialog.vue'
-import dismissalDialog from '@/components/dialogs/dismissalDialog.vue'
-import inspectionDialog from '@/components/dialogs/inspectionDialog.vue'
+import ConfirmationDialog from '@/components/dialogs/ConfirmationDialog.vue'
+import DismissalDialog from '@/components/dialogs/DismissalDialog.vue'
+import InspectionDialog from '@/components/dialogs/InspectionDialog.vue'
 
 export default function useDialogs() {
   const $q = useQuasar()
@@ -15,7 +15,7 @@ export default function useDialogs() {
     onOkFunc: () => void
   ) {
     $q.dialog({
-      component: confirmationDialog,
+      component: ConfirmationDialog,
       componentProps: {
         title,
         message,
@@ -34,7 +34,7 @@ export default function useDialogs() {
     color: string = 'info'
   ) {
     $q.dialog({
-      component: dismissalDialog,
+      component: DismissalDialog,
       componentProps: {
         title,
         message,
@@ -46,7 +46,7 @@ export default function useDialogs() {
 
   function inspectDialog(title: string, record: { [key: string]: any }) {
     $q.dialog({
-      component: inspectionDialog,
+      component: InspectionDialog,
       componentProps: {
         title,
         record,

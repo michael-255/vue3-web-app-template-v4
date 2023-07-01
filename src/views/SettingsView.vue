@@ -34,9 +34,9 @@ const allOptions = DataSchema.getAllOptions()
 const settings: Ref<Setting[]> = ref([])
 const logDurationIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
-const accessOptions = ref([...allOptions])
+const accessOptions = ref(allOptions)
 const accessModel = ref(accessOptions.value[0])
-const deleteOptions = ref([...allOptions])
+const deleteOptions = ref(allOptions)
 const deleteModel = ref(deleteOptions.value[0])
 const logDurationKeys = [
   // Duration[Duration.Now], // For testing log purges

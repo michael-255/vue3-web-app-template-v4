@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@/types/general'
-import { allFields, type AnyRecord } from '@/types/core'
+import { allFields, type AnyRecord, type RecordGroup, type RecordType } from '@/types/core'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { extend, uid, useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
@@ -20,8 +20,8 @@ const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
 
-const label = DataSchema.getLabel(routeGroup, routeType, 'singular')
-const fieldProps = DataSchema.getFieldProps(routeGroup, routeType)
+const label = DataSchema.getLabel(routeGroup as RecordGroup, routeType as RecordType, 'singular')
+const fieldProps = DataSchema.getFieldProps(routeGroup as RecordGroup, routeType as RecordType)
 const isFormValid = ref(true)
 
 onMounted(async () => {
@@ -46,7 +46,7 @@ async function onSubmit() {
   confirmDialog('Create', `Create ${label} record?`, Icon.CREATE, 'positive', async () => {
     try {
       const deepRecordCopy = extend(true, {}, actionStore.record) as AnyRecord
-      await DB.addRecord(routeGroup, routeType, deepRecordCopy)
+      await DB.addRecord(routeGroup as RecordGroup, routeType as RecordType, deepRecordCopy)
 
       log.info('Successfully created record', {
         id: deepRecordCopy[allFields.Values.id],

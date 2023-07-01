@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Icon } from '@/types/general'
-import { allFields, type AnyField, type AnyRecord } from '@/types/core'
+import {
+  allFields,
+  type AnyField,
+  type AnyRecord,
+  type RecordGroup,
+  type RecordType,
+} from '@/types/core'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { extend, uid, useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
@@ -20,8 +26,8 @@ const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
 
-const label = DataSchema.getLabel(routeGroup, routeType, 'singular')
-const fieldProps = DataSchema.getFieldProps(routeGroup, routeType)
+const label = DataSchema.getLabel(routeGroup as RecordGroup, routeType as RecordType, 'singular')
+const fieldProps = DataSchema.getFieldProps(routeGroup as RecordGroup, routeType as RecordType)
 const isFormValid = ref(true)
 
 onMounted(async () => {
@@ -30,7 +36,7 @@ onMounted(async () => {
     actionStore.record[allFields.Values.type] = routeType
 
     if (routeId) {
-      const editRecord = (await DB.getRecord(routeGroup, routeId)) as AnyRecord
+      const editRecord = (await DB.getRecord(routeGroup as RecordGroup, routeId)) as AnyRecord
 
       if (editRecord) {
         Object.keys(editRecord).forEach((key) => {
@@ -51,7 +57,12 @@ async function onSubmit() {
   confirmDialog('Update', `Update ${label} record?`, Icon.EDIT, 'positive', async () => {
     try {
       const deepRecordCopy = extend(true, {}, actionStore.record) as AnyRecord
-      await DB.updateRecord(routeGroup, routeType, routeId as string, deepRecordCopy)
+      await DB.updateRecord(
+        routeGroup as RecordGroup,
+        routeType as RecordType,
+        routeId as string,
+        deepRecordCopy
+      )
 
       log.info('Successfully updated record', {
         id: deepRecordCopy[allFields.Values.id],

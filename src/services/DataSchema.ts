@@ -23,6 +23,7 @@ import {
   testCoreFieldProps,
   testSubFieldProps,
 } from '@/services/field-props'
+import type { type } from 'os'
 
 export default class DataSchema {
   private static recordProps: RecordProps[] = [
@@ -72,7 +73,11 @@ export default class DataSchema {
     },
   ]
 
-  static getAllOptions() {
+  static getAllOptions(): {
+    value: { type: RecordType; group: RecordGroup }
+    label: string
+    icon: Icon
+  }[] {
     return this.recordProps.map((p) => ({
       value: {
         type: p.type,
@@ -83,7 +88,11 @@ export default class DataSchema {
     }))
   }
 
-  static getGroupOptions(group: RecordGroup) {
+  static getGroupOptions(group: RecordGroup): {
+    value: { type: RecordType; group: RecordGroup }
+    label: string
+    icon: Icon
+  }[] {
     return this.recordProps
       .filter((p) => p.group === group)
       .map((p) => ({
@@ -96,7 +105,11 @@ export default class DataSchema {
       }))
   }
 
-  static getDashboardOptions() {
+  static getDashboardOptions(): {
+    value: RecordType
+    label: string
+    icon: Icon
+  }[] {
     return this.recordProps
       .filter((p) => p.group === recordGroups.Values.core)
       .map((p) => ({

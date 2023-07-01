@@ -3,7 +3,18 @@ import { useRoute, useRouter } from 'vue-router'
 import { routeNames } from '@/types/general'
 import useLogger from '@/composables/useLogger'
 
-export default function useRoutables() {
+export default function useRoutables(): {
+  routeId?: string
+  routeCoreId?: string
+  routeType?: RecordType
+  routeGroup?: RecordGroup
+  goToLogsData: () => void
+  goToRecordsData: (group: RecordGroup, type: RecordType) => void
+  goToCreate: (group: RecordGroup, type: RecordType, coreId?: string) => void
+  goToEdit: (group: RecordGroup, type: RecordType, id: string) => void
+  goToCharts: (type: RecordType, id: string) => void
+  goBack: () => void
+} {
   const route = useRoute()
   const router = useRouter()
   const { log } = useLogger()
@@ -15,10 +26,10 @@ export default function useRoutables() {
   const group = Array.isArray(route.params.group) ? route.params.group[0] : route.params.group
 
   // Cleaned route params
-  const routeId = String(id) || undefined
-  const routeCoreId = String(coreId) || undefined
-  const routeType = (String(type) as RecordType) || undefined
-  const routeGroup = (String(group) as RecordGroup) || undefined
+  const routeId = id || undefined
+  const routeCoreId = coreId || undefined
+  const routeType = (type as RecordType) || undefined
+  const routeGroup = (group as RecordGroup) || undefined
 
   function goToLogsData() {
     try {

@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { AppName } from '@/constants/global'
 import Logger from '@/services/Logger'
-import { AppName } from '@/types/general'
 
 describe('Logger service', () => {
   const baseStyle = 'border-radius: 3px; padding: 2px 4px; color: white; background-color:'
