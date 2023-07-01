@@ -90,7 +90,7 @@ describe('getDurationFromMilliseconds util', () => {
 
 describe('getRecordsCountDisplay util', () => {
   test('should return a formatted count string based on the number of records', () => {
-    expect(common.getRecordsCountDisplay([])).toBe('0 records found')
+    expect(common.getRecordsCountDisplay([])).toBe('No records found')
     expect(common.getRecordsCountDisplay([1])).toBe('1 record found')
     expect(common.getRecordsCountDisplay([1, 2, 3])).toBe('3 records found')
     expect(common.getRecordsCountDisplay(Array.from({ length: 1000 }).fill(1))).toBe(
