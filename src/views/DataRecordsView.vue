@@ -24,8 +24,8 @@ import DB from '@/services/Database'
 useMeta({ title: `${AppName} - Records Data` })
 
 const { log } = useLogger()
-const { routeGroup, routeType, goToCharts, goToEdit, goToCreate, goBack } = useRoutables()
-const { confirmDialog, inspectDialog } = useDialogs()
+const { routeGroup, routeType, goToEdit, goToCreate, goBack } = useRoutables()
+const { confirmDialog, inspectDialog, chartsDialog } = useDialogs()
 
 const searchFilter: Ref<string> = ref('')
 const rows: Ref<any[]> = ref([])
@@ -99,6 +99,15 @@ async function onInspect(type: RecordType, id: string) {
   const record = (await DB.getRecord(routeGroup as RecordGroup, id)) as AnyRecord
   inspectDialog(title, fieldProps, record)
 }
+
+async function onCharts(type: RecordType, id: string) {
+  const title = DataSchema.getLabel(
+    routeGroup as RecordGroup,
+    routeType as RecordType,
+    'singular'
+  ) as string
+  chartsDialog(title, type, id)
+}
 </script>
 
 <template>
@@ -137,13 +146,14 @@ async function onInspect(type: RecordType, id: string) {
         <QTd auto-width>
           <!-- CHARTS -->
           <QBtn
+            v-if="routeGroup === recordGroups.Values.core"
             flat
             round
             dense
             class="q-ml-xs"
             color="accent"
             :icon="Icon.CHARTS"
-            @click="goToCharts(routeType as RecordType, props.cols[0].value)"
+            @click="onCharts(routeType as RecordType, props.cols[0].value)"
           />
           <!-- INSPECT -->
           <QBtn

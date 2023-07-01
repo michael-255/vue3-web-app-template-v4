@@ -26,7 +26,7 @@ useMeta({ title: `${AppName} - Dashboard` })
 
 const uiStore = useUIStore()
 const { log } = useLogger()
-const { goToCreate, goToEdit, goToCharts } = useRoutables()
+const { goToCreate, goToEdit } = useRoutables()
 const { confirmDialog, dismissDialog, inspectDialog, chartsDialog } = useDialogs()
 
 const showDescription: Ref<boolean> = ref(false)

@@ -7,6 +7,7 @@ structured.
 ## TODOS
 
 - Fix things up!
+- Validate that everything is working correctly!
 
 ## Post Cloning Steps
 
