@@ -35,7 +35,7 @@ onMounted(async () => {
 
     options.value = records.map((r: AnyCoreRecord) => ({
       value: r.id,
-      label: `${r.name} (${truncateString(r.id, 4, '*')})`,
+      label: `${r.name} (${truncateString(r.id, 8, '*')})`,
     }))
   } catch (error) {
     log.error('Error with core ids input', error)

@@ -6,7 +6,6 @@ import { extend, uid, useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
 import DataSchema from '@/services/DataSchema'
 import ResponsivePage from '@/components/ResponsivePage.vue'
-import ParentInfoCard from '@/components/ParentInfoCard.vue'
 import useRoutables from '@/composables/useRoutables'
 import useActionStore from '@/stores/action'
 import useLogger from '@/composables/useLogger'
@@ -80,8 +79,6 @@ async function onSubmit() {
         @validation-error="isFormValid = false"
         @validation-success="isFormValid = true"
       >
-        <ParentInfoCard v-if="actionStore.record?.coreId" :coreId="actionStore.record.coreId" />
-
         <!-- Dynamic Async Components -->
         <div v-for="(field, i) in fields" :key="i" class="q-mb-md">
           <component :is="field" :inspecting="false" />
