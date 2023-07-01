@@ -6,7 +6,6 @@ export const routeNames = z.enum([
   'DataRecords',
   'Create',
   'Edit',
-  'Charts',
   'Settings',
   'FAQ',
   'About',
@@ -32,7 +31,7 @@ export enum Duration {
   'Three Months' = 7_776_000_000,
   'Six Months' = 15_552_000_000,
   'One Year' = 31_536_000_000,
-  'All Time' = Number.MAX_SAFE_INTEGER,
+  'All Time' = Number.MAX_SAFE_INTEGER - 1,
   'Forever' = Number.MAX_SAFE_INTEGER,
 }
 

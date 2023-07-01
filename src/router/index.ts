@@ -35,12 +35,6 @@ const router = createRouter({
       component: () => import('../views/EditView.vue'),
     },
     {
-      path: '/charts/:type/:id',
-      name: routeNames.Values.Charts,
-      meta: { layout: 'MenuLayout' },
-      component: () => import('../views/ChartsView.vue'),
-    },
-    {
       path: '/settings',
       name: routeNames.Values.Settings,
       meta: { layout: 'MenuLayout' },

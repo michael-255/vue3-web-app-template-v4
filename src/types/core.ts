@@ -35,11 +35,13 @@ export const nameSchema = z.string().min(Limit.MIN_NAME).max(Limit.MAX_NAME).tri
 export const textAreaSchema = z.string().max(Limit.MAX_TEXT_AREA).trim().optional()
 export const booleanSchema = z.boolean()
 export const percentSchema = z.number().min(0).max(100)
+export const settingValueSchema = z.boolean().or(z.string()).or(z.number()).optional()
+export const objectSchema = z.record(z.any()).optional()
 
 // Non-exported schemas
 const settingSchema = z.object({
   key: settingkeys,
-  value: z.any(),
+  value: settingValueSchema,
 })
 
 const logSchema = z.object({
@@ -47,7 +49,7 @@ const logSchema = z.object({
   timestamp: timestampSchema,
   logLevel: logLevels,
   label: textSchema,
-  details: z.any(),
+  details: objectSchema,
   message: textSchema.optional(),
   stack: textSchema.optional(),
 })

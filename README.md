@@ -6,8 +6,7 @@ structured.
 
 ## TODOS
 
-- [ ] Convert `Charts` route to a fullscreen dialog like inspect?
-- [ ] Fully implement `Inspect` feature with the new fullscreen dialog
+- Fix things up!
 
 ## Post Cloning Steps
 

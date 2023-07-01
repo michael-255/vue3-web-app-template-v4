@@ -12,8 +12,8 @@ import {
   allFields,
   type RecordGroup,
   type AnyField,
-  type AnyDatabaseRecord,
   type RecordType,
+  type AnyRecord,
 } from '@/types/core'
 import DataSchema from '@/services/DataSchema'
 import useLogger from '@/composables/useLogger'
@@ -93,10 +93,11 @@ async function onDelete(group: RecordGroup, id: string) {
   })
 }
 
-// TODO
-async function onInspect(id: string) {
-  const record = { id } as AnyDatabaseRecord
-  inspectDialog('Log', record as AnyDatabaseRecord)
+async function onInspect(type: RecordType, id: string) {
+  const title = DataSchema.getLabel(routeGroup as RecordGroup, type, 'singular') as string
+  const fieldProps = DataSchema.getFieldProps(routeGroup as RecordGroup, type)
+  const record = (await DB.getRecord(routeGroup as RecordGroup, id)) as AnyRecord
+  inspectDialog(title, fieldProps, record)
 }
 </script>
 
@@ -152,7 +153,7 @@ async function onInspect(id: string) {
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="onInspect(props.cols[0].value)"
+            @click="onInspect(routeType as RecordType, props.cols[0].value)"
           />
           <!-- EDIT -->
           <QBtn

@@ -9,7 +9,6 @@ import { getRecordsCountDisplay } from '@/utils/common'
 import {
   type AnyCoreRecord,
   type RecordType,
-  type AnyRecord,
   settingkeys,
   recordGroups,
   recordTypes,
@@ -28,7 +27,7 @@ useMeta({ title: `${AppName} - Dashboard` })
 const uiStore = useUIStore()
 const { log } = useLogger()
 const { goToCreate, goToEdit, goToCharts } = useRoutables()
-const { confirmDialog, dismissDialog, inspectDialog } = useDialogs()
+const { confirmDialog, dismissDialog, inspectDialog, chartsDialog } = useDialogs()
 
 const showDescription: Ref<boolean> = ref(false)
 const dashboardOptions = DataSchema.getDashboardOptions()
@@ -44,7 +43,7 @@ const settingsSubscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     showDescription.value = liveSettings.find(
       (s) => s.key === settingkeys.Values['dashboard-descriptions']
-    )?.value
+    )?.value as boolean
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)
@@ -104,9 +103,19 @@ async function onUnfavorite(id: string, name: string) {
 }
 
 async function onInspect(type: RecordType, id: string) {
-  const title = DataSchema.getLabel(recordGroups.Values.core, type, 'singular')
-  const record = await DB.getRecord(recordGroups.Values.core, id)
-  inspectDialog(title as string, record as AnyRecord)
+  const title = DataSchema.getLabel(recordGroups.Values.core, type, 'singular') as string
+  const fieldProps = DataSchema.getFieldProps(recordGroups.Values.core, type)
+  const record = (await DB.getRecord(recordGroups.Values.core, id)) as AnyCoreRecord
+  inspectDialog(title, fieldProps, record)
+}
+
+async function onCharts(type: RecordType, id: string) {
+  const title = DataSchema.getLabel(
+    recordGroups.Values.core,
+    uiStore.dashboardSelection,
+    'singular'
+  ) as string
+  chartsDialog(title, type, id)
 }
 </script>
 
@@ -180,7 +189,7 @@ async function onInspect(type: RecordType, id: string) {
                 transition-hide="flip-left"
               >
                 <QList>
-                  <QItem clickable @click="goToCharts(record.type, record.id)">
+                  <QItem clickable @click="onCharts(record.type, record.id)">
                     <QItemSection avatar>
                       <QIcon color="accent" :name="Icon.CHARTS" />
                     </QItemSection>
