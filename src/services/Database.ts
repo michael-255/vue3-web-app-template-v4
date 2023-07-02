@@ -1,7 +1,7 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
 import { Dark } from 'quasar'
 import { Duration } from '@/types/general'
-import { AppName } from '@/constants/global'
+import { AppDatabaseVersion, AppName } from '@/constants/global'
 import {
   type Log,
   type Setting,
@@ -411,6 +411,6 @@ class Database extends Dexie {
 /**
  * Use this preconfigured Database instance. Do NOT create another one!
  */
-const DB = new Database(AppName)
+const DB = new Database(`${AppName} v${AppDatabaseVersion}`)
 
 export default DB

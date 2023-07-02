@@ -2,7 +2,7 @@
 import { exportFile } from 'quasar'
 import { Duration, Icon, Limit } from '@/types/general'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { AppName } from '@/constants/global'
+import { AppDatabaseVersion, AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
 import {
   type Setting,
@@ -132,9 +132,10 @@ function onExportRecords() {
     'info',
     async () => {
       try {
-        const backupData = {
+        const backupData: BackupData = {
           appName: AppName,
-          backupTimestamp: Date.now(),
+          databaseVersion: AppDatabaseVersion,
+          timestamp: Date.now(),
           logs: await DB.getLogs(),
           settings: await DB.getSettings(),
           coreRecords: (await DB.getAllCoreRecords()).map((p) => {
@@ -142,7 +143,7 @@ function onExportRecords() {
             return p
           }),
           subRecords: await DB.getAllSubRecords(),
-        } as BackupData
+        }
 
         log.silentDebug('backupData:', backupData)
 

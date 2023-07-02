@@ -150,7 +150,8 @@ export type TestSubRecord = z.infer<typeof testSubSchema>
 
 export type BackupData = {
   appName: string
-  backupTimestamp: number
+  databaseVersion: number
+  timestamp: number
   logs: Log[]
   settings: Setting[]
   coreRecords: AnyCoreRecord[]
