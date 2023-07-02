@@ -26,8 +26,6 @@ const options: Ref<{ value: string; label: string }[]> = ref([])
 
 onMounted(async () => {
   try {
-    // actionStore.record[field] = actionStore.record[field] ?? null // TODO - May need to choose a record after this is set
-
     const records = (await DB.getRecords(
       recordGroups.Values.core,
       routeType as RecordType
@@ -37,6 +35,12 @@ onMounted(async () => {
       value: r.id,
       label: `${r.name} (${truncateString(r.id, 8, '*')})`,
     }))
+
+    const coreIdFound = options.value.some((o) => o.value === actionStore.record[field])
+
+    if (!coreIdFound) {
+      actionStore.record[field] = options.value[0].value || undefined // If no options
+    }
   } catch (error) {
     log.error('Error with core ids input', error)
   }
@@ -59,7 +63,7 @@ function inspectFormat(val: string) {
 
     <QSelect
       v-model="actionStore.record[field]"
-      :rules="[(val: string) => idSchema.safeParse(val).success || '* Required']"
+      :rules="[(val: string) => idSchema.safeParse(val).success || 'Required']"
       :options="options"
       emit-value
       map-options

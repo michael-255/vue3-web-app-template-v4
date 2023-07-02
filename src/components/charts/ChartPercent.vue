@@ -14,11 +14,12 @@ import {
 } from 'chart.js'
 import { onMounted, ref, type Ref } from 'vue'
 import { idSchema, allFields, recordTypes, type RecordType } from '@/types/core'
+import { Duration } from '@/types/general'
+import ErrorStates from '../ErrorStates.vue'
 import useLogger from '@/composables/useLogger'
 import useUIStore from '@/stores/ui'
 import useChartTimeWatcher from '@/composables/useChartTimeWatcher'
 import DB from '@/services/Database'
-import { Duration } from '@/types/general'
 
 const props = defineProps<{
   type: RecordType
@@ -160,9 +161,5 @@ async function recalculateChart() {
     </QBadge>
   </div>
 
-  <!-- No Data -->
-  <div v-else>
-    <div class="text-bold q-my-md">No Records Found</div>
-    <div>This item may not have any records created for it yet.</div>
-  </div>
+  <ErrorStates v-else error="no-data" />
 </template>

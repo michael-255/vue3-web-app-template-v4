@@ -11,6 +11,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { extend, uid, useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
 import DataSchema from '@/services/DataSchema'
+import ErrorStates from '@/components/ErrorStates.vue'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import useRoutables from '@/composables/useRoutables'
 import useActionStore from '@/stores/action'
@@ -34,14 +35,16 @@ onMounted(async () => {
     actionStore.record[allFields.Values.id] = uid()
     actionStore.record[allFields.Values.type] = routeType
 
-    if (routeId) {
-      const editRecord = (await DB.getRecord(routeGroup as RecordGroup, routeId)) as AnyRecord
+    const editRecord = (await DB.getRecord(
+      routeGroup as RecordGroup,
+      routeId as string
+    )) as AnyRecord
 
-      if (editRecord) {
-        Object.keys(editRecord).forEach((key) => {
-          actionStore.record[key as AnyField] = editRecord[key as AnyField]
-        })
-      }
+    if (editRecord) {
+      // Setup action store record with all the record values
+      Object.keys(editRecord).map((key) => {
+        actionStore.record[key as AnyField] = editRecord[key as AnyField]
+      })
     }
   } catch (error) {
     log.error('Error loading edit view', error)
@@ -78,18 +81,7 @@ async function onSubmit() {
 
 <template>
   <ResponsivePage :bannerIcon="Icon.EDIT" :bannerTitle="`Edit ${label}`">
-    <!-- Error Render -->
-    <div v-if="!label || !fields">
-      <QCard class="q-mb-md">
-        <QCardSection>
-          <QIcon :name="Icon.WARN" size="md" color="warning" />
-          <span class="q-ml-md">Error rendering this record</span>
-        </QCardSection>
-      </QCard>
-    </div>
-
-    <!-- Normal Page Render -->
-    <div v-else>
+    <div v-if="label && fields">
       <QForm
         @submit="onSubmit"
         @validation-error="isFormValid = false"
@@ -116,5 +108,7 @@ async function onSubmit() {
         </div>
       </QForm>
     </div>
+
+    <ErrorStates v-else error="unknown" />
   </ResponsivePage>
 </template>

@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar'
 import { Icon } from '@/types/general'
-import {
-  recordGroups,
-  type AnyDatabaseRecord,
-  type AnyCoreRecord,
-  type AnyField,
-} from '@/types/core'
-import { defineAsyncComponent, onMounted, onUnmounted, ref, type Ref } from 'vue'
+import type { AnyDatabaseRecord, AnyField } from '@/types/core'
+import { defineAsyncComponent, onUnmounted } from 'vue'
 import useActionStore from '@/stores/action'
-import DataSchema from '@/services/DataSchema'
-import DB from '@/services/Database'
 
 const props = defineProps<{
   title: string
@@ -26,27 +19,6 @@ const actionStore = useActionStore()
 // Setup action store record with all the record values
 Object.keys(props.record).map((key) => {
   actionStore.record[key as AnyField] = props.record[key as AnyField]
-})
-
-const coreRecordInfo: Ref<string> = ref('')
-
-onMounted(async () => {
-  if (props?.record?.coreId) {
-    const coreRecord = (await DB.getRecord(
-      recordGroups.Values.core,
-      props?.record?.coreId
-    )) as AnyCoreRecord
-
-    if (coreRecord) {
-      const recordDetails = DataSchema.getLabel(
-        recordGroups.Values.core,
-        coreRecord.type,
-        'singular'
-      )
-      const recordName = coreRecord.name
-      coreRecordInfo.value = `${recordDetails}, ${recordName}`
-    }
-  }
 })
 
 onUnmounted(() => {

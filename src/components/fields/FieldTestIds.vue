@@ -57,7 +57,7 @@ function inspectFormat(val: string[]) {
 
     <QSelect
       v-model="actionStore.record[field]"
-      :rules="[(val: string[]) => testIdsSchema.safeParse(val).success || '* Required']"
+      :rules="[(val: string[]) => testIdsSchema.safeParse(val).success || 'Required']"
       :options="options"
       counter
       multiple

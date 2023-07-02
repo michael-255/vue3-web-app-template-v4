@@ -48,17 +48,17 @@ function chartTimeRule(time: string) {
     </QToolbar>
 
     <QCard class="q-dialog-plugin">
-      <QCardSection>
+      <QCardSection v-if="charts.length > 0">
         <p class="text-h5">{{ title }}</p>
 
-        <p>Select how far back you want the charts to display record data.</p>
+        <p>Select how far back you want the charts to display.</p>
 
         <QSelect
           v-model="uiStore.chartTime"
           ref="inputRef"
           label="Chart Time"
           :options="options"
-          :rules="[(chartTime: string) => chartTimeRule(chartTime) || '* Required']"
+          :rules="[(chartTime: string) => chartTimeRule(chartTime) || 'Required']"
           emit-value
           map-options
           options-dense
@@ -73,6 +73,8 @@ function chartTimeRule(time: string) {
           <component :is="chart" :type="type" :id="id" />
         </div>
       </QCardSection>
+
+      <ErrorStates v-else error="no-data" />
     </QCard>
   </QDialog>
 </template>

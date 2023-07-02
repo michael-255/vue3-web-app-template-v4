@@ -123,23 +123,24 @@ async function onCharts(type: RecordType, id: string) {
   <ResponsivePage :bannerIcon="Icon.DASHBOARD" bannerTitle="Dashboard">
     <WelcomeOverlay />
 
-    <section class="q-mb-lg">
+    <section class="q-mb-md">
       <p class="text-h6 q-mb-sm text-center">What would you like to work on?</p>
 
+      <p class="text-center">
+        {{ dashboardOptions.find((o) => o.value === uiStore.dashboardSelection)?.label }}
+      </p>
+
       <div class="row justify-center">
-        <QOptionGroup
-          color="primary"
-          :options="dashboardOptions"
-          :model-value="uiStore.dashboardSelection"
-          @update:model-value="uiStore.dashboardSelection = $event"
-        >
-          <template v-slot:label="opt">
-            <div class="row items-center">
-              <QIcon :name="opt.icon" size="xs" class="q-mr-sm" />
-              <span>{{ opt.label }}</span>
-            </div>
-          </template>
-        </QOptionGroup>
+        <QBtn
+          v-for="(option, i) in dashboardOptions"
+          :key="i"
+          round
+          size="lg"
+          class="q-mb-xs q-mx-xs"
+          :icon="option.icon"
+          :color="uiStore.dashboardSelection === option.value ? 'primary' : 'grey'"
+          @click="uiStore.dashboardSelection = option.value"
+        />
       </div>
     </section>
 
@@ -236,7 +237,7 @@ async function onCharts(type: RecordType, id: string) {
           </div>
 
           <QBtn
-            label="Attach Record"
+            label="Add Sub Record"
             color="primary"
             :icon="Icon.ADD_NOTE"
             @click="goToCreate(recordGroups.Values.sub, record?.type, record?.id)"
@@ -246,10 +247,8 @@ async function onCharts(type: RecordType, id: string) {
     </div>
 
     <!-- Record Count & Create -->
-    <div class="row justify-center q-my-md">
-      <div class="col-12 text-center">
-        <QIcon name="menu_open" size="80px" color="grey" />
-      </div>
+    <div class="row justify-center">
+      <QIcon class="col-12 text-center" name="menu_open" size="80px" color="grey" />
 
       <p class="col-12 text-grey text-center">
         {{ getRecordsCountDisplay(dashboardRecords[uiStore.dashboardSelection]) }}

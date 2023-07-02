@@ -272,233 +272,207 @@ function getSettingValue(key: SettingKey) {
 
 <template>
   <ResponsivePage :bannerIcon="Icon.SETTINGS" bannerTitle="Settings">
-    <QCard class="q-mb-md">
-      <QCardSection>
-        <p class="text-h6">Options</p>
+    <section class="q-mb-xl">
+      <p class="text-h6">Options</p>
 
-        <div class="q-mb-md">
-          <p>Reset your app Settings to the defaults without impacting any of your data.</p>
-          <QBtn label="Reset Settings" color="primary" @click="onResetSettings()" />
-        </div>
+      <div class="q-mb-md">
+        <p>Reset your app Settings to the defaults without impacting any of your data.</p>
+        <QBtn label="Reset Settings" color="primary" @click="onResetSettings()" />
+      </div>
 
-        <div class="q-mb-md">
-          <p>
-            Welcome overlay provides helpful instructions on basic app usage on the Dashboard page.
-          </p>
-          <QToggle
-            label="Show Welcome Overlay"
-            :model-value="getSettingValue(settingkeys.Values['welcome-overlay'])"
-            @update:model-value="DB.setSetting(settingkeys.Values['welcome-overlay'], $event)"
-          />
-        </div>
-
-        <div class="q-mb-md">
-          <p>Show descriptions for records displayed on the Dashboard page.</p>
-          <QToggle
-            label="Show Dashboard Descriptions"
-            :model-value="getSettingValue(settingkeys.Values['dashboard-descriptions'])"
-            @update:model-value="
-              DB.setSetting(settingkeys.Values['dashboard-descriptions'], $event)
-            "
-          />
-        </div>
-
-        <div>
-          <p>Dark mode allows you to switch between a light or dark theme for the app.</p>
-          <QToggle
-            label="Dark Mode"
-            :model-value="getSettingValue(settingkeys.Values['dark-mode'])"
-            @update:model-value="DB.setSetting(settingkeys.Values['dark-mode'], $event)"
-          />
-        </div>
-      </QCardSection>
-    </QCard>
-
-    <QCard class="q-mb-md">
-      <QCardSection>
-        <p class="text-h6">Defaults</p>
-
-        <div>
-          <p>Load default demostration records into the database. This action can be repeated.</p>
-
-          <div class="q-mb-md">
-            <QBtn label="Load Examples" color="primary" @click="onDefaultExamples()" />
-          </div>
-
-          <div>
-            <QBtn label="Load Tests" color="primary" @click="onDefaultTests()" />
-          </div>
-        </div>
-      </QCardSection>
-    </QCard>
-
-    <QCard class="q-mb-md">
-      <QCardSection>
-        <p class="text-h6">Data Management</p>
-
-        <div class="q-mb-md">
-          <p>
-            Import data into the database from a JSON file. The app expects the data in the file to
-            be structured the same as the exported version.
-          </p>
-          <QFile
-            v-model="importFile"
-            dense
-            outlined
-            counter
-            bottom-slots
-            label="File Select"
-            :max-file-size="Limit.MAX_FILE_SIZE"
-            accept="application/json"
-            @rejected="onRejectedFile"
-          >
-            <template v-slot:before>
-              <QBtn :disable="!importFile" label="Import" color="primary" @click="onImportFile()" />
-            </template>
-            <template v-slot:append>
-              <QIcon
-                v-if="importFile"
-                :name="Icon.CLOSE"
-                class="cursor-pointer"
-                @click.stop="importFile = null"
-              />
-            </template>
-          </QFile>
-        </div>
-
-        <div class="q-mb-md">
-          <p>
-            Export your data as a JSON file. Do this on a regularly basis so you have a backup of
-            your data.
-          </p>
-          <QBtn label="Export" color="primary" @click="onExportRecords()" />
-        </div>
-
-        <div class="q-mb-md">
-          <p>View the app logs to troubleshoot issues.</p>
-          <QBtn label="Access Logs" color="primary" @click="goToLogsData()" />
-        </div>
-
-        <div class="q-mb-md">
-          <p>Access any app data tables to view your records.</p>
-          <QSelect
-            v-model="accessModel"
-            outlined
-            dense
-            label="Record Type"
-            :options="accessOptions"
-          >
-            <template v-slot:before>
-              <QBtn
-                :disable="!accessModel"
-                label="Access Data"
-                color="primary"
-                @click="goToRecordsData(accessModel?.value?.group, accessModel?.value?.type)"
-              />
-            </template>
-          </QSelect>
-        </div>
-      </QCardSection>
-    </QCard>
-
-    <QCard class="q-mb-md">
-      <QCardSection>
-        <p class="text-h6">Logging</p>
-
-        <div class="q-mb-md">
-          <p>Show Console Logs will display all log messages in the browser console.</p>
-          <QToggle
-            label="Show Console Logs"
-            :model-value="getSettingValue(settingkeys.Values['console-logs'])"
-            @update:model-value="DB.setSetting(settingkeys.Values['console-logs'], $event)"
-          />
-        </div>
-
-        <div class="q-mb-md">
-          <p>Show Info Messages will display info level notifications.</p>
-          <QToggle
-            label="Show Info Messages"
-            :model-value="getSettingValue(settingkeys.Values['info-messages'])"
-            @update:model-value="DB.setSetting(settingkeys.Values['info-messages'], $event)"
-          />
-        </div>
-
-        <div class="q-mb-md">
-          <p>
-            Validate that your logging settings above are working as expected by using the test
-            action below.
-          </p>
-          <QBtn label="Test Logger" color="primary" @click="onTestLogger()" />
-        </div>
-
-        <div class="q-mb-md">
-          <p>
-            Change log retention duration below. Logs older than the selected time will be deleted.
-            This functions retroactivley. Change the time to three months will cause all logs older
-            than three months to be deleted. Expired log processing occurs every time the app is
-            loaded.
-          </p>
-
-          <div class="q-mx-lg">
-            <QSlider
-              v-model="logDurationIndex"
-              :label-value="logDurationKeys[logDurationIndex]"
-              color="primary"
-              markers
-              label-always
-              switch-label-side
-              :min="0"
-              :max="logDurationKeys.length - 1"
-              @change="(index) => onChangeLogRetention(index)"
-            />
-          </div>
-        </div>
-      </QCardSection>
-    </QCard>
-
-    <QCard class="q-mb-md">
-      <QCardSection>
-        <p class="text-h6 text-negative">DANGER ZONE</p>
-
+      <div class="q-mb-md">
         <p>
-          The following operations cannot be undone. Consider exporting your data before proceeding.
+          Welcome overlay provides helpful instructions on basic app usage on the Dashboard page.
+        </p>
+        <QToggle
+          label="Show Welcome Overlay"
+          :model-value="getSettingValue(settingkeys.Values['welcome-overlay'])"
+          @update:model-value="DB.setSetting(settingkeys.Values['welcome-overlay'], $event)"
+        />
+      </div>
+
+      <div class="q-mb-md">
+        <p>Show descriptions for records displayed on the Dashboard page.</p>
+        <QToggle
+          label="Show Dashboard Descriptions"
+          :model-value="getSettingValue(settingkeys.Values['dashboard-descriptions'])"
+          @update:model-value="DB.setSetting(settingkeys.Values['dashboard-descriptions'], $event)"
+        />
+      </div>
+
+      <div>
+        <p>Dark mode allows you to switch between a light or dark theme for the app.</p>
+        <QToggle
+          label="Dark Mode"
+          :model-value="getSettingValue(settingkeys.Values['dark-mode'])"
+          @update:model-value="DB.setSetting(settingkeys.Values['dark-mode'], $event)"
+        />
+      </div>
+    </section>
+
+    <section class="q-mb-xl">
+      <p class="text-h6">Defaults</p>
+
+      <div>
+        <p>Load default demostration records into the database. This action can be repeated.</p>
+
+        <div class="q-mb-md">
+          <QBtn label="Load Examples" color="primary" @click="onDefaultExamples()" />
+        </div>
+
+        <div>
+          <QBtn label="Load Tests" color="primary" @click="onDefaultTests()" />
+        </div>
+      </div>
+    </section>
+
+    <section class="q-mb-xl">
+      <p class="text-h6">Data Management</p>
+
+      <div class="q-mb-md">
+        <p>
+          Import data into the database from a JSON file. The app expects the data in the file to be
+          structured the same as the exported version.
+        </p>
+        <QFile
+          v-model="importFile"
+          dense
+          outlined
+          counter
+          bottom-slots
+          label="File Select"
+          :max-file-size="Limit.MAX_FILE_SIZE"
+          accept="application/json"
+          @rejected="onRejectedFile"
+        >
+          <template v-slot:before>
+            <QBtn :disable="!importFile" label="Import" color="primary" @click="onImportFile()" />
+          </template>
+          <template v-slot:append>
+            <QIcon
+              v-if="importFile"
+              :name="Icon.CLOSE"
+              class="cursor-pointer"
+              @click.stop="importFile = null"
+            />
+          </template>
+        </QFile>
+      </div>
+
+      <div class="q-mb-md">
+        <p>
+          Export your data as a JSON file. Do this on a regularly basis so you have a backup of your
+          data.
+        </p>
+        <QBtn label="Export" color="primary" @click="onExportRecords()" />
+      </div>
+
+      <div class="q-mb-md">
+        <p>View the app logs to troubleshoot issues.</p>
+        <QBtn label="Access Logs" color="primary" @click="goToLogsData()" />
+      </div>
+
+      <div class="q-mb-md">
+        <p>Access any app data tables to view your records.</p>
+        <QSelect v-model="accessModel" outlined dense label="Record Type" :options="accessOptions">
+          <template v-slot:before>
+            <QBtn
+              :disable="!accessModel"
+              label="Access Data"
+              color="primary"
+              @click="goToRecordsData(accessModel?.value?.group, accessModel?.value?.type)"
+            />
+          </template>
+        </QSelect>
+      </div>
+    </section>
+
+    <section class="q-mb-xl">
+      <p class="text-h6">Logging</p>
+
+      <div class="q-mb-md">
+        <p>Show Console Logs will display all log messages in the browser console.</p>
+        <QToggle
+          label="Show Console Logs"
+          :model-value="getSettingValue(settingkeys.Values['console-logs'])"
+          @update:model-value="DB.setSetting(settingkeys.Values['console-logs'], $event)"
+        />
+      </div>
+
+      <div class="q-mb-md">
+        <p>Show Info Messages will display info level notifications.</p>
+        <QToggle
+          label="Show Info Messages"
+          :model-value="getSettingValue(settingkeys.Values['info-messages'])"
+          @update:model-value="DB.setSetting(settingkeys.Values['info-messages'], $event)"
+        />
+      </div>
+
+      <div class="q-mb-md">
+        <p>
+          Validate that your logging settings above are working as expected by using the test action
+          below.
+        </p>
+        <QBtn label="Test Logger" color="primary" @click="onTestLogger()" />
+      </div>
+
+      <div class="q-mb-md">
+        <p>
+          Change log retention duration below. Logs older than the selected time will be deleted.
+          This functions retroactivley. Expired log processing occurs every time the app is loaded.
         </p>
 
-        <div class="q-mb-md">
-          <p>Delete the app logs from the database.</p>
-          <QBtn label="Delete Logs" color="negative" @click="onDeleteLogs()" />
+        <div class="q-mx-lg">
+          <QSlider
+            v-model="logDurationIndex"
+            :label-value="logDurationKeys[logDurationIndex]"
+            color="primary"
+            markers
+            label-always
+            switch-label-side
+            :min="0"
+            :max="logDurationKeys.length - 1"
+            @change="(index) => onChangeLogRetention(index)"
+          />
         </div>
+      </div>
+    </section>
 
-        <div class="q-mb-md">
-          <p>Select a data type and permanently delete all of its records.</p>
-          <QSelect
-            v-model="deleteModel"
-            outlined
-            dense
-            label="Record Type"
-            :options="deleteOptions"
-          >
-            <template v-slot:before>
-              <QBtn
-                :disable="!deleteModel"
-                label="Delete Data"
-                color="negative"
-                @click="onDeleteBy(deleteModel.label, deleteModel.value)"
-              />
-            </template>
-          </QSelect>
-        </div>
+    <section class="q-mb-xl">
+      <p class="text-h6 text-negative">DANGER ZONE</p>
 
-        <div class="q-mb-md">
-          <p>Permanently delete all data records from the database.</p>
-          <QBtn label="Delete All Data" color="negative" @click="onDeleteAll()" />
-        </div>
+      <p>
+        The following operations cannot be undone. Consider exporting your data before proceeding.
+      </p>
 
-        <div class="q-mb-md">
-          <p>Delete the underlining database and all of its data (requires website reload).</p>
-          <QBtn label="Delete Database" color="negative" @click="onDeleteDatabase()" />
-        </div>
-      </QCardSection>
-    </QCard>
+      <div class="q-mb-md">
+        <p>Delete the app logs from the database.</p>
+        <QBtn label="Delete Logs" color="negative" @click="onDeleteLogs()" />
+      </div>
+
+      <div class="q-mb-md">
+        <p>Select a data type and permanently delete all of its records.</p>
+        <QSelect v-model="deleteModel" outlined dense label="Record Type" :options="deleteOptions">
+          <template v-slot:before>
+            <QBtn
+              :disable="!deleteModel"
+              label="Delete Data"
+              color="negative"
+              @click="onDeleteBy(deleteModel.label, deleteModel.value)"
+            />
+          </template>
+        </QSelect>
+      </div>
+
+      <div class="q-mb-md">
+        <p>Permanently delete all data records from the database.</p>
+        <QBtn label="Delete All Data" color="negative" @click="onDeleteAll()" />
+      </div>
+
+      <div class="q-mb-md">
+        <p>Delete the underlining database and all of its data (requires website reload).</p>
+        <QBtn label="Delete Database" color="negative" @click="onDeleteDatabase()" />
+      </div>
+    </section>
   </ResponsivePage>
 </template>

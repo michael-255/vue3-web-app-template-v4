@@ -12,7 +12,7 @@ const actionStore = useActionStore()
 const field = allFields.Values.favorited
 
 onMounted(() => {
-  actionStore.record[field] = actionStore.record[field] ?? true
+  actionStore.record[field] = actionStore.record[field] ?? false
 })
 
 function inspectFormat(val: boolean) {

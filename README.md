@@ -4,11 +4,6 @@ This Vue 3 Typescript project can be used as a web application template to help 
 developing. Read through this README to have a better understanding of how this project is
 structured.
 
-## TODOS
-
-- Fix things up!
-- Validate that everything is working correctly!
-
 ## Post Cloning Steps
 
 - [ ] Update `package.json`
@@ -23,7 +18,7 @@ structured.
 - [ ] Update specific files
 
   - [ ] `base` in `~/vite.config.ts` to your repository name for deployments to work
-  - [ ] `AppName` and `AppDescription` in `~/src/types/general.ts`
+  - [ ] `AppName` and `AppDescription` in `~/src/constants/global.ts`
   - [ ] `name` and `short_name` in `~/public/manifest.json`
   - [ ] `start_url` in `~/public/manifest.json` to deployed website address
   - [ ] `menu-avatar` in `~/src/assets/menu-avatar.png` to new 96x96 png (+50% canvas for cropping)
@@ -215,7 +210,7 @@ Details on the steps I took to create this project.
        // loadingBar: { ... }, // settings for LoadingBar Quasar plugin
        // // ..and many more (check Installation card on each Quasar component/directive/plugin)
      },
-   })
+   } as any)
 
    // Assumes you have a <div id="app"></div> in your index.html
    app.mount('#app')

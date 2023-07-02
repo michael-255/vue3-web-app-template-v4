@@ -8,7 +8,7 @@ useMeta({ title: `${AppName} - 404` })
 
 <template>
   <ResponsivePage>
-    <QCard>
+    <QCard flat>
       <QCardSection class="bg-negative text-white">
         <div class="text-h3">404</div>
         <div class="text-subtitle1">Page Not Found</div>

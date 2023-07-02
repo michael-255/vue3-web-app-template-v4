@@ -5,6 +5,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { extend, uid, useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
 import DataSchema from '@/services/DataSchema'
+import ErrorStates from '@/components/ErrorStates.vue'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import useRoutables from '@/composables/useRoutables'
 import useActionStore from '@/stores/action'
@@ -29,7 +30,7 @@ onMounted(async () => {
     actionStore.record[allFields.Values.type] = routeType
 
     if (routeCoreId) {
-      // Attaching sub-record to existing core record so need to include coreId
+      // Only including optional coreId if valid
       actionStore.record[allFields.Values.coreId] = routeCoreId
     }
   } catch (error) {
@@ -62,18 +63,7 @@ async function onSubmit() {
 
 <template>
   <ResponsivePage :bannerIcon="Icon.CREATE" :bannerTitle="`Create ${label}`">
-    <!-- Error Render -->
-    <div v-if="!label || !fields">
-      <QCard class="q-mb-md">
-        <QCardSection>
-          <QIcon :name="Icon.WARN" size="md" color="warning" />
-          <span class="q-ml-md">Error rendering this record</span>
-        </QCardSection>
-      </QCard>
-    </div>
-
-    <!-- Normal Page Render -->
-    <div v-else>
+    <div v-if="label && fields">
       <QForm
         @submit="onSubmit"
         @validation-error="isFormValid = false"
@@ -90,15 +80,15 @@ async function onSubmit() {
         </div>
 
         <!-- Validation Message -->
-        <div class="row justify-center">
-          <div v-show="!isFormValid">
-            <QIcon :name="Icon.WARN" color="warning" />
-            <span class="text-caption q-ml-xs text-warning">
-              Correct invalid entries and try again
-            </span>
-          </div>
+        <div v-show="!isFormValid" class="row justify-center">
+          <QIcon :name="Icon.WARN" color="warning" />
+          <span class="text-caption q-ml-xs text-warning">
+            Correct invalid entries and try again
+          </span>
         </div>
       </QForm>
     </div>
+
+    <ErrorStates v-else error="unknown" />
   </ResponsivePage>
 </template>

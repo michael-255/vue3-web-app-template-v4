@@ -9,49 +9,47 @@ useMeta({ title: `${AppName} - About` })
 
 <template>
   <ResponsivePage :bannerIcon="Icon.INFO" bannerTitle="About">
-    <QCard>
-      <QCardSection>
-        <p>{{ AppDescription }}</p>
+    <section>
+      <p>{{ AppDescription }}</p>
 
-        <p>
-          Feel free to checkout my other projects or help support my work with a donation. Thanks
-          for visiting!
-        </p>
+      <p>
+        Feel free to checkout my other projects or help support my work with a donation. Thanks for
+        visiting!
+      </p>
 
-        <div class="row q-col-gutter-md justify-center">
-          <div class="col-sm-4 col-xs-12">
-            <QBtn
-              class="full-width"
-              color="primary"
-              label="Blog"
-              target="_blank"
-              href="https://www.example.com"
-              :icon="Icon.WEB"
-            />
-          </div>
-
-          <div class="col-sm-4 col-xs-12">
-            <QBtn
-              class="full-width"
-              color="primary"
-              label="GitHub"
-              target="_blank"
-              href="https://github.com/michael-255"
-              :icon="Icon.CODE"
-            />
-          </div>
-
-          <div class="col-sm-4 col-xs-12">
-            <QBtn
-              class="full-width"
-              color="warning"
-              label="Donate"
-              :to="{ name: routeNames.Values.Donate }"
-              :icon="Icon.DONATE"
-            />
-          </div>
+      <div class="row q-col-gutter-md justify-center">
+        <div class="col-sm-4 col-xs-12">
+          <QBtn
+            class="full-width"
+            color="primary"
+            label="Blog"
+            target="_blank"
+            href="https://www.example.com"
+            :icon="Icon.WEB"
+          />
         </div>
-      </QCardSection>
-    </QCard>
+
+        <div class="col-sm-4 col-xs-12">
+          <QBtn
+            class="full-width"
+            color="primary"
+            label="GitHub"
+            target="_blank"
+            href="https://github.com/michael-255"
+            :icon="Icon.CODE"
+          />
+        </div>
+
+        <div class="col-sm-4 col-xs-12">
+          <QBtn
+            class="full-width"
+            color="warning"
+            label="Donate"
+            :to="{ name: routeNames.Values.Donate }"
+            :icon="Icon.DONATE"
+          />
+        </div>
+      </div>
+    </section>
   </ResponsivePage>
 </template>

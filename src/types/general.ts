@@ -67,6 +67,7 @@ export enum Icon {
   TESTS = 'cruelty_free',
   PERF = 'speed',
   // Misc
+  NOT_FOUND = 'question_mark',
   LOCK = 'lock',
   NOTE = 'sticky_note_2',
   ADD_NOTE = 'post_add',

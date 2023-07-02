@@ -1,4 +1,10 @@
-import type { RecordGroup, RecordType } from '@/types/core'
+import {
+  idSchema,
+  recordTypes,
+  type RecordGroup,
+  type RecordType,
+  recordGroups,
+} from '@/types/core'
 import { useRoute, useRouter } from 'vue-router'
 import { routeNames } from '@/types/general'
 import useLogger from '@/composables/useLogger'
@@ -25,10 +31,10 @@ export default function useRoutables(): {
   const group = Array.isArray(route.params.group) ? route.params.group[0] : route.params.group
 
   // Cleaned route params
-  const routeId = id || undefined
-  const routeCoreId = coreId || undefined
-  const routeType = (type as RecordType) || undefined
-  const routeGroup = (group as RecordGroup) || undefined
+  const routeId = idSchema.safeParse(id).success ? id : undefined
+  const routeCoreId = idSchema.safeParse(coreId).success ? coreId : undefined
+  const routeType = recordTypes.safeParse(type).success ? (type as RecordType) : undefined
+  const routeGroup = recordGroups.safeParse(group).success ? (group as RecordGroup) : undefined
 
   function goToLogsData() {
     try {

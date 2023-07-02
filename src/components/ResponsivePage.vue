@@ -10,7 +10,7 @@ defineProps<{
 </script>
 
 <template>
-  <QPage padding>
+  <QPage padding class="q-mx-sm">
     <div class="row justify-center">
       <div class="col-md-8 col-sm-10 col-xs-12">
         <!-- Optional Banner -->
