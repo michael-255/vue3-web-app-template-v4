@@ -36,7 +36,7 @@ onMounted(async () => {
       label: `${r.name} (${truncateString(r.id, 8, '*')})`,
     }))
   } catch (error) {
-    log.error('Error with test ids input', error)
+    log.error('Error with test ids field', error)
   }
 })
 

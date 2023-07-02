@@ -42,7 +42,7 @@ onMounted(async () => {
       actionStore.record[field] = options.value[0].value || undefined // If no options
     }
   } catch (error) {
-    log.error('Error with core ids input', error)
+    log.error('Error with core id field', error)
   }
 })
 
