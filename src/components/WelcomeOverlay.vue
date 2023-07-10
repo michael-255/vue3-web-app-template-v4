@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Icon, routeNames } from '@/types/general'
+import { Icon, RouteName } from '@/types/general'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { settingkeys } from '@/types/core'
 import { AppDescription, AppName } from '@/constants/global'
+import { SettingKey } from '@/models/Setting'
 import useLogger from '@/composables/useLogger'
 import DB from '@/services/Database'
 
@@ -13,9 +13,7 @@ const showWelcome: Ref<any> = ref(false)
 
 const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
-    showWelcome.value = liveSettings.find(
-      (s) => s.key === settingkeys.Values['welcome-overlay']
-    )?.value
+    showWelcome.value = liveSettings.find((s) => s.key === SettingKey.WELCOME_OVERLAY)?.value
   },
   error: (error) => {
     log.error('Error fetching live Settings', error)
@@ -27,17 +25,16 @@ onUnmounted(() => {
 })
 
 async function onCloseWelcomeOverlay() {
-  await DB.setSetting(settingkeys.Values['welcome-overlay'], false)
+  await DB.setSetting(SettingKey.WELCOME_OVERLAY, false)
 }
 </script>
 
 <template>
   <QDialog v-model="showWelcome" persistent>
-    <QCard>
+    <QCard flat square>
       <QCardSection>
         <p class="text-h6">Welcome to {{ AppName }}</p>
 
-        <!-- Information -->
         <p>{{ AppDescription }}</p>
 
         <p>
@@ -45,7 +42,6 @@ async function onCloseWelcomeOverlay() {
           button to jump right in.
         </p>
 
-        <!-- Favorites -->
         <div class="q-mb-md">
           <p>
             You are currently on the Dashboard page. This page gives you quick access to the primary
@@ -63,7 +59,6 @@ async function onCloseWelcomeOverlay() {
           />
         </div>
 
-        <!-- Menu -->
         <div class="q-mb-md">
           <p>
             You can navigate through the app using the menu in the top left corner of the page. An
@@ -71,10 +66,9 @@ async function onCloseWelcomeOverlay() {
             tables, Frequently Asked Questions (FAQ), Settings, and more. More advanced operations
             for the app are available on the Settings page.
           </p>
-          <QBtn disable color="primary" class="q-px-sm" :icon="Icon.MENU_STANDARD" />
+          <QBtn disable color="primary" class="q-px-sm" :icon="Icon.MENU" />
         </div>
 
-        <!-- Donation -->
         <div class="q-mb-md">
           <p>
             Hope you find {{ AppName }} useful. Please consider donating to help me continue to
@@ -83,12 +77,11 @@ async function onCloseWelcomeOverlay() {
           <QBtn
             color="warning"
             label="Donate"
-            :to="{ name: routeNames.Values.Donate }"
+            :to="{ name: RouteName.DONATE }"
             :icon="Icon.DONATE"
           />
         </div>
 
-        <!-- Close Welcome Overlay -->
         <div>
           <p>Click the button below when you are ready to get started.</p>
           <QBtn
@@ -97,7 +90,7 @@ async function onCloseWelcomeOverlay() {
             class="full-width"
             size="lg"
             color="positive"
-            :icon="Icon.RECOMMEND"
+            :icon="Icon.READY"
             @click="onCloseWelcomeOverlay()"
           />
         </div>

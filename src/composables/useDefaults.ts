@@ -105,10 +105,10 @@ export default function useDefaults() {
 
           buildRecords(360)
 
-          await Promise.all([
-            DB.importRecords(recordGroups.Values.core, coreRecords),
-            DB.importRecords(recordGroups.Values.sub, subRecords),
-          ])
+          // await Promise.all([
+          //   DB.importRecords(recordGroups.Values.core, coreRecords),
+          //   DB.importRecords(recordGroups.Values.sub, subRecords),
+          // ])
 
           log.info('Default examples loaded')
         } catch (error) {
@@ -157,10 +157,10 @@ export default function useDefaults() {
 
           buildRecords(0)
 
-          await Promise.all([
-            DB.importRecords(recordGroups.Values.core, coreRecords),
-            DB.importRecords(recordGroups.Values.sub, subRecords),
-          ])
+          // await Promise.all([
+          //   DB.importRecords(recordGroups.Values.core, coreRecords),
+          //   DB.importRecords(recordGroups.Values.sub, subRecords),
+          // ])
 
           log.info('Default tests loaded')
         } catch (error) {

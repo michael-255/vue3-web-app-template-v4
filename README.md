@@ -4,6 +4,15 @@ This Vue 3 Typescript project can be used as a web application template to help 
 developing. Read through this README to have a better understanding of how this project is
 structured.
 
+## TODO
+
+- [ ] Port over various components updates from `fitness-web-app-v19`
+- [ ] Clean and update the following components to get the App running again:
+
+  - [ ] Refactor `Dashboard`
+  - [ ] Refactor `Settings`
+  - [ ] Refactor `composables` (rename routables to routing)
+
 ## Post Cloning Steps
 
 - [ ] Update `package.json`

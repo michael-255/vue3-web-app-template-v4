@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Icon, routeNames } from '@/types/general'
+import { Icon, RouteName } from '@/types/general'
 import { AppDescription, AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
 import ResponsivePage from '@/components/ResponsivePage.vue'
@@ -45,7 +45,7 @@ useMeta({ title: `${AppName} - About` })
             class="full-width"
             color="warning"
             label="Donate"
-            :to="{ name: routeNames.Values.Donate }"
+            :to="{ name: RouteName.DONATE }"
             :icon="Icon.DONATE"
           />
         </div>
