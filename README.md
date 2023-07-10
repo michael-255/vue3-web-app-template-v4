@@ -13,6 +13,8 @@ structured.
   - [ ] Refactor `Settings`
   - [ ] Refactor `composables` (rename routables to routing)
 
+- [ ] Make use of `ErrorStates` component
+
 ## Post Cloning Steps
 
 - [ ] Update `package.json`

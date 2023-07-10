@@ -48,7 +48,7 @@ defineProps<{
     </div>
 
     <QPageScroller>
-      <QBtn fab :icon="Icon.TOP_OF_PAGE" color="accent" />
+      <QBtn fab :icon="Icon.UP" color="accent" />
     </QPageScroller>
   </QPage>
 </template>

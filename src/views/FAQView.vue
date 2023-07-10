@@ -8,7 +8,7 @@ useMeta({ title: `${AppName} - FAQ` })
 </script>
 
 <template>
-  <ResponsivePage :bannerIcon="Icon.HELP" bannerTitle="FAQ">
+  <ResponsivePage :bannerIcon="Icon.FAQ" bannerTitle="FAQ">
     <QList bordered class="rounded-borders">
       <QExpansionItem label="What is this application?" header-class="text-weight-bold">
         <QCard>

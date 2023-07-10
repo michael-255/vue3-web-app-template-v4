@@ -10,12 +10,12 @@ export class Test extends Parent {
   constructor(
     id: string,
     createdTimestamp: number,
-    active: boolean,
+    activated: boolean,
     name: string,
     desc: string,
     enabled: boolean,
     favorited: boolean
   ) {
-    super(id, createdTimestamp, active, name, desc, enabled, favorited)
+    super(id, createdTimestamp, activated, name, desc, enabled, favorited)
   }
 }

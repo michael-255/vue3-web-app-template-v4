@@ -8,18 +8,18 @@ export const booleanSchema = z.boolean()
 export const entitySchema = z.object({
   [DBField.ID]: idSchema,
   [DBField.CREATED_TIMESTAMP]: createdTimestampSchema,
-  [DBField.ACTIVE]: booleanSchema,
+  [DBField.ACTIVATED]: booleanSchema,
 })
 
 export class Entity {
   [DBField.ID]: string;
   [DBField.CREATED_TIMESTAMP]: number;
-  [DBField.ACTIVE]: boolean
+  [DBField.ACTIVATED]: boolean
 
-  constructor(id: string, createdTimestamp: number, active: boolean) {
+  constructor(id: string, createdTimestamp: number, activated: boolean) {
     this.id = id
     this.createdTimestamp = createdTimestamp
-    this.active = active
+    this.activated = activated
   }
 
   static getFieldSFCs() {

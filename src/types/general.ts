@@ -50,10 +50,18 @@ export enum Icon {
   SETTINGS = 'settings',
   LOGS = 'plagiarism',
   FAQ = 'help_center',
+  NOT_FOUND = 'question_mark',
+
+  // Dialogs
+  CHARTS = 'bar_chart',
+  INSPECT = 'manage_search',
+  NOTE = 'sticky_note_2',
 
   // Tables Types
   PARENTS = 'table_chart',
   CHILDREN = 'fact_check',
+  EXAMPLES = 'smart_toy',
+  TESTS = 'cruelty_free',
 
   // Actions
   BACK = 'arrow_back',
@@ -62,6 +70,10 @@ export enum Icon {
   REFRESH = 'refresh',
   CLEAR = 'delete_sweep',
   CLOSE = 'close',
+  CREATE = 'add_circle',
+  DELETE = 'delete',
+  EDIT = 'edit',
+  UP = 'keyboard_arrow_up',
 
   // Design Elements
   MENU = 'menu',
@@ -77,9 +89,9 @@ export enum Icon {
   // CLOSE = 'close',
   // ADD = 'add',
   // REMOVE = 'remove',
-  // EDIT = 'edit',
-  // INSPECT = 'manage_search',
-  // DELETE = 'delete',
+  //
+  //
+  //
   // CREATE = 'add_circle',
   // NEW = 'add_box',
   // CLEAR = 'delete_sweep',
@@ -95,9 +107,9 @@ export enum Icon {
   // MEASUREMENTS = 'straighten',
   // // Misc
   // WORKOUT_RESUME = 'replay',
-  // NOT_FOUND = 'question_mark',
+  //
   // LOCK = 'lock',
-  // NOTE = 'sticky_note_2',
+  //
   // ADD_NOTE = 'post_add',
   // DESCRIPTION = 'description',
   // LIST = 'view_list',
@@ -115,10 +127,6 @@ export enum Icon {
   // REFRESH = 'refresh',
   // PREVIOUS = 'undo',
   // CODE = 'code',
-
-  // MENU_STANDARD = 'menu',
-  // MENU_VERTICAL = 'more_vert',
-  // TOP_OF_PAGE = 'keyboard_arrow_up',
 
   // // Exercise Data
   // REPS = 'tag',

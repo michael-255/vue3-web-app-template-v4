@@ -46,10 +46,6 @@ class Database extends Dexie {
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
-  liveSettings() {
-    return liveQuery(() => this.Settings.toArray())
-  }
-
   async getSettings() {
     return await this.Settings.toArray()
   }
@@ -106,10 +102,6 @@ class Database extends Dexie {
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
-  liveLogs() {
-    return liveQuery(() => this.Logs.orderBy(InternalField.AUTO_ID).reverse().toArray())
-  }
-
   async getLogs() {
     return await this.Logs.toArray()
   }
@@ -153,13 +145,21 @@ class Database extends Dexie {
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
+  liveSettings() {
+    return liveQuery(() => this.Settings.toArray())
+  }
+
+  liveLogs() {
+    return liveQuery(() => this.Logs.orderBy(InternalField.AUTO_ID).reverse().toArray())
+  }
+
   private organizeDashboardData<T extends AnyDBRecord>(records: T[]) {
     const active: T[] = []
     const favorites: T[] = []
     const nonFavorites: T[] = []
 
     records.forEach((i) => {
-      if (i.active) {
+      if (i.activated) {
         active.push(i)
       } else if (i.favorited === true) {
         favorites.push(i)
@@ -171,15 +171,19 @@ class Database extends Dexie {
     return [...active, ...favorites, ...nonFavorites]
   }
 
-  liveDashboard() {
+  liveExamples() {
     return liveQuery(async () => {
-      const Examples = this.organizeDashboardData(
+      return this.organizeDashboardData(
         await this.Examples.filter((i) => i.enabled === true).sortBy(DBField.NAME)
       )
-      const Tests = this.organizeDashboardData(
+    })
+  }
+
+  liveTests() {
+    return liveQuery(async () => {
+      return this.organizeDashboardData(
         await this.Tests.filter((i) => i.enabled === true).sortBy(DBField.NAME)
       )
-      return { Examples, Tests }
     })
   }
 

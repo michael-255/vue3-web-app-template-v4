@@ -6,10 +6,10 @@ export class TestResult extends Child {
   constructor(
     id: string,
     createdTimestamp: number,
-    active: boolean,
+    activated: boolean,
     parentId: string,
     note: string
   ) {
-    super(id, createdTimestamp, active, parentId, note)
+    super(id, createdTimestamp, activated, parentId, note)
   }
 }

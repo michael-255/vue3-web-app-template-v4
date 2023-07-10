@@ -1,112 +1,93 @@
 <script setup lang="ts">
 import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
-import { ref, type Ref, onUnmounted } from 'vue'
+import { ref, type Ref, onUnmounted, onMounted } from 'vue'
 import { AppName } from '@/constants/global'
+import { SettingKey } from '@/models/Setting'
+import type { Example } from '@/models/Example'
+import type { Test } from '@/models/Test'
+import { DBTable } from '@/types/database'
 import ResponsivePage from '@/components/ResponsivePage.vue'
 import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
 import useUIStore from '@/stores/ui'
 import useLogger from '@/composables/useLogger'
-import useDialogs from '@/composables/useDialogs'
+import ExampleCardList from '@/components/dashboard/ExampleCardList.vue'
+import TestCardList from '@/components/dashboard/TestCardList.vue'
+import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Dashboard` })
 
 const uiStore = useUIStore()
 const { log } = useLogger()
-const { confirmDialog, dismissDialog, inspectDialog, chartsDialog } = useDialogs()
 
-// const showDescription: Ref<boolean> = ref(false)
-// const dashboardOptions = DataSchema.getDashboardOptions()
-// // Type is used as the key to access related parent records
-// const dashboardRecords: Ref<{ [key in RecordType]: AnyCoreRecord[] }> = ref(
-//   Object.values(RecordType).reduce((acc, type) => {
-//     acc[type] = []
-//     return acc
-//   }, {} as { [key in RecordType]: AnyCoreRecord[] })
-// )
+const dashboardOptions = [
+  {
+    value: DBTable.EXAMPLES,
+    label: 'Examples', // TODO - table labels
+    icon: Icon.EXAMPLES,
+  },
+  {
+    value: DBTable.TESTS,
+    label: 'Tests', // TODO - table labels
+    icon: Icon.TESTS,
+  },
+]
+const showDescriptions = ref(false)
+const dashboardExamples: Ref<Example[]> = ref([])
+const dashboardTests: Ref<Test[]> = ref([])
 
-// const settingsSubscription = DB.liveSettings().subscribe({
-//   next: (liveSettings) => {
-//     showDescription.value = liveSettings.find((s) => s.key === SettingKey.DASHBOARD_DESCRIPTIONS)
-//       ?.value as boolean
-//   },
-//   error: (error) => {
-//     log.error('Error fetching live Settings', error)
-//   },
-// })
+const examplesSubscription = DB.liveExamples().subscribe({
+  next: (liveExamples) => (dashboardExamples.value = liveExamples),
+  error: (error) => log.error('Error fetching live Examples', error),
+})
 
-// const dashboardSubscription = DB.liveDashboard().subscribe({
-//   next: (liveDashboard) => {
-//     dashboardRecords.value = liveDashboard
-//   },
-//   error: (error) => {
-//     log.error('Error fetching live Dashboard', error)
-//   },
-// })
+const testsSubscription = DB.liveTests().subscribe({
+  next: (liveTests) => (dashboardTests.value = liveTests),
+  error: (error) => log.error('Error fetching live Tests', error),
+})
 
-// onUnmounted(() => {
-//   settingsSubscription.unsubscribe()
-//   dashboardSubscription.unsubscribe()
-// })
+onMounted(async () => {
+  showDescriptions.value = Boolean(await DB.getSettingValue(SettingKey.DASHBOARD_DESCRIPTIONS))
+})
 
-// async function viewPreviousNote(note: string) {
-//   dismissDialog('Previous Note', note, Icon.NOTE)
-// }
-
-// async function onFavorite(id: string, name: string) {
-//   confirmDialog(
-//     'Favorite',
-//     `Do you want to favorite ${name}?`,
-//     Icon.FAVORITE_ON,
-//     'info',
-//     async () => {
-//       try {
-//         await DB.CoreRecords.update(id, { favorited: true })
-//         log.info(`${name} favorited`, { id, name })
-//       } catch (error) {
-//         log.error('Favorite update failed', error)
-//       }
-//     }
-//   )
-// }
-
-// async function onUnfavorite(id: string, name: string) {
-//   confirmDialog(
-//     'Unfavorite',
-//     `Do you want to unfavorite ${name}?`,
-//     Icon.FAVORITE_OFF,
-//     'info',
-//     async () => {
-//       try {
-//         await DB.CoreRecords.update(id, { favorited: false })
-//         log.info(`${name} unfavorited`, { id, name })
-//       } catch (error) {
-//         log.error('Unfavorite update failed', error)
-//       }
-//     }
-//   )
-// }
-
-// async function onInspect(type: RecordType, id: string) {
-//   const title = DataSchema.getLabel(RecordGroup.CORE, type, 'singular') as string
-//   const record = (await DB.getRecord(RecordGroup.CORE, id)) as AnyCoreRecord
-//   const fields = DataSchema.getFields(RecordGroup.CORE, type)
-//   inspectDialog(title, record, fields)
-// }
-
-// async function onCharts(type: RecordType, id: string) {
-//   const title = DataSchema.getLabel(
-//     RecordGroup.CORE,
-//     uiStore.dashboardSelection,
-//     'singular'
-//   ) as string
-//   chartsDialog(title, type, id)
-// }
+onUnmounted(() => {
+  examplesSubscription.unsubscribe()
+  testsSubscription.unsubscribe()
+})
 </script>
 
 <template>
   <ResponsivePage :bannerIcon="Icon.DASHBOARD" bannerTitle="Dashboard">
     <WelcomeOverlay />
+
+    <section class="q-mb-md">
+      <p class="text-center text-body1">
+        {{ dashboardOptions.find((i) => i.value === uiStore.dashboardSelection)?.label }}
+      </p>
+
+      <div class="row justify-center">
+        <QBtn
+          v-for="(option, i) in dashboardOptions"
+          :key="i"
+          round
+          size="lg"
+          class="q-mb-xs q-mx-xs"
+          :icon="option.icon"
+          :color="uiStore.dashboardSelection === option.value ? 'info' : 'grey'"
+          @click="uiStore.dashboardSelection = option.value"
+        />
+      </div>
+    </section>
+
+    <section>
+      <div v-show="uiStore.dashboardSelection === DBTable.EXAMPLES">
+        <ExampleCardList :examples="dashboardExamples" :showDescriptions="showDescriptions" />
+      </div>
+
+      <div v-show="uiStore.dashboardSelection === DBTable.TESTS">
+        <TestCardList :tests="dashboardTests" :showDescriptions="showDescriptions" />
+      </div>
+    </section>
 
     <!-- <section class="q-mb-md">
       <p class="text-center text-body1">
@@ -434,24 +415,6 @@ const { confirmDialog, dismissDialog, inspectDialog, chartsDialog } = useDialogs
           </div>
         </div>
       </div>
-    </section>
-
-
-    <div class="row justify-center">
-      <p class="col-12 text-grey text-center text-body1">
-        {{ getRecordsCountDisplay(dashboardRecords[uiStore.dashboardSelection]) }}
-      </p>
-
-      <QBtn
-        color="positive"
-        :icon="Icon.CREATE"
-        :label="`Create ${DataSchema.getLabel(
-          RecordGroup.CORE,
-          uiStore.dashboardSelection,
-          'singular'
-        )}`"
-        @click="goToCreate(RecordGroup.CORE, uiStore.dashboardSelection)"
-      />
-    </div> -->
+    </section> -->
   </ResponsivePage>
 </template>

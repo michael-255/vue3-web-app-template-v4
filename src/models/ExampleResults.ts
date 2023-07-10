@@ -16,12 +16,12 @@ export class ExampleResult extends Child {
   constructor(
     id: string,
     createdTimestamp: number,
-    active: boolean,
+    activated: boolean,
     parentId: string,
     note: string,
     percent: number
   ) {
-    super(id, createdTimestamp, active, parentId, note)
+    super(id, createdTimestamp, activated, parentId, note)
     this.percent = percent
   }
 }

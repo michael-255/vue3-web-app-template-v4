@@ -42,7 +42,7 @@ export enum DBField {
   // Entity
   ID = 'id',
   CREATED_TIMESTAMP = 'createdTimestamp',
-  ACTIVE = 'active',
+  ACTIVATED = 'activated',
 
   // Parent
   NAME = 'name',
