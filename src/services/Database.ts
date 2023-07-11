@@ -9,6 +9,8 @@ import { Example, exampleSchema } from '@/models/Example'
 import { ExampleResult, exampleResultSchema } from '@/models/ExampleResults'
 import { Test, testSchema } from '@/models/Test'
 import { TestResult, testResultSchema } from '@/models/TestResults'
+import type { z } from 'zod'
+import type { Previous } from '@/models/_Parent'
 
 class Database extends Dexie {
   // Required for easier TypeScript usage
@@ -39,6 +41,21 @@ class Database extends Dexie {
     this[DBTable.TESTS].mapToClass(Test)
     this[DBTable.TEST_RESULTS].mapToClass(TestResult)
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  //                                                                         //
+  //     Data Properties                                                     //
+  //                                                                         //
+  /////////////////////////////////////////////////////////////////////////////
+
+  // TODO - Not sure if I'll use this or not yet
+  /**
+   * Select DBTable and get class properties:
+   * - Labels?
+   * - QTableColumn[]
+   * - FieldComponents[]
+   * - ChartComponents[]
+   */
 
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
@@ -194,25 +211,78 @@ class Database extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   async getRecord<T>(table: DBTable, id: string): Promise<T | undefined> {
-    return {
-      [DBTable.EXAMPLES]: await this.table(DBTable.EXAMPLES).get(id),
-      [DBTable.EXAMPLE_RESULTS]: await this.table(DBTable.EXAMPLE_RESULTS).get(id),
-      [DBTable.TESTS]: await this.table(DBTable.TESTS).get(id),
-      [DBTable.TEST_RESULTS]: await this.table(DBTable.TEST_RESULTS).get(id),
-    }[table]
+    return await {
+      [DBTable.EXAMPLES]: async () => {
+        return await this.table(DBTable.EXAMPLES).get(id)
+      },
+      [DBTable.EXAMPLE_RESULTS]: async () => {
+        return await this.table(DBTable.EXAMPLE_RESULTS).get(id)
+      },
+      [DBTable.TESTS]: async () => {
+        return await this.table(DBTable.TESTS).get(id)
+      },
+      [DBTable.TEST_RESULTS]: async () => {
+        return await this.table(DBTable.TEST_RESULTS).get(id)
+      },
+    }[table]()
   }
 
   async getAll<T>(table: DBTable): Promise<T[]> {
-    return {
-      [DBTable.EXAMPLES]: await this.table(DBTable.EXAMPLES).orderBy(DBField.NAME).toArray(),
-      [DBTable.EXAMPLE_RESULTS]: (
-        await this.table(DBTable.EXAMPLE_RESULTS).orderBy(DBField.CREATED_TIMESTAMP).toArray()
-      ).reverse(),
-      [DBTable.TESTS]: await this.table(DBTable.TESTS).orderBy(DBField.NAME).toArray(),
-      [DBTable.TEST_RESULTS]: (
-        await this.table(DBTable.TEST_RESULTS).orderBy(DBField.CREATED_TIMESTAMP).toArray()
-      ).reverse(),
-    }[table]
+    return await {
+      [DBTable.EXAMPLES]: async () => {
+        return await this.table(DBTable.EXAMPLES).orderBy(DBField.NAME).toArray()
+      },
+      [DBTable.EXAMPLE_RESULTS]: async () => {
+        return (
+          await this.table(DBTable.EXAMPLE_RESULTS).orderBy(DBField.CREATED_TIMESTAMP).toArray()
+        ).reverse()
+      },
+      [DBTable.TESTS]: async () => {
+        return await this.table(DBTable.TESTS).orderBy(DBField.NAME).toArray()
+      },
+      [DBTable.TEST_RESULTS]: async () => {
+        return (
+          await this.table(DBTable.TEST_RESULTS).orderBy(DBField.CREATED_TIMESTAMP).toArray()
+        ).reverse()
+      },
+    }[table]()
+  }
+
+  async getPreviousRecord(table: DBTable, parentId: string) {
+    return await {
+      [DBTable.EXAMPLES]: async () => {
+        return (
+          await this.table(DBTable.EXAMPLES)
+            .where(DBField.ID)
+            .equals(parentId)
+            .sortBy(DBField.CREATED_TIMESTAMP)
+        ).reverse()[0]
+      },
+      [DBTable.EXAMPLE_RESULTS]: async () => {
+        return (
+          await this.table(DBTable.EXAMPLE_RESULTS)
+            .where(DBField.PARENT_ID)
+            .equals(parentId)
+            .sortBy(DBField.CREATED_TIMESTAMP)
+        ).reverse()[0]
+      },
+      [DBTable.TESTS]: async () => {
+        return (
+          await this.table(DBTable.TESTS)
+            .where(DBField.ID)
+            .equals(parentId)
+            .sortBy(DBField.CREATED_TIMESTAMP)
+        ).reverse()[0]
+      },
+      [DBTable.TEST_RESULTS]: async () => {
+        return (
+          await this.table(DBTable.TEST_RESULTS)
+            .where(DBField.PARENT_ID)
+            .equals(parentId)
+            .sortBy(DBField.CREATED_TIMESTAMP)
+        ).reverse()[0]
+      },
+    }[table]()
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -222,20 +292,80 @@ class Database extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   async addRecord(table: DBTable, record: AnyDBRecord) {
-    return {
-      [DBTable.EXAMPLES]: await this.table(DBTable.EXAMPLES).add(exampleSchema.parse(record)),
-      [DBTable.EXAMPLE_RESULTS]: await this.table(DBTable.EXAMPLE_RESULTS).add(
-        exampleResultSchema.parse(record)
-      ),
-      [DBTable.TESTS]: await this.table(DBTable.TESTS).add(testSchema.parse(record)),
-      [DBTable.TEST_RESULTS]: await this.table(DBTable.TEST_RESULTS).add(
-        testResultSchema.parse(record)
-      ),
-    }[table]
+    return await {
+      [DBTable.EXAMPLES]: async () => {
+        const newParentRecord = exampleSchema.parse(record)
+        const result = await this.table(DBTable.EXAMPLES).add(newParentRecord)
+        await this.updatePrevious(DBTable.EXAMPLES, record.parentId)
+        return result
+      },
+      [DBTable.EXAMPLE_RESULTS]: async () => {
+        const newChildRecord = exampleResultSchema.parse(record)
+        const result = await this.table(DBTable.EXAMPLE_RESULTS).add(newChildRecord)
+        await this.updatePrevious(DBTable.EXAMPLES, newChildRecord.parentId)
+        return result
+      },
+      [DBTable.TESTS]: async () => {
+        const newParentRecord = testSchema.parse(record)
+        const result = await this.table(DBTable.TESTS).add(newParentRecord)
+        await this.updatePrevious(DBTable.TESTS, record.parentId)
+        return result
+      },
+      [DBTable.TEST_RESULTS]: async () => {
+        const newChildRecord = testResultSchema.parse(record)
+        const result = await this.table(DBTable.TEST_RESULTS).add(newChildRecord)
+        await this.updatePrevious(DBTable.TESTS, newChildRecord.parentId)
+        return result
+      },
+    }[table]()
+  }
+
+  private async processImport(
+    table: DBTable,
+    records: AnyDBRecord[],
+    schema: z.ZodObject<any, any, any> | z.ZodEffects<any, any, any>
+  ) {
+    const validRecords: AnyDBRecord[] = []
+    const skippedRecords: AnyDBRecord[] = []
+
+    records.forEach((r) => {
+      if (schema.safeParse(r).success) {
+        validRecords.push(schema.parse(r))
+      } else {
+        skippedRecords.push(r)
+      }
+    })
+
+    await this.table(table).bulkAdd(validRecords)
+    await this.updateAllPrevious(table)
+
+    return skippedRecords
   }
 
   async importRecords(table: DBTable, records: AnyDBRecord[]) {
-    // TODO
+    const skippedRecords = await {
+      [DBTable.EXAMPLES]: async () => {
+        return await this.processImport(DBTable.EXAMPLES, records, exampleSchema)
+      },
+      [DBTable.EXAMPLE_RESULTS]: async () => {
+        return await this.processImport(DBTable.EXAMPLE_RESULTS, records, exampleResultSchema)
+      },
+      [DBTable.TESTS]: async () => {
+        return await this.processImport(DBTable.TESTS, records, testSchema)
+      },
+      [DBTable.TEST_RESULTS]: async () => {
+        return await this.processImport(DBTable.TEST_RESULTS, records, testResultSchema)
+      },
+    }[table]()
+
+    if (skippedRecords.length > 0) {
+      // Error for the frontend to report if any records were skipped
+      throw new Error(
+        `Records skipped due to validation failures (${
+          skippedRecords.length
+        }): ${skippedRecords.map((r) => String(r.id))}`
+      )
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -245,20 +375,117 @@ class Database extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   async putRecord(table: DBTable, record: AnyDBRecord) {
-    return {
-      [DBTable.EXAMPLES]: await this.table(DBTable.EXAMPLES).put(exampleSchema.parse(record)),
-      [DBTable.EXAMPLE_RESULTS]: await this.table(DBTable.EXAMPLE_RESULTS).put(
-        exampleResultSchema.parse(record)
-      ),
-      [DBTable.TESTS]: await this.table(DBTable.TESTS).put(testSchema.parse(record)),
-      [DBTable.TEST_RESULTS]: await this.table(DBTable.TEST_RESULTS).put(
-        testResultSchema.parse(record)
-      ),
-    }[table]
+    return await {
+      [DBTable.EXAMPLES]: async () => {
+        const result = await this.table(DBTable.EXAMPLES).put(exampleSchema.parse(record))
+        await this.updatePrevious(DBTable.EXAMPLES, record.id)
+        return result
+      },
+      [DBTable.EXAMPLE_RESULTS]: async () => {
+        const result = await this.table(DBTable.EXAMPLE_RESULTS).put(
+          exampleResultSchema.parse(record)
+        )
+        await this.updatePrevious(DBTable.EXAMPLES, record.parentId)
+        return result
+      },
+      [DBTable.TESTS]: async () => {
+        const result = await this.table(DBTable.TESTS).put(testSchema.parse(record))
+        await this.updatePrevious(DBTable.TESTS, record.id)
+        return result
+      },
+      [DBTable.TEST_RESULTS]: async () => {
+        const result = await this.table(DBTable.TEST_RESULTS).put(testResultSchema.parse(record))
+        await this.updatePrevious(DBTable.TESTS, record.parentId)
+        return result
+      },
+    }[table]()
   }
 
-  async updatePrevious() {
-    // TODO
+  async toggleFavorite(table: DBTable, id: string) {
+    const record = (await this.getRecord(table, id)) as AnyDBRecord | undefined
+
+    if (record && record.favorited !== undefined) {
+      record.favorited = !record.favorited
+      return await this.putRecord(table, record)
+    }
+  }
+
+  async updatePrevious(table: DBTable, parentId: string) {
+    return await {
+      [DBTable.EXAMPLES]: async () => {
+        const previousChild = (await this.getPreviousRecord(DBTable.EXAMPLE_RESULTS, parentId)) as
+          | AnyDBRecord
+          | undefined
+        const previous: Previous = {}
+
+        if (previousChild) {
+          previous.createdTimestamp = previousChild.createdTimestamp
+          previous.note = previousChild.note
+        }
+
+        return await this.table(DBTable.EXAMPLES).update(parentId, { previous })
+      },
+      [DBTable.EXAMPLE_RESULTS]: async () => {
+        const previousChild = (await this.getPreviousRecord(DBTable.EXAMPLE_RESULTS, parentId)) as
+          | AnyDBRecord
+          | undefined
+        const previous: Previous = {}
+
+        if (previousChild) {
+          previous.createdTimestamp = previousChild.createdTimestamp
+          previous.note = previousChild.note
+        }
+
+        return await this.table(DBTable.EXAMPLES).update(parentId, { previous })
+      },
+      [DBTable.TESTS]: async () => {
+        const previousChild = (await this.getPreviousRecord(DBTable.TEST_RESULTS, parentId)) as
+          | AnyDBRecord
+          | undefined
+        const previous: Previous = {}
+
+        if (previousChild) {
+          previous.createdTimestamp = previousChild.createdTimestamp
+          previous.note = previousChild.note
+        }
+
+        return await this.table(DBTable.TESTS).update(parentId, { previous })
+      },
+      [DBTable.TEST_RESULTS]: async () => {
+        const previousChild = (await this.getPreviousRecord(DBTable.TEST_RESULTS, parentId)) as
+          | AnyDBRecord
+          | undefined
+        const previous: Previous = {}
+
+        if (previousChild) {
+          previous.createdTimestamp = previousChild.createdTimestamp
+          previous.note = previousChild.note
+        }
+
+        return await this.table(DBTable.TESTS).update(parentId, { previous })
+      },
+    }[table]()
+  }
+
+  async updateAllPrevious(table: DBTable) {
+    return await {
+      [DBTable.EXAMPLES]: async () => {
+        const examples = await this.table(DBTable.EXAMPLES).toArray()
+        return await Promise.all(examples.map((i) => this.updatePrevious(DBTable.EXAMPLES, i.id)))
+      },
+      [DBTable.EXAMPLE_RESULTS]: async () => {
+        const examples = await this.table(DBTable.EXAMPLES).toArray()
+        return await Promise.all(examples.map((i) => this.updatePrevious(DBTable.EXAMPLES, i.id)))
+      },
+      [DBTable.TESTS]: async () => {
+        const tests = await this.table(DBTable.TESTS).toArray()
+        return await Promise.all(tests.map((i) => this.updatePrevious(DBTable.TESTS, i.id)))
+      },
+      [DBTable.TEST_RESULTS]: async () => {
+        const tests = await this.table(DBTable.TESTS).toArray()
+        return await Promise.all(tests.map((i) => this.updatePrevious(DBTable.TESTS, i.id)))
+      },
+    }[table]()
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -268,7 +495,13 @@ class Database extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   async deleteRecord(table: DBTable, id: string) {
-    return {
+    const recordToDelete = (await this.getRecord(table, id)) as AnyDBRecord | undefined
+
+    if (!recordToDelete) {
+      throw new Error(`No record to delete in table ${table} for id ${id}`)
+    }
+
+    return await {
       [DBTable.EXAMPLES]: async () => {
         await this.table(DBTable.EXAMPLES).delete(id)
         return await this.table(DBTable.EXAMPLE_RESULTS)
@@ -277,16 +510,16 @@ class Database extends Dexie {
           .delete()
       },
       [DBTable.EXAMPLE_RESULTS]: async () => {
-        return await this.table(DBTable.EXAMPLE_RESULTS).delete(id)
-        // TODO - update previous data
+        await this.table(DBTable.EXAMPLE_RESULTS).delete(id)
+        return await this.updatePrevious(DBTable.EXAMPLES, recordToDelete.parentId)
       },
       [DBTable.TESTS]: async () => {
         await this.table(DBTable.TESTS).delete(id)
         return await this.table(DBTable.TEST_RESULTS).where(DBField.PARENT_ID).equals(id).delete()
       },
       [DBTable.TEST_RESULTS]: async () => {
-        return await this.table(DBTable.TEST_RESULTS).delete(id)
-        // TODO - update previous data
+        await this.table(DBTable.TEST_RESULTS).delete(id)
+        return await this.updatePrevious(DBTable.TESTS, recordToDelete.parentId)
       },
     }[table]()
   }

@@ -5,7 +5,7 @@ import { Limit } from '@/types/general'
 
 export const nameSchema = z.string().min(Limit.MIN_NAME).max(Limit.MAX_NAME).trim()
 export const textAreaSchema = z.string().max(Limit.MAX_TEXT_AREA).trim()
-export const previousSchema = z.record(z.nativeEnum(DBField)).optional()
+export const previousSchema = z.record(z.nativeEnum(DBField), z.any()).optional()
 export type Previous = z.infer<typeof previousSchema>
 
 export const parentSchema = entitySchema.extend({
@@ -30,13 +30,14 @@ export class Parent extends Entity {
     name: string,
     desc: string,
     enabled: boolean,
-    favorited: boolean
+    favorited: boolean,
+    previous: Previous
   ) {
     super(id, createdTimestamp, active)
     this.name = name
     this.desc = desc
     this.enabled = enabled
     this.favorited = favorited
-    this.previous = {}
+    this.previous = previous
   }
 }

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { Icon } from '@/types/general'
-import type { AnyDBRecord } from '@/types/database'
+import type { AnyDBRecord, DBTable } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import useRouting from '@/composables/useRouting'
 import useUIStore from '@/stores/ui'
 import DB from '@/services/Database'
 
-defineProps<{
+const props = defineProps<{
+  table: DBTable
   record: AnyDBRecord
 }>()
 
@@ -20,38 +21,19 @@ async function viewPreviousNote(note: string) {
   dismissDialog('Previous Note', note, Icon.NOTE)
 }
 
-async function onFavorite(id: string, name: string) {
-  confirmDialog(
-    'Favorite',
-    `Do you want to favorite ${name}?`,
-    Icon.FAVORITE_ON,
-    'info',
-    async () => {
-      try {
-        // await DB.CoreRecords.update(id, { favorited: true }) // TODO
-        log.info(`${name} favorited`, { id, name })
-      } catch (error) {
-        log.error('Favorite update failed', error)
-      }
-    }
-  )
-}
+async function onToggleFavorite(id: string, name: string, current: boolean) {
+  const action = current ? 'Unfavorite' : 'Favorite'
+  const message = `Do you want to ${action.toLocaleLowerCase()} ${name}?`
+  const icon = current ? Icon.FAVORITE_OFF : Icon.FAVORITE_ON
 
-async function onUnfavorite(id: string, name: string) {
-  confirmDialog(
-    'Unfavorite',
-    `Do you want to unfavorite ${name}?`,
-    Icon.FAVORITE_OFF,
-    'info',
-    async () => {
-      try {
-        // await DB.CoreRecords.update(id, { favorited: false }) // TODO
-        log.info(`${name} unfavorited`, { id, name })
-      } catch (error) {
-        log.error('Unfavorite update failed', error)
-      }
+  confirmDialog(action, message, icon, 'info', async () => {
+    try {
+      await DB.toggleFavorite(props.table, id)
+      log.info(`${name} unfavorited`, { id, name })
+    } catch (error) {
+      log.error('Unfavorite update failed', error)
     }
-  )
+  })
 }
 
 async function onInspect(id: string) {
@@ -88,20 +70,11 @@ async function onCharts(id: string) {
 
     <span v-else>
       <QIcon
-        v-if="record.favorited"
-        :name="Icon.FAVORITE_ON"
-        color="warning"
+        :name="record.favorited ? Icon.FAVORITE_ON : Icon.FAVORITE_OFF"
+        :color="record.favorited ? 'warning' : 'grey'"
         size="md"
         class="cursor-pointer"
-        @click="onUnfavorite(record.id, record.name)"
-      />
-      <QIcon
-        v-if="!record.favorited"
-        :name="Icon.FAVORITE_OFF"
-        color="grey"
-        size="md"
-        class="cursor-pointer"
-        @click="onFavorite(record.id, record.name)"
+        @click="onToggleFavorite(record.id, record.name, record.favorited)"
       />
     </span>
 

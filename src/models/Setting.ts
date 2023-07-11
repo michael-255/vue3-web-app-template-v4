@@ -1,4 +1,5 @@
 import { InternalField } from '@/types/database'
+import { Icon } from '@/types/general'
 import { z } from 'zod'
 
 export enum SettingKey {
@@ -26,5 +27,9 @@ export class Setting {
   constructor(key: SettingKey, value: SettingValue) {
     this.key = key
     this.value = value
+  }
+
+  static getLabel(style: 'singular' | 'plural') {
+    return style === 'singular' ? 'Setting' : 'Settings'
   }
 }

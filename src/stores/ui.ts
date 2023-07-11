@@ -7,7 +7,7 @@ const useUIStore = defineStore({
 
   state: () => ({
     drawer: false,
-    dashboardSelection: Object.values(DBTable)[0],
+    dashboardSelection: Object.values(DBTable)[0], // First table in the list
     chartTime: Duration[Duration['Three Months']] as keyof typeof Duration,
   }),
 })

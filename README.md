@@ -7,13 +7,12 @@ structured.
 ## TODO
 
 - [ ] Port over various components updates from `fitness-web-app-v19`
-- [ ] Clean and update the following components to get the App running again:
-
-  - [ ] Refactor `Dashboard`
-  - [ ] Refactor `Settings`
-  - [ ] Refactor `composables` (rename routables to routing)
-
 - [ ] Make use of `ErrorStates` component
+- [ ] Find a way to reuse code more in `Database`
+- [ ] Build out `models` with methods for data properties
+- [ ] Build the generic `DashboardCardList` component
+- [ ] Get `Inspect` and `Charts` working
+- [ ] Get `Data` routes working
 
 ## Post Cloning Steps
 

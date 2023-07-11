@@ -74,6 +74,7 @@ export enum Icon {
   DELETE = 'delete',
   EDIT = 'edit',
   UP = 'keyboard_arrow_up',
+  ATTACH = 'post_add',
 
   // Design Elements
   MENU = 'menu',
@@ -82,6 +83,9 @@ export enum Icon {
   CODE = 'code',
   STOPWATCH = 'timer',
   READY = 'recommend',
+  LOCK = 'lock',
+  PREVIOUS = 'undo',
+  CALENDAR_CHECK = 'event_available',
 
   // // Actions
   // NONE = 'select',
@@ -108,7 +112,7 @@ export enum Icon {
   // // Misc
   // WORKOUT_RESUME = 'replay',
   //
-  // LOCK = 'lock',
+  //
   //
   // ADD_NOTE = 'post_add',
   // DESCRIPTION = 'description',
@@ -120,12 +124,12 @@ export enum Icon {
   // STOPWATCH = 'timer',
   // CLOCK = 'access_time',
   // CALENDAR_DATE = 'event',
-  // CALENDAR_CHECK = 'event_available',
+  //
   // CALENDAR_CLEAR = 'event_busy',
   // EXIT = 'exit_to_app',
 
   // REFRESH = 'refresh',
-  // PREVIOUS = 'undo',
+  //
   // CODE = 'code',
 
   // // Exercise Data

@@ -1,6 +1,7 @@
 import { InternalField } from '@/types/database'
 import { createdTimestampSchema } from '@/models/_Entity'
 import { z } from 'zod'
+import { Icon } from '@/types/general'
 
 export enum LogLevel {
   DEBUG = 'DEBUG',
@@ -35,18 +36,22 @@ export class Log {
     this.timestamp = Date.now()
     this.logLevel = logLevel
     this.label = label
-    this.details = details
 
-    if (this.details && typeof this.details === 'object') {
-      if ('message' in this.details || 'stack' in this.details) {
+    if (details && typeof details === 'object') {
+      if ('message' in details || 'stack' in details) {
         // An object with a message or stack property is a JS Error
-        this.errorMessage = this.details.message
-        this.stackTrace = this.details.stack
+        this.errorMessage = details.message
+        this.stackTrace = details.stack
+        this.details = undefined
       } else {
         // Should be safe to store most other objects into the details property
         // Details only used with non-error logs
         this.details = details
       }
     }
+  }
+
+  static getLabel(style: 'singular' | 'plural') {
+    return style === 'singular' ? 'Log' : 'Logs'
   }
 }
