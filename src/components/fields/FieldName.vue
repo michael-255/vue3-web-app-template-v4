@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { allFields, nameSchema } from '@/types/core'
+import { nameSchema } from '@/types/core'
 import { Limit } from '@/types/general'
 import useActionStore from '@/stores/action'
 
@@ -10,10 +10,8 @@ defineProps<{
 
 const actionStore = useActionStore()
 
-const field = allFields.Values.name
-
 onMounted(() => {
-  actionStore.record[field] = actionStore.record[field] ?? ''
+  actionStore.record.name = actionStore.record.name ?? ''
 })
 
 function inspectFormat(val: string) {
@@ -24,13 +22,11 @@ function inspectFormat(val: string) {
 <template>
   <div class="text-weight-bold text-body1">Name</div>
 
-  <div v-if="inspecting">
-    {{ inspectFormat(actionStore.record[field]) }}
-  </div>
+  <div v-if="inspecting">{{ inspectFormat(actionStore.record.name) }}</div>
 
   <QInput
     v-else
-    v-model="actionStore.record[field]"
+    v-model="actionStore.record.name"
     :rules="[(val: string) => nameSchema.safeParse(val).success || `Name must be between ${Limit.MIN_NAME} and ${Limit.MAX_NAME} characters`]"
     :maxlength="Limit.MAX_NAME"
     type="text"
@@ -39,6 +35,6 @@ function inspectFormat(val: string) {
     dense
     outlined
     color="primary"
-    @blur="actionStore.record[field] = actionStore.record[field]?.trim()"
+    @blur="actionStore.record.name = actionStore.record.name?.trim()"
   />
 </template>

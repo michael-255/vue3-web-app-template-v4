@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import { truncateString } from '@/utils/common'
-import {
-  type AnyCoreRecord,
-  recordGroups,
-  recordTypes,
-  allFields,
-  testIdsSchema,
-} from '@/types/core'
+import { allFields, testIdsSchema } from '@/types/core'
+import type { Test } from '@/models/Test'
+import { DBTable } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
 import DB from '@/services/Database'
@@ -26,12 +22,9 @@ onMounted(async () => {
   try {
     actionStore.record[field] = actionStore.record[field] ?? []
 
-    const records = (await DB.getRecords(
-      recordGroups.Values.core,
-      recordTypes.Values.test
-    )) as AnyCoreRecord[]
+    const testRecords = await DB.getAll<Test>(DBTable.TESTS)
 
-    options.value = records.map((r: AnyCoreRecord) => ({
+    options.value = testRecords.map((r: Test) => ({
       value: r.id,
       label: `${r.name} (${truncateString(r.id, 8, '*')})`,
     }))
@@ -39,17 +32,15 @@ onMounted(async () => {
     log.error('Error with test ids field', error)
   }
 })
-
-function inspectFormat(val: string[]) {
-  return val?.join(', ') || '-'
-}
 </script>
 
 <template>
   <div class="text-weight-bold text-body1">Tests</div>
 
   <div v-if="inspecting">
-    {{ inspectFormat(actionStore.record[field]) }}
+    <li v-for="(val, i) in actionStore.record.testIds" :key="i" class="q-ml-sm">
+      {{ val }}
+    </li>
   </div>
 
   <div v-else>

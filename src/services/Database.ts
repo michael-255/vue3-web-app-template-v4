@@ -27,10 +27,10 @@ class Database extends Dexie {
     this.version(1).stores({
       [InternalTable.SETTINGS]: `&${InternalField.KEY}`,
       [InternalTable.LOGS]: `++${InternalField.AUTO_ID}`,
-      [DBTable.EXAMPLES]: `&${DBField.ID}`,
-      [DBTable.EXAMPLE_RESULTS]: `&${DBField.ID}, ${DBField.PARENT_ID}`,
-      [DBTable.TESTS]: `&${DBField.ID}`,
-      [DBTable.TEST_RESULTS]: `&${DBField.ID}, ${DBField.PARENT_ID}`,
+      [DBTable.EXAMPLES]: `&${DBField.ID}, ${DBField.NAME}`,
+      [DBTable.EXAMPLE_RESULTS]: `&${DBField.ID}, ${DBField.PARENT_ID}, ${DBField.CREATED_TIMESTAMP}`,
+      [DBTable.TESTS]: `&${DBField.ID}, ${DBField.NAME}`,
+      [DBTable.TEST_RESULTS]: `&${DBField.ID}, ${DBField.PARENT_ID}, ${DBField.CREATED_TIMESTAMP}`,
     })
 
     // Required
@@ -48,14 +48,59 @@ class Database extends Dexie {
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
-  // TODO - Not sure if I'll use this or not yet
-  /**
-   * Select DBTable and get class properties:
-   * - Labels?
-   * - QTableColumn[]
-   * - FieldComponents[]
-   * - ChartComponents[]
-   */
+  getParentTable(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: DBTable.EXAMPLES,
+      [DBTable.EXAMPLE_RESULTS]: DBTable.EXAMPLES,
+      [DBTable.TESTS]: DBTable.TESTS,
+      [DBTable.TEST_RESULTS]: DBTable.TESTS,
+    }[table]
+  }
+
+  getChildTable(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: DBTable.EXAMPLE_RESULTS,
+      [DBTable.EXAMPLE_RESULTS]: DBTable.EXAMPLE_RESULTS,
+      [DBTable.TESTS]: DBTable.TEST_RESULTS,
+      [DBTable.TEST_RESULTS]: DBTable.TEST_RESULTS,
+    }[table]
+  }
+
+  getLabel(table: DBTable, style: 'singular' | 'plural') {
+    return {
+      [DBTable.EXAMPLES]: Example.getLabel(style),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getLabel(style),
+      [DBTable.TESTS]: Test.getLabel(style),
+      [DBTable.TEST_RESULTS]: TestResult.getLabel(style),
+    }[table]
+  }
+
+  getFieldComponents(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: Example.getFieldComponents(),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getFieldComponents(),
+      [DBTable.TESTS]: Test.getFieldComponents(),
+      [DBTable.TEST_RESULTS]: TestResult.getFieldComponents(),
+    }[table]
+  }
+
+  getChartComponents(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: Example.getChartComponents(),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getChartComponents(),
+      [DBTable.TESTS]: Test.getChartComponents(),
+      [DBTable.TEST_RESULTS]: TestResult.getChartComponents(),
+    }[table]
+  }
+
+  getTableColumns(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: Example.getTableColumns(),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getTableColumns(),
+      [DBTable.TESTS]: Test.getTableColumns(),
+      [DBTable.TEST_RESULTS]: TestResult.getTableColumns(),
+    }[table]
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
@@ -170,7 +215,7 @@ class Database extends Dexie {
     return liveQuery(() => this.Logs.orderBy(InternalField.AUTO_ID).reverse().toArray())
   }
 
-  private organizeDashboardData<T extends AnyDBRecord>(records: T[]) {
+  private sortDashboardData<T extends AnyDBRecord>(records: T[]) {
     const active: T[] = []
     const favorites: T[] = []
     const nonFavorites: T[] = []
@@ -190,17 +235,47 @@ class Database extends Dexie {
 
   liveExamples() {
     return liveQuery(async () => {
-      return this.organizeDashboardData(
-        await this.Examples.filter((i) => i.enabled === true).sortBy(DBField.NAME)
+      return this.sortDashboardData(
+        await this.Examples.orderBy(DBField.NAME)
+          .filter((i) => i.enabled === true)
+          .toArray()
       )
     })
   }
 
   liveTests() {
     return liveQuery(async () => {
-      return this.organizeDashboardData(
-        await this.Tests.filter((i) => i.enabled === true).sortBy(DBField.NAME)
+      return this.sortDashboardData(
+        await this.Tests.orderBy(DBField.NAME)
+          .filter((i) => i.enabled === true)
+          .toArray()
       )
+    })
+  }
+
+  private async getParentDataTable(table: DBTable) {
+    return await this.table(table)
+      .orderBy(DBField.NAME)
+      .filter((i) => i.activated !== true)
+      .toArray()
+  }
+
+  private async getChildDataTable(table: DBTable) {
+    return await this.table(table)
+      .orderBy(DBField.CREATED_TIMESTAMP)
+      .reverse()
+      .filter((i) => i.activated !== true)
+      .toArray()
+  }
+
+  liveDataTable(table: DBTable) {
+    return liveQuery(async () => {
+      return {
+        [DBTable.EXAMPLES]: this.getParentDataTable(DBTable.EXAMPLES),
+        [DBTable.EXAMPLE_RESULTS]: this.getChildDataTable(DBTable.EXAMPLE_RESULTS),
+        [DBTable.TESTS]: this.getParentDataTable(DBTable.TESTS),
+        [DBTable.TEST_RESULTS]: this.getChildDataTable(DBTable.TEST_RESULTS),
+      }[table]
     })
   }
 
@@ -210,7 +285,7 @@ class Database extends Dexie {
   //                                                                         //
   /////////////////////////////////////////////////////////////////////////////
 
-  async getRecord<T>(table: DBTable, id: string): Promise<T | undefined> {
+  async getRecord<T extends AnyDBRecord>(table: DBTable, id: string): Promise<T | undefined> {
     return await {
       [DBTable.EXAMPLES]: async () => {
         return await this.table(DBTable.EXAMPLES).get(id)
@@ -227,7 +302,7 @@ class Database extends Dexie {
     }[table]()
   }
 
-  async getAll<T>(table: DBTable): Promise<T[]> {
+  async getAll<T extends AnyDBRecord>(table: DBTable): Promise<T[]> {
     return await {
       [DBTable.EXAMPLES]: async () => {
         return await this.table(DBTable.EXAMPLES).orderBy(DBField.NAME).toArray()

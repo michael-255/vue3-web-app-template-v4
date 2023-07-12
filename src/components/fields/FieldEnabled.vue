@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { allFields } from '@/types/core'
 import { onMounted } from 'vue'
 import useActionStore from '@/stores/action'
 
@@ -9,10 +8,8 @@ defineProps<{
 
 const actionStore = useActionStore()
 
-const field = allFields.Values.enabled
-
 onMounted(() => {
-  actionStore.record[field] = actionStore.record[field] ?? true
+  actionStore.record.enabled = actionStore.record.enabled ?? true
 })
 
 function inspectFormat(val: boolean) {
@@ -23,12 +20,10 @@ function inspectFormat(val: boolean) {
 <template>
   <div class="text-weight-bold text-body1">Enabled</div>
 
-  <div v-if="inspecting">
-    {{ inspectFormat(actionStore.record[field]) }}
-  </div>
+  <div v-if="inspecting">{{ inspectFormat(actionStore.record.enabled) }}</div>
 
   <div v-else>
     <p>Whether the record is enabled and shows up on the Dashboard and in other lists.</p>
-    <QToggle v-model="actionStore.record[field]" />
+    <QToggle v-model="actionStore.record.enabled" />
   </div>
 </template>

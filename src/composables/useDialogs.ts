@@ -1,11 +1,12 @@
 import { useQuasar } from 'quasar'
 import { Icon } from '@/types/general'
-import type { AnyDatabaseRecord, RecordType } from '@/types/core'
-import type { defineAsyncComponent } from 'vue'
 import ConfirmationDialog from '@/components/dialogs/ConfirmationDialog.vue'
 import DismissalDialog from '@/components/dialogs/DismissalDialog.vue'
 import InspectionDialog from '@/components/dialogs/InspectionDialog.vue'
 import ChartingDialog from '@/components/dialogs/ChartingDialog.vue'
+import type { AnyDBRecord, DBTable, InternalTable } from '@/types/database'
+import type { defineAsyncComponent } from 'vue'
+import type { Log } from '@/models/Log'
 
 export default function useDialogs() {
   const $q = useQuasar()
@@ -49,27 +50,30 @@ export default function useDialogs() {
 
   function inspectDialog(
     title: string,
-    record: AnyDatabaseRecord,
-    fields: ReturnType<typeof defineAsyncComponent>[]
+    record: AnyDBRecord,
+    fieldComponents: ReturnType<typeof defineAsyncComponent>[]
   ) {
     $q.dialog({
       component: InspectionDialog,
       componentProps: {
         title,
         record,
-        fields,
+        fieldComponents,
       },
     })
   }
 
-  function chartsDialog(title: string, type: RecordType, id: string) {
+  function chartsDialog(
+    title: string,
+    id: string,
+    chartComponents: ReturnType<typeof defineAsyncComponent>[]
+  ) {
     $q.dialog({
       component: ChartingDialog,
       componentProps: {
         title,
-
-        type,
         id,
+        chartComponents,
       },
     })
   }

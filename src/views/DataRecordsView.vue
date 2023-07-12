@@ -1,112 +1,68 @@
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar'
 import { type Ref, ref, onUnmounted } from 'vue'
-import type { Subscription } from 'dexie'
 import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
-import { hiddenColumnNames } from '@/services/table-columns'
-import {
-  recordGroups,
-  allFields,
-  type RecordGroup,
-  type AnyField,
-  type RecordType,
-  type AnyRecord,
-} from '@/types/core'
-import DataSchema from '@/services/DataSchema'
+import type { DBField, DBTable } from '@/types/database'
 import useLogger from '@/composables/useLogger'
-import useRoutables from '@/composables/useRoutables'
+import useRouting from '@/composables/useRouting'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/Database'
 
-useMeta({ title: `${AppName} - Records Data` })
+useMeta({ title: `${AppName} - Records Data Table` })
 
 const { log } = useLogger()
-const { routeGroup, routeType, goToEdit, goToCreate, goBack } = useRoutables()
+const { routeTable, goToEdit, goToCreate, goBack } = useRouting()
 const { confirmDialog, inspectDialog, chartsDialog } = useDialogs()
 
 const searchFilter: Ref<string> = ref('')
 const rows: Ref<any[]> = ref([])
-const visibleColumns: Ref<AnyField[]> = ref([])
-const columns: Ref<QTableColumn[]> = ref(
-  DataSchema.getTableColumns(routeGroup as RecordGroup, routeType as RecordType) as QTableColumn[]
-)
+const columns: Ref<QTableColumn[]> = ref(DB.getTableColumns(routeTable as DBTable))
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
 )
-let subscription: Subscription | null = null
+const visibleColumns: Ref<DBField[]> = ref(columnOptions.value.map((col) => col.name) as DBField[])
 
-if (routeGroup === recordGroups.Values.core) {
-  visibleColumns.value = [allFields.Values.id, allFields.Values.timestamp, allFields.Values.name]
-
-  subscription = DB.liveCoreRecords(routeType as RecordType).subscribe({
-    next: (records) => {
-      rows.value = records
-    },
-    error: (error) => {
-      log.error('Error fetching live parent data', error)
-    },
-  })
-} else {
-  visibleColumns.value = [allFields.Values.id, allFields.Values.timestamp]
-
-  subscription = DB.liveSubRecords(routeType as RecordType).subscribe({
-    next: (records) => {
-      rows.value = records
-    },
-    error: (error) => {
-      log.error('Error fetching live child data', error)
-    },
-  })
-}
+const subscription = DB.liveDataTable(routeTable as DBTable).subscribe({
+  next: (records) => (rows.value = records),
+  error: (error) => log.error('Error fetching live records data', error),
+})
 
 onUnmounted(() => {
   subscription?.unsubscribe()
 })
 
-async function onDelete(group: RecordGroup, id: string) {
-  let dialogMessage = ''
-
-  if (group === recordGroups.Values.core) {
-    dialogMessage = `Permanently delete ${DataSchema.getLabel(
-      routeGroup as RecordGroup,
-      routeType as RecordType,
-      'singular'
-    )} with id ${id}? This will also delete all associated sub-records.`
-  } else {
-    dialogMessage = `Permanently delete ${DataSchema.getLabel(
-      routeGroup as RecordGroup,
-      routeType as RecordType,
-      'singular'
-    )} with id ${id}?`
-  }
-
-  confirmDialog('Delete', dialogMessage, Icon.DELETE, 'negative', async () => {
-    try {
-      await DB.deleteRecord(group, id)
-      log.info('Successfully deleted record', { type: routeType, id })
-    } catch (error) {
-      log.error('Delete failed', error)
+async function onDelete(table: DBTable, id: string) {
+  confirmDialog(
+    'Delete',
+    'Permanently delete this record? Please note that all child records are deleted when you delete a parent record.',
+    Icon.DELETE,
+    'negative',
+    async () => {
+      try {
+        await DB.deleteRecord(table, id)
+        log.info('Successfully deleted record', { table, id })
+      } catch (error) {
+        log.error('Delete failed', error)
+      }
     }
-  })
+  )
 }
 
-async function onInspect(type: RecordType, id: string) {
-  const title = DataSchema.getLabel(routeGroup as RecordGroup, type, 'singular') as string
-  const record = (await DB.getRecord(routeGroup as RecordGroup, id)) as AnyRecord
-  const fields = DataSchema.getFields(routeGroup as RecordGroup, type)
-  inspectDialog(title, record, fields)
+async function onInspect(table: DBTable, id: string) {
+  const record = await DB.getRecord(table, id)
+
+  if (record) {
+    inspectDialog(DB.getLabel(table, 'singular'), record, DB.getFieldComponents(table))
+  } else {
+    log.error('Failed to find record', { table, id })
+  }
 }
 
-async function onCharts(type: RecordType, id: string) {
-  const title = DataSchema.getLabel(
-    routeGroup as RecordGroup,
-    routeType as RecordType,
-    'singular'
-  ) as string
-  chartsDialog(title, type, id)
+async function onCharts(table: DBTable, id: string) {
+  chartsDialog(DB.getLabel(table, 'singular'), id, DB.getChartComponents(table))
 }
 </script>
 
@@ -127,7 +83,7 @@ async function onCharts(type: RecordType, id: string) {
         <!-- Do not show hidden columns -->
         <QTh
           v-for="col in props.cols"
-          v-show="!hiddenColumnNames.includes(col.name)"
+          v-show="col.name !== 'hiddenId'"
           :key="col.name"
           :props="props"
         >
@@ -146,14 +102,13 @@ async function onCharts(type: RecordType, id: string) {
         <QTd auto-width>
           <!-- CHARTS -->
           <QBtn
-            v-if="routeGroup === recordGroups.Values.core"
             flat
             round
             dense
             class="q-ml-xs"
             color="accent"
             :icon="Icon.CHARTS"
-            @click="onCharts(routeType as RecordType, props.cols[0].value)"
+            @click="onCharts(routeTable as DBTable, props.cols[0].value)"
           />
           <!-- INSPECT -->
           <QBtn
@@ -163,7 +118,7 @@ async function onCharts(type: RecordType, id: string) {
             class="q-ml-xs"
             color="primary"
             :icon="Icon.INSPECT"
-            @click="onInspect(routeType as RecordType, props.cols[0].value)"
+            @click="onInspect(routeTable as DBTable, props.cols[0].value)"
           />
           <!-- EDIT -->
           <QBtn
@@ -173,9 +128,7 @@ async function onCharts(type: RecordType, id: string) {
             class="q-ml-xs"
             color="orange-9"
             :icon="Icon.EDIT"
-            @click="
-              goToEdit(routeGroup as RecordGroup, routeType as RecordType, props.cols[0].value)
-            "
+            @click="goToEdit(routeTable as DBTable, props.cols[0].value)"
           />
           <!-- DELETE -->
           <QBtn
@@ -184,7 +137,7 @@ async function onCharts(type: RecordType, id: string) {
             dense
             class="q-ml-xs"
             color="negative"
-            @click="onDelete(routeGroup as RecordGroup, props.cols[0].value)"
+            @click="onDelete(routeTable as DBTable, props.cols[0].value)"
             :icon="Icon.DELETE"
           />
         </QTd>
@@ -195,7 +148,7 @@ async function onCharts(type: RecordType, id: string) {
       <div class="row justify-start full-width q-mb-md">
         <!-- Table Title -->
         <div class="col-10 text-h6 text-bold ellipsis">
-          {{ DataSchema.getLabel(routeGroup as RecordGroup, routeType as RecordType, 'plural') }}
+          {{ DB.getLabel(routeTable as DBTable, 'plural') }}
         </div>
         <!-- Go Back Button -->
         <QBtn
@@ -225,7 +178,7 @@ async function onCharts(type: RecordType, id: string) {
                 color="positive"
                 class="q-px-sm q-mr-xs"
                 :icon="Icon.ADD"
-                @click="goToCreate(routeGroup as RecordGroup, routeType as RecordType)"
+                @click="goToCreate(routeTable as DBTable)"
               />
               <!-- COLUMN OPTIONS (Visible Columns) -->
               <QSelect

@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { idSchema } from '@/models/_Entity'
 import { Parent, parentSchema, type Previous } from '@/models/_Parent'
-import { Icon } from '@/types/general'
+import type { QTableColumn } from 'quasar'
+import { defineAsyncComponent } from 'vue'
 
 export const idsSchema = z.array(idSchema)
 
@@ -32,5 +33,25 @@ export class Test extends Parent {
 
   static getLabel(style: 'singular' | 'plural') {
     return style === 'singular' ? 'Test' : 'Tests'
+  }
+
+  static getFieldComponents(): ReturnType<typeof defineAsyncComponent>[] {
+    return [
+      defineAsyncComponent(() => import('@/components/fields/FieldName.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldDesc.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldCreatedTimestamp.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldEnabled.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldFavorited.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldActivated.vue')),
+    ]
+  }
+
+  static getChartComponents(): ReturnType<typeof defineAsyncComponent>[] {
+    return []
+  }
+
+  static getTableColumns(): QTableColumn[] {
+    return [...Parent.getTableColumns()]
   }
 }

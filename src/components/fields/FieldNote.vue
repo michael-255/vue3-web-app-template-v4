@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { allFields, textAreaSchema } from '@/types/core'
-import { Limit } from '@/types/general'
+import { textAreaSchema } from '@/types/core'
+import { Icon, Limit } from '@/types/general'
 import useActionStore from '@/stores/action'
 
 defineProps<{
@@ -10,10 +10,8 @@ defineProps<{
 
 const actionStore = useActionStore()
 
-const field = allFields.Values.note
-
 onMounted(() => {
-  actionStore.record[field] = actionStore.record[field] ?? ''
+  actionStore.record.note = actionStore.record.note ?? ''
 })
 
 function inspectFormat(val: string) {
@@ -24,15 +22,13 @@ function inspectFormat(val: string) {
 <template>
   <div class="text-weight-bold text-body1">Note</div>
 
-  <div v-if="inspecting">
-    {{ inspectFormat(actionStore.record[field]) }}
-  </div>
+  <div v-if="inspecting">{{ inspectFormat(actionStore.record.note) }}</div>
 
   <div v-else>
     <p>Text note about the record that can be viewed on the Dashboard.</p>
 
     <QInput
-      v-model="actionStore.record[field]"
+      v-model="actionStore.record.note"
       :rules="[(val: string) => textAreaSchema.safeParse(val).success || `Note cannot exceed ${Limit.MAX_TEXT_AREA} characters`]"
       :maxlength="Limit.MAX_TEXT_AREA"
       type="textarea"
@@ -41,9 +37,17 @@ function inspectFormat(val: string) {
       counter
       dense
       outlined
-      clearable
       color="primary"
-      @blur="actionStore.record[field] = actionStore.record[field].trim()"
-    />
+      @blur="actionStore.record.note = actionStore.record.note?.trim()"
+    >
+      <template v-slot:append>
+        <QIcon
+          v-if="actionStore.record.note !== ''"
+          :name="Icon.CANCEL"
+          @click="actionStore.record.note = ''"
+          class="cursor-pointer"
+        />
+      </template>
+    </QInput>
   </div>
 </template>

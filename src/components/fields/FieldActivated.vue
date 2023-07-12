@@ -7,14 +7,14 @@ defineProps<{
 
 const actionStore = useActionStore()
 
-function inspectFormat(val: string) {
-  return `${val || '-'}`
+function inspectFormat(val: boolean) {
+  return val ? 'Yes' : 'No'
 }
 </script>
 
 <template>
   <div v-if="inspecting">
-    <div class="text-weight-bold text-body1">Label</div>
-    <div>{{ inspectFormat(actionStore.record.label) }}</div>
+    <div class="text-weight-bold text-body1">Activated</div>
+    <div>{{ inspectFormat(actionStore.record.activated) }}</div>
   </div>
 </template>

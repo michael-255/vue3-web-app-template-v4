@@ -1,4 +1,6 @@
 import { DBField } from '@/types/database'
+import { getDisplayDate, truncateString } from '@/utils/common'
+import type { QTableColumn } from 'quasar'
 import { z } from 'zod'
 
 export const idSchema = z.string().uuid()
@@ -22,15 +24,45 @@ export class Entity {
     this.activated = activated
   }
 
-  static getFieldSFCs() {
-    // ReturnType<typeof defineAsyncComponent>[]
-  }
-
-  static getChartSFCs() {
-    // ReturnType<typeof defineAsyncComponent>[]
-  }
-
-  static getTableColumns() {
-    // QTableColumn[]
+  static getTableColumns(): QTableColumn[] {
+    return [
+      {
+        name: 'hiddenId', // Needed in QTable row props
+        label: '',
+        align: 'left',
+        sortable: false,
+        required: true,
+        field: (row: any) => row[DBField.ID],
+        format: (val: string) => `${val}`,
+        style: 'display: none', // Hide column in QTable
+      },
+      {
+        name: DBField.ID,
+        label: 'Id*',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[DBField.ID],
+        format: (val: string) => truncateString(val, 8, '*'),
+      },
+      {
+        name: DBField.CREATED_TIMESTAMP,
+        label: 'Created Date',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[DBField.CREATED_TIMESTAMP],
+        format: (val: number) => getDisplayDate(val),
+      },
+      {
+        name: DBField.ACTIVATED,
+        label: 'Activated',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[DBField.ACTIVATED],
+        format: (val: boolean) => (val ? 'Yes' : 'No'),
+      },
+    ]
   }
 }

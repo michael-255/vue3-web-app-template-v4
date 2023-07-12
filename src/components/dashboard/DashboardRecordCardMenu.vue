@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { Icon } from '@/types/general'
-import type { AnyDBRecord, DBTable } from '@/types/database'
+import type { DBTable } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import useRouting from '@/composables/useRouting'
 import useUIStore from '@/stores/ui'
 import DB from '@/services/Database'
+import type { Example } from '@/models/Example'
+import type { Test } from '@/models/Test'
 
 const props = defineProps<{
   table: DBTable
-  record: AnyDBRecord
+  record: Example | Test
 }>()
 
 const uiStore = useUIStore()

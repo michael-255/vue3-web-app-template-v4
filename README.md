@@ -8,11 +8,10 @@ structured.
 
 - [ ] Port over various components updates from `fitness-web-app-v19`
 - [ ] Make use of `ErrorStates` component
-- [ ] Find a way to reuse code more in `Database`
-- [ ] Build out `models` with methods for data properties
-- [ ] Build the generic `DashboardCardList` component
-- [ ] Get `Inspect` and `Charts` working
-- [ ] Get `Data` routes working
+- [ ] Fix up the `EditView` component
+- [ ] DRY up some more `Database` code
+- [ ] Remove unneeded files like `core.ts` and `DataSchema.ts`
+- [ ] Do a pass of the `copy` in the app
 
 ## Post Cloning Steps
 

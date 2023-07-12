@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { Icon } from '@/types/general'
-import { DBTable } from '@/types/database'
 import type { Example } from '@/models/Example'
+import type { Test } from '@/models/Test'
 import { getDisplayDate, getRecordsCountDisplay } from '@/utils/common'
 import { useTimeAgo } from '@vueuse/core'
+import type { DBTable } from '@/types/database'
 import useRouting from '@/composables/useRouting'
-import DashboardCardMenu from '@/components/dashboard/DashboardCardMenu.vue'
+import DashboardRecordCardMenu from '@/components/dashboard/DashboardRecordCardMenu.vue'
 
 defineProps<{
-  examples: Example[]
+  table: DBTable
+  records: Example[] | Test[]
   showDescriptions: boolean
 }>()
 
@@ -17,10 +19,10 @@ const { goToCreate } = useRouting()
 
 <template>
   <div class="row justify-center q-gutter-md">
-    <div v-for="record in examples" :key="record.id" class="col-xs-12 col-sm-12 col-md-12 col-lg-5">
+    <div v-for="record in records" :key="record.id" class="col-xs-12 col-sm-12 col-md-12 col-lg-5">
       <QCard class="column full-height">
         <QCardSection class="col">
-          <DashboardCardMenu :table="DBTable.EXAMPLES" :record="record" />
+          <DashboardRecordCardMenu :table="table" :record="record" />
 
           <QBadge
             v-if="record.activated"
@@ -48,7 +50,7 @@ const { goToCreate } = useRouting()
           <div v-if="record.previous?.createdTimestamp">
             <QIcon :name="Icon.CALENDAR_CHECK" />
             <span class="text-caption q-ml-xs">
-              {{ getDisplayDate(record?.previous?.createdTimestamp) }}
+              {{ getDisplayDate(record.previous?.createdTimestamp) }}
             </span>
           </div>
         </QCardSection>
@@ -60,7 +62,7 @@ const { goToCreate } = useRouting()
             color="primary"
             class="full-width"
             :icon="Icon.ATTACH"
-            @click="goToCreate(DBTable.EXAMPLES, record.id)"
+            @click="goToCreate(table, record.id)"
           />
 
           <QBtn v-else label="Go To ACTIVE" color="primary" class="full-width" :icon="Icon.UP" />
@@ -68,15 +70,8 @@ const { goToCreate } = useRouting()
       </QCard>
     </div>
 
-    <div class="col-12 text-grey text-center text-body1">
-      {{ getRecordsCountDisplay(examples) }}
-    </div>
+    <div class="col-12 text-grey text-center text-body1">{{ getRecordsCountDisplay(records) }}</div>
 
-    <QBtn
-      color="positive"
-      :icon="Icon.CREATE"
-      label="Create Example"
-      @click="goToCreate(DBTable.EXAMPLES)"
-    />
+    <QBtn color="positive" :icon="Icon.CREATE" label="Create Example" @click="goToCreate(table)" />
   </div>
 </template>

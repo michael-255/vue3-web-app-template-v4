@@ -4,6 +4,7 @@ import { AppHeaderColor, AppName } from '@/constants/global'
 import { Icon, RouteName } from '@/types/general'
 import useUIStore from '@/stores/ui'
 import useRouting from '@/composables/useRouting'
+import DB from '@/services/Database'
 
 const { route, goToRecordsData, goBack } = useRouting()
 const uiStore = useUIStore()
@@ -36,7 +37,7 @@ const uiStore = useUIStore()
             class="q-px-sm"
             color="info"
             :icon="Icon.CHILDREN"
-            @click="goToRecordsData(uiStore.dashboardSelection)"
+            @click="goToRecordsData(DB.getChildTable(uiStore.dashboardSelection))"
           />
         </div>
       </QToolbar>

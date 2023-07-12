@@ -1,7 +1,9 @@
 import { InternalField } from '@/types/database'
 import { createdTimestampSchema } from '@/models/_Entity'
+import type { QTableColumn } from 'quasar'
+import { getDisplayDate, truncateString } from '@/utils/common'
 import { z } from 'zod'
-import { Icon } from '@/types/general'
+import { defineAsyncComponent } from 'vue'
 
 export enum LogLevel {
   DEBUG = 'DEBUG',
@@ -53,5 +55,95 @@ export class Log {
 
   static getLabel(style: 'singular' | 'plural') {
     return style === 'singular' ? 'Log' : 'Logs'
+  }
+
+  static getFieldComponents(): ReturnType<typeof defineAsyncComponent>[] {
+    return [
+      defineAsyncComponent(() => import('@/components/fields/FieldAutoId.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldCreatedTimestamp.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldLogLevel.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldLogLabel.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldDetails.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldErrorMessage.vue')),
+      defineAsyncComponent(() => import('@/components/fields/FieldStackTrace.vue')),
+    ]
+  }
+
+  static getTableColumns(): QTableColumn[] {
+    return [
+      {
+        name: 'hiddenAutoId', // Needed in QTable row props
+        label: '',
+        align: 'left',
+        sortable: false,
+        required: true,
+        field: (row: any) => row[InternalField.AUTO_ID],
+        format: (val: string) => `${val}`,
+        style: 'display: none', // Hide column in QTable
+      },
+      {
+        name: InternalField.AUTO_ID,
+        label: 'Auto Id',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[InternalField.AUTO_ID],
+        format: (val: number) => `${val}`,
+      },
+      {
+        name: InternalField.LOG_LEVEL,
+        label: 'Log Level',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[InternalField.LOG_LEVEL],
+        format: (val: LogLevel) => `${val}`,
+      },
+      {
+        name: InternalField.TIMESTAMP,
+        label: 'Created Date',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[InternalField.TIMESTAMP],
+        format: (val: number) => getDisplayDate(val),
+      },
+      {
+        name: InternalField.LABEL,
+        label: 'Label',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[InternalField.LABEL],
+        format: (val: string) => truncateString(val, 50, '...'),
+      },
+      {
+        name: InternalField.DETAILS,
+        label: 'Details',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[InternalField.DETAILS],
+        format: (val: LogDetails) => truncateString(JSON.stringify(val), 50, '...'),
+      },
+      {
+        name: InternalField.ERROR_MESSAGE,
+        label: 'Error Message',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[InternalField.ERROR_MESSAGE],
+        format: (val: string) => truncateString(val, 50, '...'),
+      },
+      {
+        name: InternalField.STACK_TRACE,
+        label: 'Stack Trace',
+        align: 'left',
+        sortable: true,
+        required: false,
+        field: (row: any) => row[InternalField.STACK_TRACE],
+        format: (val: string) => truncateString(val, 50, '...'),
+      },
+    ]
   }
 }

@@ -68,7 +68,7 @@ export enum DBField {
   // ...
 }
 
-export type AnyDBRecord = { [key in DBField]?: any }
+export type AnyDBRecord = { [key in DBField | InternalField]?: any }
 
 export type BackupData = {
   appName: string

@@ -11,8 +11,7 @@ import ResponsivePage from '@/components/ResponsivePage.vue'
 import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
 import useUIStore from '@/stores/ui'
 import useLogger from '@/composables/useLogger'
-import ExampleCardList from '@/components/dashboard/ExampleCardList.vue'
-import TestCardList from '@/components/dashboard/TestCardList.vue'
+import DashboardRecordCardList from '@/components/dashboard/DashboardRecordCardList.vue'
 import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Dashboard` })
@@ -80,14 +79,16 @@ onUnmounted(() => {
     </section>
 
     <section>
-      <ExampleCardList
+      <DashboardRecordCardList
         v-show="uiStore.dashboardSelection === DBTable.EXAMPLES"
-        :examples="dashboardExamples"
+        :table="DBTable.EXAMPLES"
+        :records="dashboardExamples"
         :showDescriptions="showDescriptions"
       />
-      <TestCardList
+      <DashboardRecordCardList
         v-show="uiStore.dashboardSelection === DBTable.TESTS"
-        :tests="dashboardTests"
+        :table="DBTable.TESTS"
+        :records="dashboardTests"
         :showDescriptions="showDescriptions"
       />
     </section>

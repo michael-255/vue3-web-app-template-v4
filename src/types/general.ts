@@ -75,6 +75,9 @@ export enum Icon {
   EDIT = 'edit',
   UP = 'keyboard_arrow_up',
   ATTACH = 'post_add',
+  CANCEL = 'cancel',
+  ADD = 'add',
+  SAVE = 'save',
 
   // Design Elements
   MENU = 'menu',
@@ -86,12 +89,15 @@ export enum Icon {
   LOCK = 'lock',
   PREVIOUS = 'undo',
   CALENDAR_CHECK = 'event_available',
+  CALENDAR_DATE = 'event',
+  OPTIONS = 'tune',
+  CLOCK = 'access_time',
 
   // // Actions
   // NONE = 'select',
-  // SAVE = 'save',
+  //
   // CLOSE = 'close',
-  // ADD = 'add',
+  //
   // REMOVE = 'remove',
   //
   //
@@ -99,7 +105,7 @@ export enum Icon {
   // CREATE = 'add_circle',
   // NEW = 'add_box',
   // CLEAR = 'delete_sweep',
-  // CANCEL = 'cancel',
+  //
   // REMOVE_LAST = 'backspace',
   // // Pages
   // CHARTS = 'bar_chart',
@@ -118,12 +124,11 @@ export enum Icon {
   // DESCRIPTION = 'description',
   // LIST = 'view_list',
   // TABLE = 'table_chart',
-  // OPTIONS = 'tune',
+  //
   // RECOMMEND = 'recommend',
   // REMINDER = 'notifications_active',
   // STOPWATCH = 'timer',
-  // CLOCK = 'access_time',
-  // CALENDAR_DATE = 'event',
+
   //
   // CALENDAR_CLEAR = 'event_busy',
   // EXIT = 'exit_to_app',
