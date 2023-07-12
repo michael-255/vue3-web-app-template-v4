@@ -51,7 +51,7 @@ const router = createRouter({
       },
     },
     {
-      path: '/edit/:group/:table/:id',
+      path: '/edit/:table/:id',
       name: RouteName.EDIT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/EditView.vue'),

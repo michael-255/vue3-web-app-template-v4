@@ -36,6 +36,9 @@ export enum DBTable {
   TEST_RESULTS = 'TestResults',
 }
 
+export type ParentTable = DBTable.EXAMPLES | DBTable.TESTS
+export type ChildTable = DBTable.EXAMPLE_RESULTS | DBTable.TEST_RESULTS
+
 export const tableSchema = z.nativeEnum(DBTable)
 
 export enum DBField {

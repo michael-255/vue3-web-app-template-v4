@@ -35,12 +35,12 @@ const showDescriptions = ref(false)
 const dashboardExamples: Ref<Example[]> = ref([])
 const dashboardTests: Ref<Test[]> = ref([])
 
-const examplesSubscription = DB.liveExamples().subscribe({
+const examplesSubscription = DB.liveDashboardData<Example>(DBTable.EXAMPLES).subscribe({
   next: (liveExamples) => (dashboardExamples.value = liveExamples),
   error: (error) => log.error('Error fetching live Examples', error),
 })
 
-const testsSubscription = DB.liveTests().subscribe({
+const testsSubscription = DB.liveDashboardData<Test>(DBTable.TESTS).subscribe({
   next: (liveTests) => (dashboardTests.value = liveTests),
   error: (error) => log.error('Error fetching live Tests', error),
 })

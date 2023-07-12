@@ -8,10 +8,13 @@ structured.
 
 - [ ] Port over various components updates from `fitness-web-app-v19`
 - [ ] Make use of `ErrorStates` component
-- [ ] Fix up the `EditView` component
+- [ ] Use `schemas` to validate data in `setup` and `onMounted` in components?
 - [ ] DRY up some more `Database` code
 - [ ] Remove unneeded files like `core.ts` and `DataSchema.ts`
+- [ ] Need `zod` transforms for classes so I can replace `table(DBTable.X)` in the `Database`
 - [ ] Do a pass of the `copy` in the app
+- [ ] Make `Header` look better on desktop views
+- [ ] Data table needs to handle `Charts` for child record tables
 
 ## Post Cloning Steps
 

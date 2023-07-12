@@ -2,7 +2,15 @@ import Dexie, { liveQuery, type Table } from 'dexie'
 import { Dark } from 'quasar'
 import { Duration } from '@/types/general'
 import { AppDatabaseVersion, AppName } from '@/constants/global'
-import { DBTable, type AnyDBRecord, DBField, InternalTable, InternalField } from '@/types/database'
+import {
+  DBTable,
+  type AnyDBRecord,
+  DBField,
+  InternalTable,
+  InternalField,
+  type ParentTable,
+  type ChildTable,
+} from '@/types/database'
 import { Setting, SettingKey, settingSchema, type SettingValue } from '@/models/Setting'
 import { Log, LogLevel, logSchema, type LogDetails } from '@/models/Log'
 import { Example, exampleSchema } from '@/models/Example'
@@ -87,9 +95,9 @@ class Database extends Dexie {
   getChartComponents(table: DBTable) {
     return {
       [DBTable.EXAMPLES]: Example.getChartComponents(),
-      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getChartComponents(),
+      [DBTable.EXAMPLE_RESULTS]: Example.getChartComponents(),
       [DBTable.TESTS]: Test.getChartComponents(),
-      [DBTable.TEST_RESULTS]: TestResult.getChartComponents(),
+      [DBTable.TEST_RESULTS]: Test.getChartComponents(),
     }[table]
   }
 
@@ -233,34 +241,32 @@ class Database extends Dexie {
     return [...active, ...favorites, ...nonFavorites]
   }
 
-  liveExamples() {
+  private async getDashboardParentData<T extends AnyDBRecord>(table: ParentTable): Promise<T[]> {
+    return this.sortDashboardData<T>(
+      await this.table(table)
+        .orderBy(DBField.NAME)
+        .filter((i) => i.enabled === true)
+        .toArray()
+    )
+  }
+
+  liveDashboardData<T extends AnyDBRecord>(table: ParentTable) {
     return liveQuery(async () => {
-      return this.sortDashboardData(
-        await this.Examples.orderBy(DBField.NAME)
-          .filter((i) => i.enabled === true)
-          .toArray()
-      )
+      return {
+        [DBTable.EXAMPLES]: this.getDashboardParentData<T>(DBTable.EXAMPLES),
+        [DBTable.TESTS]: this.getDashboardParentData<T>(DBTable.TESTS),
+      }[table]
     })
   }
 
-  liveTests() {
-    return liveQuery(async () => {
-      return this.sortDashboardData(
-        await this.Tests.orderBy(DBField.NAME)
-          .filter((i) => i.enabled === true)
-          .toArray()
-      )
-    })
-  }
-
-  private async getParentDataTable(table: DBTable) {
+  private async getParentDataTable<T extends AnyDBRecord>(table: ParentTable): Promise<T[]> {
     return await this.table(table)
       .orderBy(DBField.NAME)
       .filter((i) => i.activated !== true)
       .toArray()
   }
 
-  private async getChildDataTable(table: DBTable) {
+  private async getChildDataTable<T extends AnyDBRecord>(table: ChildTable): Promise<T[]> {
     return await this.table(table)
       .orderBy(DBField.CREATED_TIMESTAMP)
       .reverse()
@@ -271,10 +277,10 @@ class Database extends Dexie {
   liveDataTable(table: DBTable) {
     return liveQuery(async () => {
       return {
-        [DBTable.EXAMPLES]: this.getParentDataTable(DBTable.EXAMPLES),
-        [DBTable.EXAMPLE_RESULTS]: this.getChildDataTable(DBTable.EXAMPLE_RESULTS),
-        [DBTable.TESTS]: this.getParentDataTable(DBTable.TESTS),
-        [DBTable.TEST_RESULTS]: this.getChildDataTable(DBTable.TEST_RESULTS),
+        [DBTable.EXAMPLES]: this.getParentDataTable<Example>(DBTable.EXAMPLES),
+        [DBTable.EXAMPLE_RESULTS]: this.getChildDataTable<ExampleResult>(DBTable.EXAMPLE_RESULTS),
+        [DBTable.TESTS]: this.getParentDataTable<Test>(DBTable.TESTS),
+        [DBTable.TEST_RESULTS]: this.getChildDataTable<TestResult>(DBTable.TEST_RESULTS),
       }[table]
     })
   }
@@ -286,41 +292,24 @@ class Database extends Dexie {
   /////////////////////////////////////////////////////////////////////////////
 
   async getRecord<T extends AnyDBRecord>(table: DBTable, id: string): Promise<T | undefined> {
-    return await {
-      [DBTable.EXAMPLES]: async () => {
-        return await this.table(DBTable.EXAMPLES).get(id)
-      },
-      [DBTable.EXAMPLE_RESULTS]: async () => {
-        return await this.table(DBTable.EXAMPLE_RESULTS).get(id)
-      },
-      [DBTable.TESTS]: async () => {
-        return await this.table(DBTable.TESTS).get(id)
-      },
-      [DBTable.TEST_RESULTS]: async () => {
-        return await this.table(DBTable.TEST_RESULTS).get(id)
-      },
-    }[table]()
+    return await this.table(table).get(id)
   }
 
-  async getAll<T extends AnyDBRecord>(table: DBTable): Promise<T[]> {
+  private async getParents<T extends AnyDBRecord>(table: ParentTable): Promise<T[]> {
+    return await this.table(table).orderBy(DBField.NAME).toArray()
+  }
+
+  private async getChildren<T extends AnyDBRecord>(table: ChildTable): Promise<T[]> {
+    return await this.table(table).orderBy(DBField.CREATED_TIMESTAMP).reverse().toArray()
+  }
+
+  async getAll(table: DBTable) {
     return await {
-      [DBTable.EXAMPLES]: async () => {
-        return await this.table(DBTable.EXAMPLES).orderBy(DBField.NAME).toArray()
-      },
-      [DBTable.EXAMPLE_RESULTS]: async () => {
-        return (
-          await this.table(DBTable.EXAMPLE_RESULTS).orderBy(DBField.CREATED_TIMESTAMP).toArray()
-        ).reverse()
-      },
-      [DBTable.TESTS]: async () => {
-        return await this.table(DBTable.TESTS).orderBy(DBField.NAME).toArray()
-      },
-      [DBTable.TEST_RESULTS]: async () => {
-        return (
-          await this.table(DBTable.TEST_RESULTS).orderBy(DBField.CREATED_TIMESTAMP).toArray()
-        ).reverse()
-      },
-    }[table]()
+      [DBTable.EXAMPLES]: this.getParents<Example>(DBTable.EXAMPLES),
+      [DBTable.EXAMPLE_RESULTS]: this.getChildren<ExampleResult>(DBTable.EXAMPLE_RESULTS),
+      [DBTable.TESTS]: this.getParents<Test>(DBTable.TESTS),
+      [DBTable.TEST_RESULTS]: this.getChildren<TestResult>(DBTable.TEST_RESULTS),
+    }[table]
   }
 
   async getPreviousRecord(table: DBTable, parentId: string) {

@@ -47,7 +47,7 @@ async function onSubmit() {
 
       await DB.addRecord(routeTable as DBTable, extend(true, {}, actionStore.record))
 
-      log.info('Successfully created record', {
+      log.info('Record created', {
         table: routeTable,
         id: actionStore.record.id,
       })

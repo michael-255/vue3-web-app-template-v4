@@ -5,7 +5,7 @@ import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
-import type { DBField, DBTable } from '@/types/database'
+import type { DBTable, DBField } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useRouting from '@/composables/useRouting'
 import useDialogs from '@/composables/useDialogs'
@@ -77,10 +77,8 @@ async function onCharts(table: DBTable, id: string) {
     fullscreen
     row-key="id"
   >
-    <!-- Column Headers -->
     <template v-slot:header="props">
       <QTr :props="props">
-        <!-- Do not show hidden columns -->
         <QTh
           v-for="col in props.cols"
           v-show="col.name !== 'hiddenId'"
@@ -93,14 +91,12 @@ async function onCharts(table: DBTable, id: string) {
       </QTr>
     </template>
 
-    <!-- Rows -->
     <template v-slot:body="props">
       <QTr :props="props">
         <QTd v-for="col in props.cols" :key="col.name" :props="props">
           {{ col.value }}
         </QTd>
         <QTd auto-width>
-          <!-- CHARTS -->
           <QBtn
             flat
             round
@@ -110,7 +106,7 @@ async function onCharts(table: DBTable, id: string) {
             :icon="Icon.CHARTS"
             @click="onCharts(routeTable as DBTable, props.cols[0].value)"
           />
-          <!-- INSPECT -->
+
           <QBtn
             flat
             round
@@ -120,7 +116,7 @@ async function onCharts(table: DBTable, id: string) {
             :icon="Icon.INSPECT"
             @click="onInspect(routeTable as DBTable, props.cols[0].value)"
           />
-          <!-- EDIT -->
+
           <QBtn
             flat
             round
@@ -130,7 +126,7 @@ async function onCharts(table: DBTable, id: string) {
             :icon="Icon.EDIT"
             @click="goToEdit(routeTable as DBTable, props.cols[0].value)"
           />
-          <!-- DELETE -->
+
           <QBtn
             flat
             round
@@ -146,11 +142,10 @@ async function onCharts(table: DBTable, id: string) {
 
     <template v-slot:top>
       <div class="row justify-start full-width q-mb-md">
-        <!-- Table Title -->
         <div class="col-10 text-h6 text-bold ellipsis">
           {{ DB.getLabel(routeTable as DBTable, 'plural') }}
         </div>
-        <!-- Go Back Button -->
+
         <QBtn
           round
           flat
@@ -162,7 +157,6 @@ async function onCharts(table: DBTable, id: string) {
 
       <div class="row justify-start full-width">
         <div class="col-12">
-          <!-- SEARCH -->
           <QInput
             :disable="!rows.length"
             outlined
@@ -173,14 +167,13 @@ async function onCharts(table: DBTable, id: string) {
             placeholder="Search"
           >
             <template v-slot:before>
-              <!-- CREATE - Child records cannot be created alone on the data table -->
               <QBtn
                 color="positive"
                 class="q-px-sm q-mr-xs"
                 :icon="Icon.ADD"
                 @click="goToCreate(routeTable as DBTable)"
               />
-              <!-- COLUMN OPTIONS (Visible Columns) -->
+
               <QSelect
                 v-model="visibleColumns"
                 :options="columnOptions"
