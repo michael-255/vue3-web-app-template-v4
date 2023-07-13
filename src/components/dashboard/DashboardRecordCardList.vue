@@ -4,17 +4,23 @@ import type { Example } from '@/models/Example'
 import type { Test } from '@/models/Test'
 import { getDisplayDate, getRecordsCountDisplay } from '@/utils/common'
 import { useTimeAgo } from '@vueuse/core'
-import type { DBTable } from '@/types/database'
-import useRouting from '@/composables/useRouting'
+import type { DBTable, ParentTable } from '@/types/database'
 import DashboardRecordCardMenu from '@/components/dashboard/DashboardRecordCardMenu.vue'
+import useRouting from '@/composables/useRouting'
+import DB from '@/services/Database'
 
 defineProps<{
-  table: DBTable
+  parentTable: ParentTable
   records: Example[] | Test[]
   showDescriptions: boolean
 }>()
 
-const { goToCreate } = useRouting()
+const { goToCreate, goToActive } = useRouting()
+
+async function onActivate(table: DBTable, id: string) {
+  await DB.toggleActive(table, id)
+  goToActive()
+}
 </script>
 
 <template>
@@ -22,7 +28,7 @@ const { goToCreate } = useRouting()
     <div v-for="record in records" :key="record.id" class="col-xs-12 col-sm-12 col-md-12 col-lg-5">
       <QCard class="column full-height">
         <QCardSection class="col">
-          <DashboardRecordCardMenu :table="table" :record="record" />
+          <DashboardRecordCardMenu :parentTable="parentTable" :record="record" />
 
           <QBadge
             v-if="record.activated"
@@ -55,23 +61,43 @@ const { goToCreate } = useRouting()
           </div>
         </QCardSection>
 
-        <QCardActions clas="col-auto">
+        <QCardActions v-if="record.activated" class="col-auto">
           <QBtn
-            v-if="!record.activated"
-            label="Attach Example Result"
-            color="primary"
+            label="Go To Active"
+            color="positive"
             class="full-width"
+            :icon="Icon.UP"
+            @click="goToActive()"
+          />
+        </QCardActions>
+
+        <QCardActions v-else class="col-auto">
+          <QBtn
+            :label="`Attach ${DB.getLabel(DB.getChildTable(parentTable), 'singular')}`"
+            color="primary"
+            class="full-width q-mb-sm"
             :icon="Icon.ATTACH"
-            @click="goToCreate(table, record.id)"
+            @click="goToCreate(parentTable, record.id)"
           />
 
-          <QBtn v-else label="Go To ACTIVE" color="primary" class="full-width" :icon="Icon.UP" />
+          <QBtn
+            label="Activate"
+            color="primary"
+            class="full-width"
+            :icon="Icon.READY"
+            @click="onActivate(parentTable, record.id)"
+          />
         </QCardActions>
       </QCard>
     </div>
 
     <div class="col-12 text-grey text-center text-body1">{{ getRecordsCountDisplay(records) }}</div>
 
-    <QBtn color="positive" :icon="Icon.CREATE" label="Create Example" @click="goToCreate(table)" />
+    <QBtn
+      color="positive"
+      :icon="Icon.CREATE"
+      :label="`Create ${DB.getLabel(parentTable, 'singular')}`"
+      @click="goToCreate(parentTable)"
+    />
   </div>
 </template>

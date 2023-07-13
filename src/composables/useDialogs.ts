@@ -4,9 +4,8 @@ import ConfirmationDialog from '@/components/dialogs/ConfirmationDialog.vue'
 import DismissalDialog from '@/components/dialogs/DismissalDialog.vue'
 import InspectionDialog from '@/components/dialogs/InspectionDialog.vue'
 import ChartingDialog from '@/components/dialogs/ChartingDialog.vue'
-import type { AnyDBRecord, DBTable, InternalTable } from '@/types/database'
+import type { AnyDBRecord } from '@/types/database'
 import type { defineAsyncComponent } from 'vue'
-import type { Log } from '@/models/Log'
 
 export default function useDialogs() {
   const $q = useQuasar()
@@ -49,30 +48,30 @@ export default function useDialogs() {
   }
 
   function inspectDialog(
-    title: string,
     record: AnyDBRecord,
+    title: string,
     fieldComponents: ReturnType<typeof defineAsyncComponent>[]
   ) {
     $q.dialog({
       component: InspectionDialog,
       componentProps: {
-        title,
         record,
+        title,
         fieldComponents,
       },
     })
   }
 
   function chartsDialog(
-    title: string,
     id: string,
+    title: string,
     chartComponents: ReturnType<typeof defineAsyncComponent>[]
   ) {
     $q.dialog({
       component: ChartingDialog,
       componentProps: {
-        title,
         id,
+        title,
         chartComponents,
       },
     })

@@ -6,8 +6,8 @@ import type { AnyDBRecord, DBField, InternalField } from '@/types/database'
 import useActionStore from '@/stores/action'
 
 const props = defineProps<{
-  title: string
   record: AnyDBRecord
+  title: string
   fieldComponents: ReturnType<typeof defineAsyncComponent>[]
 }>()
 
@@ -18,6 +18,7 @@ const actionStore = useActionStore()
 
 // Setup action store record with all the record values
 Object.keys(props.record).map((key) => {
+  // Includes InternalField to support inspecting Logs
   actionStore.record[key as DBField | InternalField] = props.record[key as DBField | InternalField]
 })
 

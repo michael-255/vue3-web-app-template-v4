@@ -5,7 +5,7 @@ import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
-import type { DBTable, DBField } from '@/types/database'
+import { DBTable, type DBField, type ParentTable } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useRouting from '@/composables/useRouting'
 import useDialogs from '@/composables/useDialogs'
@@ -55,14 +55,14 @@ async function onInspect(table: DBTable, id: string) {
   const record = await DB.getRecord(table, id)
 
   if (record) {
-    inspectDialog(DB.getLabel(table, 'singular'), record, DB.getFieldComponents(table))
+    inspectDialog(record, DB.getLabel(table, 'singular'), DB.getFieldComponents(table))
   } else {
     log.error('Failed to find record', { table, id })
   }
 }
 
-async function onCharts(table: DBTable, id: string) {
-  chartsDialog(DB.getLabel(table, 'singular'), id, DB.getChartComponents(table))
+async function onCharts(parentTable: ParentTable, id: string) {
+  chartsDialog(id, DB.getLabel(parentTable, 'singular'), DB.getChartComponents(parentTable))
 }
 </script>
 
@@ -98,13 +98,14 @@ async function onCharts(table: DBTable, id: string) {
         </QTd>
         <QTd auto-width>
           <QBtn
+            v-if="[DBTable.EXAMPLES, DBTable.TESTS].includes(routeTable as DBTable)"
             flat
             round
             dense
             class="q-ml-xs"
             color="accent"
             :icon="Icon.CHARTS"
-            @click="onCharts(routeTable as DBTable, props.cols[0].value)"
+            @click="onCharts(routeTable as ParentTable, props.cols[0].value)"
           />
 
           <QBtn

@@ -7,13 +7,16 @@ import { useMeta } from 'quasar'
 import { Setting, SettingKey } from '@/models/Setting'
 import { DBTable, type BackupData } from '@/types/database'
 import type { Example } from '@/models/Example'
+import type { ExampleResult } from '@/models/ExampleResults'
+import type { Test } from '@/models/Test'
+import type { TestResult } from '@/models/TestResults'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
 import useDialogs from '@/composables/useDialogs'
 import useDefaults from '@/composables/useDefaults'
 import ResponsivePage from '@/components/ResponsivePage.vue'
-import DB from '@/services/Database'
 import useRouting from '@/composables/useRouting'
+import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Settings` })
 
@@ -93,10 +96,11 @@ function onImportFile() {
         }
 
         // Logs are never imported
-        // await Promise.all([
-        //   DB.importRecords(RecordGroup.CORE, backupData.coreRecords),
-        //   DB.importRecords(RecordGroup.SUB, backupData.subRecords),
-        // ])
+        await Promise.all([
+          Object.values(DBTable).map(
+            async (table) => await DB.importRecords(table, backupData[table])
+          ),
+        ])
 
         importFile.value = null // Clear input
         log.info('Successfully imported available data')
@@ -129,12 +133,12 @@ function onExportRecords() {
             delete record.previous
             return record
           }),
-          ExampleResults: await DB.getAll(DBTable.EXAMPLE_RESULTS),
-          Tests: (await DB.getAll<Example>(DBTable.TESTS)).map((record) => {
+          ExampleResults: await DB.getAll<ExampleResult>(DBTable.EXAMPLE_RESULTS),
+          Tests: (await DB.getAll<Test>(DBTable.TESTS)).map((record) => {
             delete record.previous
             return record
           }),
-          TestResults: await DB.getAll(DBTable.TEST_RESULTS),
+          TestResults: await DB.getAll<TestResult>(DBTable.TEST_RESULTS),
         }
 
         log.silentDebug('backupData:', backupData)

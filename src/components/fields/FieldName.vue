@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { nameSchema } from '@/types/core'
 import { Limit } from '@/types/general'
+import { nameSchema } from '@/models/_Parent'
 import useActionStore from '@/stores/action'
 
 defineProps<{

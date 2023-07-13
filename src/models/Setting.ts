@@ -1,6 +1,4 @@
 import { InternalField } from '@/types/database'
-import type { QTableColumn } from 'quasar'
-import type { defineAsyncComponent } from 'vue'
 import { z } from 'zod'
 
 export enum SettingKey {

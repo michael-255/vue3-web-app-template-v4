@@ -41,7 +41,7 @@ async function onInspect(autoId: number) {
   const record = await DB.getLog(Number(autoId))
 
   if (record) {
-    inspectDialog(Log.getLabel('singular'), record, Log.getFieldComponents())
+    inspectDialog(record, Log.getLabel('singular'), Log.getFieldComponents())
   } else {
     log.error('Failed to find Log', { autoId })
   }

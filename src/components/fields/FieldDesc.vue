@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { textAreaSchema } from '@/types/core'
 import { Limit, Icon } from '@/types/general'
+import { textAreaSchema } from '@/models/_Parent'
 import useActionStore from '@/stores/action'
 
 defineProps<{

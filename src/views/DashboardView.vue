@@ -81,13 +81,13 @@ onUnmounted(() => {
     <section>
       <DashboardRecordCardList
         v-show="uiStore.dashboardSelection === DBTable.EXAMPLES"
-        :table="DBTable.EXAMPLES"
+        :parentTable="DBTable.EXAMPLES"
         :records="dashboardExamples"
         :showDescriptions="showDescriptions"
       />
       <DashboardRecordCardList
         v-show="uiStore.dashboardSelection === DBTable.TESTS"
-        :table="DBTable.TESTS"
+        :parentTable="DBTable.TESTS"
         :records="dashboardTests"
         :showDescriptions="showDescriptions"
       />

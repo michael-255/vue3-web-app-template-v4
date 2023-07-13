@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { Icon } from '@/types/general'
-import type { DBTable } from '@/types/database'
+import type { DBTable, ParentTable } from '@/types/database'
+import type { Example } from '@/models/Example'
+import type { Test } from '@/models/Test'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import useRouting from '@/composables/useRouting'
 import useUIStore from '@/stores/ui'
 import DB from '@/services/Database'
-import type { Example } from '@/models/Example'
-import type { Test } from '@/models/Test'
 
 const props = defineProps<{
-  table: DBTable
+  parentTable: ParentTable
   record: Example | Test
 }>()
 
 const uiStore = useUIStore()
 const { log } = useLogger()
 const { goToEdit } = useRouting()
-const { confirmDialog, dismissDialog } = useDialogs()
+const { confirmDialog, dismissDialog, inspectDialog, chartsDialog } = useDialogs()
 
 async function viewPreviousNote(note: string) {
   dismissDialog('Previous Note', note, Icon.NOTE)
@@ -30,7 +30,7 @@ async function onToggleFavorite(id: string, name: string, current: boolean) {
 
   confirmDialog(action, message, icon, 'info', async () => {
     try {
-      await DB.toggleFavorite(props.table, id)
+      await DB.toggleFavorite(props.parentTable, id)
       log.info(`${name} unfavorited`, { id, name })
     } catch (error) {
       log.error('Unfavorite update failed', error)
@@ -39,21 +39,42 @@ async function onToggleFavorite(id: string, name: string, current: boolean) {
 }
 
 async function onInspect(id: string) {
-  const table = uiStore.dashboardSelection
-  // const title = DataSchema.getLabel(RecordGroup.CORE, type, 'singular') as string
-  // const record = (await DB.getRecord(RecordGroup.CORE, id)) as AnyCoreRecord
-  // const fields = DataSchema.getFields(RecordGroup.CORE, type)
-  // inspectDialog(title, record, fields)
+  const record = await DB.getRecord(props.parentTable, id)
+
+  if (record) {
+    inspectDialog(
+      record,
+      DB.getLabel(props.parentTable, 'singular'),
+      DB.getFieldComponents(props.parentTable)
+    )
+  } else {
+    log.error('Failed to find record', { id })
+  }
 }
 
 async function onCharts(id: string) {
-  const table = uiStore.dashboardSelection
-  // const title = DataSchema.getLabel(
-  //   RecordGroup.CORE,
-  //   uiStore.dashboardSelection,
-  //   'singular'
-  // ) as string
-  // chartsDialog(title, type, id)
+  chartsDialog(
+    id,
+    DB.getLabel(props.parentTable, 'singular'),
+    DB.getChartComponents(props.parentTable)
+  )
+}
+
+function onDeactivate(table: DBTable, id: string) {
+  confirmDialog(
+    'Deactivate Record',
+    'Would you like to deactivate this record?',
+    Icon.CANCEL,
+    'warning',
+    async () => {
+      try {
+        await DB.toggleActive(table, id)
+        log.info('Deactivated record', { table, id })
+      } catch (error) {
+        log.error('Deactivation failed', error)
+      }
+    }
+  )
 }
 </script>
 
@@ -68,7 +89,14 @@ async function onCharts(id: string) {
       @click="viewPreviousNote(record?.previous?.note || '')"
     />
 
-    <QBtn v-if="record.activated" round flat color="warning" :icon="Icon.CLEAR" />
+    <QBtn
+      v-if="record.activated"
+      round
+      flat
+      color="warning"
+      :icon="Icon.CANCEL"
+      @click="onDeactivate(parentTable, record.id)"
+    />
 
     <span v-else>
       <QIcon

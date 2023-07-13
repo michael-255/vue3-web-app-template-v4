@@ -3,10 +3,9 @@ import { defineAsyncComponent, ref, type Ref } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 import { Duration, Icon } from '@/types/general'
 import useUIStore from '@/stores/ui'
-
 defineProps<{
-  title: string
   id: string
+  title: string
   chartComponents: ReturnType<typeof defineAsyncComponent>[]
 }>()
 

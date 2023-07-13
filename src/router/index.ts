@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { RouteName } from '@/types/general'
 import { tableSchema } from '@/types/database'
-import { idSchema } from '@/types/core'
+import { idSchema } from '@/models/_Entity'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

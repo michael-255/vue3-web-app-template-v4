@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import { truncateString } from '@/utils/common'
-import { idSchema } from '@/types/core'
 import { Icon, RouteName } from '@/types/general'
 import { DBTable } from '@/types/database'
 import type { Example } from '@/models/Example'
 import type { Test } from '@/models/Test'
+import { idSchema } from '@/models/_Entity'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
 import DB from '@/services/Database'

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
 import { truncateString } from '@/utils/common'
-import { allFields, testIdsSchema } from '@/types/core'
-import type { Test } from '@/models/Test'
+import { idsSchema, type Test } from '@/models/Test'
 import { DBTable } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
@@ -15,12 +14,11 @@ defineProps<{
 const { log } = useLogger()
 const actionStore = useActionStore()
 
-const field = allFields.Values.testIds
 const options: Ref<{ value: string; label: string }[]> = ref([])
 
 onMounted(async () => {
   try {
-    actionStore.record[field] = actionStore.record[field] ?? []
+    // TODO - default action store value???
 
     const testRecords = await DB.getAll<Test>(DBTable.TESTS)
 
@@ -47,8 +45,8 @@ onMounted(async () => {
     <p>Tests that are stored by the Example record.</p>
 
     <QSelect
-      v-model="actionStore.record[field]"
-      :rules="[(val: string[]) => testIdsSchema.safeParse(val).success || 'Required']"
+      v-model="actionStore.record.testIds"
+      :rules="[(val: string[]) => idsSchema.safeParse(val).success || 'Required']"
       :options="options"
       counter
       multiple
