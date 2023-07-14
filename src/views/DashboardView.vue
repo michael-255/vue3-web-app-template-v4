@@ -12,12 +12,14 @@ import WelcomeOverlay from '@/components/WelcomeOverlay.vue'
 import useUIStore from '@/stores/ui'
 import useLogger from '@/composables/useLogger'
 import DashboardRecordCardList from '@/components/dashboard/DashboardRecordCardList.vue'
+import useDefaults from '@/composables/useDefaults'
 import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Dashboard` })
 
 const uiStore = useUIStore()
 const { log } = useLogger()
+const { onDefaultExamples, onDefaultTests } = useDefaults()
 
 const dashboardOptions = [
   {
@@ -84,12 +86,14 @@ onUnmounted(() => {
         :parentTable="DBTable.EXAMPLES"
         :records="dashboardExamples"
         :showDescriptions="showDescriptions"
+        :defaultsFunc="onDefaultExamples"
       />
       <DashboardRecordCardList
         v-show="uiStore.dashboardSelection === DBTable.TESTS"
         :parentTable="DBTable.TESTS"
         :records="dashboardTests"
         :showDescriptions="showDescriptions"
+        :defaultsFunc="onDefaultTests"
       />
     </section>
   </ResponsivePage>

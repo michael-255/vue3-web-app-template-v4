@@ -7,10 +7,11 @@ import DashboardRecordCardMenu from '@/components/dashboard/DashboardRecordCardM
 import useRouting from '@/composables/useRouting'
 import DB from '@/services/Database'
 
-defineProps<{
+const props = defineProps<{
   parentTable: ParentTable
   records: AnyDBRecord[]
   showDescriptions: boolean
+  defaultsFunc?: () => Promise<void>
 }>()
 
 const { goToCreate, goToActive } = useRouting()
@@ -91,11 +92,24 @@ async function onActivate(table: DBTable, id: string) {
 
     <div class="col-12 text-grey text-center text-body1">{{ getRecordsCountDisplay(records) }}</div>
 
-    <QBtn
-      color="positive"
-      :icon="Icon.CREATE"
-      :label="`Create ${DB.getLabel(parentTable, 'singular')}`"
-      @click="goToCreate(parentTable)"
-    />
+    <div v-if="records.length === 0 && defaultsFunc" class="col-12 text-center">
+      <QBtn
+        class="col-12 text-center"
+        color="primary"
+        :icon="Icon.DEFAULTS"
+        :label="`Add ${DB.getLabel(props.parentTable, 'singular')} Defaults`"
+        @click="defaultsFunc()"
+      />
+    </div>
+
+    <div class="col-12 text-center">
+      <QBtn
+        class="col-12 text-center"
+        color="positive"
+        :icon="Icon.CREATE"
+        :label="`Create ${DB.getLabel(parentTable, 'singular')}`"
+        @click="goToCreate(parentTable)"
+      />
+    </div>
   </div>
 </template>

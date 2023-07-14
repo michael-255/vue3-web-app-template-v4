@@ -374,34 +374,46 @@ class Database extends Dexie {
       Logs: await this.Logs.toArray(),
       Examples: (await this.Examples.toArray()).map((record) => {
         delete record.previous
+        delete record.activated
         return record
       }),
-      ExampleResults: await this.ExampleResults.toArray(),
+      ExampleResults: (await this.ExampleResults.toArray()).map((record) => {
+        delete record.activated
+        return record
+      }),
       Tests: (await this.Tests.toArray()).map((record) => {
         delete record.previous
+        delete record.activated
         return record
       }),
-      TestResults: await this.TestResults.toArray(),
+      TestResults: (await this.TestResults.toArray()).map((record) => {
+        delete record.activated
+        return record
+      }),
     }
 
     return backupData
   }
 
-  async getParentIdOptions(parentTable: ParentTable): Promise<{ value: string; label: string }[]> {
+  async getParentIdOptions(
+    parentTable: ParentTable
+  ): Promise<{ value: string; label: string; disable: boolean }[]> {
     const records = await this.table(parentTable).orderBy(DBField.NAME).toArray()
 
     return records.map((r: AnyDBRecord) => ({
-      value: r.id as string,
+      value: r.id,
       label: `${r.name} (${truncateString(r.id, 8, '*')})`,
+      disable: r.activated,
     }))
   }
 
-  async getTestIdsOptions(): Promise<{ value: string; label: string }[]> {
+  async getTestIdsOptions(): Promise<{ value: string; label: string; disable: boolean }[]> {
     const tests = await this.Tests.orderBy(DBField.NAME).toArray()
 
-    return tests.map((r: Test) => ({
-      value: r.id as string,
+    return tests.map((r: AnyDBRecord) => ({
+      value: r.id,
       label: `${r.name} (${truncateString(r.id, 8, '*')})`,
+      disable: r.activated,
     }))
   }
 

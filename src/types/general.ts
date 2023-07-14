@@ -78,6 +78,7 @@ export enum Icon {
   CANCEL = 'cancel',
   ADD = 'add',
   SAVE = 'save',
+  DEFAULTS = 'playlist_add',
 
   // Design Elements
   MENU = 'menu',

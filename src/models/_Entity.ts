@@ -10,7 +10,7 @@ export const booleanSchema = z.boolean()
 export const entitySchema = z.object({
   [DBField.ID]: idSchema,
   [DBField.CREATED_TIMESTAMP]: createdTimestampSchema,
-  [DBField.ACTIVATED]: booleanSchema,
+  [DBField.ACTIVATED]: booleanSchema.default(false),
 })
 
 const entityOptionalSchema = entitySchema.deepPartial()
