@@ -2,13 +2,20 @@
 import { useDialogPluginComponent } from 'quasar'
 import { Icon } from '@/types/general'
 import { onUnmounted } from 'vue'
-import type { AnyDBRecord, DBField, DBTable, InternalField } from '@/types/database'
+import { Log } from '@/models/Log'
+import {
+  InternalTable,
+  type AnyDBRecord,
+  type DBField,
+  type DBTable,
+  type InternalField,
+} from '@/types/database'
 import useActionStore from '@/stores/action'
 import DB from '@/services/Database'
 
 const props = defineProps<{
   record: AnyDBRecord
-  table: DBTable
+  table: DBTable | InternalTable.LOGS
 }>()
 
 defineEmits([...useDialogPluginComponent.emits])
@@ -16,8 +23,12 @@ defineEmits([...useDialogPluginComponent.emits])
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
 const actionStore = useActionStore()
 
-const fieldComponents = DB.getFieldComponents(props.table)
-const title = DB.getLabel(props.table, 'singular')
+const fieldComponents =
+  props.table === InternalTable.LOGS ? Log.getFieldComponents() : DB.getFieldComponents(props.table)
+const title =
+  props.table === InternalTable.LOGS
+    ? Log.getLabel('singular')
+    : DB.getLabel(props.table, 'singular')
 
 // Setup action store record with all the record values
 Object.keys(props.record).map((key) => {

@@ -27,15 +27,14 @@ export const logSchema = z.object({
 
 export class Log {
   [InternalField.AUTO_ID]?: any; // Dexie handles the auto incrementing id
-  [InternalField.TIMESTAMP]: number;
-  [InternalField.LOG_LEVEL]: LogLevel;
-  [InternalField.LABEL]: string;
+  [InternalField.TIMESTAMP]!: number;
+  [InternalField.LOG_LEVEL]!: LogLevel;
+  [InternalField.LABEL]!: string;
   [InternalField.DETAILS]?: LogDetails;
   [InternalField.ERROR_MESSAGE]?: string;
   [InternalField.STACK_TRACE]?: string
 
   constructor(logLevel: LogLevel, label: string, details: LogDetails) {
-    this.timestamp = Date.now()
     this.logLevel = logLevel
     this.label = label
 

@@ -20,7 +20,7 @@ export const settingSchema = z.object({
 })
 
 export class Setting {
-  [InternalField.KEY]: SettingKey;
+  [InternalField.KEY]!: SettingKey;
   [InternalField.VALUE]?: SettingValue
 
   constructor(key: SettingKey, value: SettingValue) {

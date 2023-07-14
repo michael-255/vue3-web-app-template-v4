@@ -1,6 +1,6 @@
 import { useQuasar } from 'quasar'
 import { Icon } from '@/types/general'
-import type { AnyDBRecord, DBTable, ParentTable } from '@/types/database'
+import type { AnyDBRecord, DBTable, InternalTable, ParentTable } from '@/types/database'
 import type { defineAsyncComponent } from 'vue'
 import ConfirmationDialog from '@/components/dialogs/ConfirmationDialog.vue'
 import DismissalDialog from '@/components/dialogs/DismissalDialog.vue'
@@ -47,7 +47,7 @@ export default function useDialogs() {
     })
   }
 
-  function inspectDialog(record: AnyDBRecord, table: DBTable) {
+  function inspectDialog(record: AnyDBRecord, table: DBTable | InternalTable.LOGS) {
     $q.dialog({
       component: InspectionDialog,
       componentProps: {

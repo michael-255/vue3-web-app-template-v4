@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import { Icon } from '@/types/general'
-import type { Example } from '@/models/Example'
-import type { Test } from '@/models/Test'
 import { getDisplayDate, getRecordsCountDisplay } from '@/utils/common'
 import { useTimeAgo } from '@vueuse/core'
-import type { DBTable, ParentTable } from '@/types/database'
+import type { AnyDBRecord, DBTable, ParentTable } from '@/types/database'
 import DashboardRecordCardMenu from '@/components/dashboard/DashboardRecordCardMenu.vue'
 import useRouting from '@/composables/useRouting'
 import DB from '@/services/Database'
 
 defineProps<{
   parentTable: ParentTable
-  records: Example[] | Test[]
+  records: AnyDBRecord[]
   showDescriptions: boolean
 }>()
 

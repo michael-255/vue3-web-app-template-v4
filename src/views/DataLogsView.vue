@@ -6,7 +6,7 @@ import { useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
 import { Log } from '@/models/Log'
-import type { InternalField } from '@/types/database'
+import { InternalTable, type InternalField } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useRouting from '@/composables/useRouting'
 import useDialogs from '@/composables/useDialogs'
@@ -41,7 +41,7 @@ async function onInspect(autoId: number) {
   const record = await DB.getLog(Number(autoId))
 
   if (record) {
-    inspectDialog(record, Log.getLabel('singular'), Log.getFieldComponents())
+    inspectDialog(record, InternalTable.LOGS)
   } else {
     log.error('Failed to find Log', { autoId })
   }
