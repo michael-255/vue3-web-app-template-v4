@@ -92,4 +92,5 @@ export enum Icon {
   CALENDAR_DATE = 'event',
   OPTIONS = 'tune',
   CLOCK = 'access_time',
+  EMPTY = 'check_box_outline_blank',
 }

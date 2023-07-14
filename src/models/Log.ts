@@ -35,6 +35,7 @@ export class Log {
   [InternalField.STACK_TRACE]?: string
 
   constructor(logLevel: LogLevel, label: string, details: LogDetails) {
+    this.timestamp = Date.now()
     this.logLevel = logLevel
     this.label = label
 

@@ -75,7 +75,7 @@ async function onActivate(table: DBTable, id: string) {
             color="primary"
             class="full-width q-mb-sm"
             :icon="Icon.ATTACH"
-            @click="goToCreate(parentTable, record.id)"
+            @click="goToCreate(DB.getChildTable(parentTable), record.id)"
           />
 
           <QBtn

@@ -510,7 +510,6 @@ class Database extends Dexie {
   }
 
   async putRecord(table: DBTable, record: AnyDBRecord) {
-    console.log('putRecord', table, record)
     return await {
       [DBTable.EXAMPLES]: async () =>
         await this._putParent(DBTable.EXAMPLES, record, exampleSchema),

@@ -142,7 +142,6 @@ async function recalculateChart() {
 <template>
   <p class="text-h6">{{ chartLabel }}</p>
 
-  <!-- Chart -->
   <div v-if="recordCount > 0">
     <Line :options="chartOptions" :data="chartData" style="max-height: 500px" />
 

@@ -7,7 +7,6 @@ defineProps<{
 </script>
 
 <template>
-  <!-- Unknown -->
   <div v-if="error === 'unknown'">
     <div class="row justify-center">
       <QIcon class="col-12 text-center q-mb-sm" :name="Icon.WARN" size="80px" color="warning" />
@@ -15,7 +14,6 @@ defineProps<{
     </div>
   </div>
 
-  <!-- Not Found -->
   <div v-else-if="error === 'not-found'">
     <div class="row justify-center">
       <QIcon class="col-12 text-center q-mb-sm" :name="Icon.NOT_FOUND" size="80px" color="accent" />
@@ -23,10 +21,9 @@ defineProps<{
     </div>
   </div>
 
-  <!-- No Data -->
   <div v-else-if="error === 'no-data'">
     <div class="row justify-center">
-      <QIcon class="col-12 text-center q-mb-sm" :name="Icon.PARENTS" size="80px" color="grey" />
+      <QIcon class="col-12 text-center q-mb-sm" :name="Icon.EMPTY" size="80px" color="grey" />
       <p class="text-body1">No data available</p>
     </div>
   </div>
