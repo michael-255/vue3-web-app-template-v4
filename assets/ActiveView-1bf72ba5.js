@@ -1,1 +1,0 @@
-import{k as e,U as n,A as a,n as t,p as c,y as o,I as r}from"./index-d68b0eaf.js";import{_ as s}from"./ResponsivePage.vue_vue_type_script_setup_true_lang-f78d365d.js";const l=e({__name:"ActiveView",setup(i){return n({title:`${a} - Active`}),(p,_)=>(t(),c(s,{bannerIcon:o(r).INFO,bannerTitle:"Active"},null,8,["bannerIcon"]))}});export{l as default};
