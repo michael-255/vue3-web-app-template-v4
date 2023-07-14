@@ -2,14 +2,10 @@
 import { exportFile } from 'quasar'
 import { Duration, Icon, Limit } from '@/types/general'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { AppDatabaseVersion, AppName } from '@/constants/global'
+import { AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
 import { Setting, SettingKey } from '@/models/Setting'
 import { DBTable, type BackupData } from '@/types/database'
-import type { Example } from '@/models/Example'
-import type { ExampleResult } from '@/models/ExampleResults'
-import type { Test } from '@/models/Test'
-import type { TestResult } from '@/models/TestResults'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
 import useDialogs from '@/composables/useDialogs'
@@ -123,23 +119,7 @@ function onExportRecords() {
     'info',
     async () => {
       try {
-        const backupData: BackupData = {
-          appName: AppName,
-          databaseVersion: AppDatabaseVersion,
-          createdTimestamp: Date.now(),
-          Settings: await DB.getSettings(),
-          Logs: await DB.getLogs(),
-          Examples: (await DB.getAll<Example>(DBTable.EXAMPLES)).map((record) => {
-            delete record.previous
-            return record
-          }),
-          ExampleResults: await DB.getAll<ExampleResult>(DBTable.EXAMPLE_RESULTS),
-          Tests: (await DB.getAll<Test>(DBTable.TESTS)).map((record) => {
-            delete record.previous
-            return record
-          }),
-          TestResults: await DB.getAll<TestResult>(DBTable.TEST_RESULTS),
-        }
+        const backupData = await DB.getBackupData()
 
         log.silentDebug('backupData:', backupData)
 

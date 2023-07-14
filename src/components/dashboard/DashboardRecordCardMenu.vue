@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@/types/general'
-import type { DBTable, ParentTable } from '@/types/database'
-import type { Example } from '@/models/Example'
-import type { Test } from '@/models/Test'
+import type { AnyDBRecord, DBTable, ParentTable } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import useRouting from '@/composables/useRouting'
@@ -11,7 +9,7 @@ import DB from '@/services/Database'
 
 const props = defineProps<{
   parentTable: ParentTable
-  record: Example | Test
+  record: AnyDBRecord
 }>()
 
 const uiStore = useUIStore()
@@ -42,22 +40,14 @@ async function onInspect(id: string) {
   const record = await DB.getRecord(props.parentTable, id)
 
   if (record) {
-    inspectDialog(
-      record,
-      DB.getLabel(props.parentTable, 'singular'),
-      DB.getFieldComponents(props.parentTable)
-    )
+    inspectDialog(record, props.parentTable)
   } else {
     log.error('Failed to find record', { id })
   }
 }
 
-async function onCharts(id: string) {
-  chartsDialog(
-    id,
-    DB.getLabel(props.parentTable, 'singular'),
-    DB.getChartComponents(props.parentTable)
-  )
+async function onCharts(parentTable: ParentTable, id: string) {
+  chartsDialog(id, parentTable)
 }
 
 function onDeactivate(table: DBTable, id: string) {
@@ -111,7 +101,7 @@ function onDeactivate(table: DBTable, id: string) {
     <QBtn round flat :icon="Icon.MENU_VERTICAL">
       <QMenu auto-close anchor="top right" transition-show="flip-right" transition-hide="flip-left">
         <QList>
-          <QItem clickable @click="onCharts(record.id)">
+          <QItem clickable @click="onCharts(parentTable, record.id)">
             <QItemSection avatar>
               <QIcon color="accent" :name="Icon.CHARTS" />
             </QItemSection>

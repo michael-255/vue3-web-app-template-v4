@@ -55,14 +55,14 @@ async function onInspect(table: DBTable, id: string) {
   const record = await DB.getRecord(table, id)
 
   if (record) {
-    inspectDialog(record, DB.getLabel(table, 'singular'), DB.getFieldComponents(table))
+    inspectDialog(record, table)
   } else {
     log.error('Failed to find record', { table, id })
   }
 }
 
 async function onCharts(parentTable: ParentTable, id: string) {
-  chartsDialog(id, DB.getLabel(parentTable, 'singular'), DB.getChartComponents(parentTable))
+  chartsDialog(id, parentTable)
 }
 </script>
 

@@ -18,24 +18,27 @@ export const parentSchema = entitySchema.extend({
   [DBField.PREVIOUS]: previousSchema,
 })
 
-export class Parent extends Entity {
-  [DBField.NAME]: string;
-  [DBField.DESC]: string;
-  [DBField.ENABLED]: boolean;
-  [DBField.FAVORITED]: boolean;
-  [DBField.PREVIOUS]: Previous
+const parentOptionalSchema = parentSchema.deepPartial()
+type ParentParams = z.infer<typeof parentOptionalSchema>
 
-  constructor(
-    id: string,
-    createdTimestamp: number,
-    active: boolean,
-    name: string,
-    desc: string,
-    enabled: boolean,
-    favorited: boolean,
-    previous: Previous
-  ) {
-    super(id, createdTimestamp, active)
+export class Parent extends Entity {
+  [DBField.NAME]?: string;
+  [DBField.DESC]?: string;
+  [DBField.ENABLED]?: boolean;
+  [DBField.FAVORITED]?: boolean;
+  [DBField.PREVIOUS]?: Previous
+
+  constructor({
+    id,
+    createdTimestamp,
+    activated,
+    name,
+    desc,
+    enabled,
+    favorited,
+    previous,
+  }: ParentParams) {
+    super({ id, createdTimestamp, activated })
     this.name = name
     this.desc = desc
     this.enabled = enabled

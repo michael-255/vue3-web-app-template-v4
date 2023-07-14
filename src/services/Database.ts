@@ -1,5 +1,5 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
-import { Dark } from 'quasar'
+import { Dark, uid } from 'quasar'
 import { Duration } from '@/types/general'
 import { AppDatabaseVersion, AppName } from '@/constants/global'
 import {
@@ -10,6 +10,7 @@ import {
   DBField,
   InternalTable,
   InternalField,
+  type BackupData,
 } from '@/types/database'
 import { Setting, SettingKey, settingSchema, type SettingValue } from '@/models/Setting'
 import { Log, LogLevel, logSchema, type LogDetails } from '@/models/Log'
@@ -19,6 +20,7 @@ import { Test, testSchema } from '@/models/Test'
 import { TestResult, testResultSchema } from '@/models/TestResults'
 import type { z } from 'zod'
 import type { Previous } from '@/models/_Parent'
+import { truncateString } from '@/utils/common'
 
 class Database extends Dexie {
   // Required for easier TypeScript usage
@@ -92,11 +94,11 @@ class Database extends Dexie {
     }[table]
   }
 
-  getChartComponents(table: ParentTable) {
+  getChartComponents(parentTable: ParentTable) {
     return {
       [DBTable.EXAMPLES]: Example.getChartComponents(),
       [DBTable.TESTS]: Test.getChartComponents(),
-    }[table]
+    }[parentTable]
   }
 
   getTableColumns(table: DBTable) {
@@ -105,6 +107,47 @@ class Database extends Dexie {
       [DBTable.EXAMPLE_RESULTS]: ExampleResult.getTableColumns(),
       [DBTable.TESTS]: Test.getTableColumns(),
       [DBTable.TEST_RESULTS]: TestResult.getTableColumns(),
+    }[table]
+  }
+
+  getDefaultActionRecord(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: new Example({
+        id: uid(),
+        createdTimestamp: Date.now(),
+        activated: false,
+        name: '',
+        desc: '',
+        enabled: true,
+        favorited: false,
+        previous: undefined,
+        testIds: [],
+      }),
+      [DBTable.EXAMPLE_RESULTS]: new ExampleResult({
+        id: uid(),
+        createdTimestamp: Date.now(),
+        activated: false,
+        parentId: undefined,
+        note: '',
+        percent: undefined,
+      }),
+      [DBTable.TESTS]: new Test({
+        id: uid(),
+        createdTimestamp: Date.now(),
+        activated: false,
+        name: '',
+        desc: '',
+        enabled: true,
+        favorited: false,
+        previous: undefined,
+      }),
+      [DBTable.TEST_RESULTS]: new TestResult({
+        id: uid(),
+        createdTimestamp: Date.now(),
+        activated: false,
+        parentId: undefined,
+        note: '',
+      }),
     }[table]
   }
 
@@ -288,21 +331,18 @@ class Database extends Dexie {
     return await this.table(table).get(id)
   }
 
-  private async _getParents<T extends AnyDBRecord>(parentTable: ParentTable): Promise<T[]> {
-    return await this.table(parentTable).orderBy(DBField.NAME).toArray()
+  async getAll<T extends AnyDBRecord>(table: DBTable): Promise<T[]> {
+    return await this.table(table).toArray()
   }
 
-  private async _getChildren<T extends AnyDBRecord>(childTable: ChildTable): Promise<T[]> {
-    return await this.table(childTable).orderBy(DBField.CREATED_TIMESTAMP).reverse().toArray()
-  }
-
-  async getAll<T extends AnyDBRecord>(table: DBTable) {
-    return await {
-      [DBTable.EXAMPLES]: async () => this._getParents<T>(DBTable.EXAMPLES),
-      [DBTable.EXAMPLE_RESULTS]: async () => this._getChildren<T>(DBTable.EXAMPLE_RESULTS),
-      [DBTable.TESTS]: async () => this._getParents<T>(DBTable.TESTS),
-      [DBTable.TEST_RESULTS]: async () => this._getChildren<T>(DBTable.TEST_RESULTS),
-    }[table]()
+  async getSortedChildren<T extends AnyDBRecord>(
+    childTable: ChildTable,
+    parentId: string
+  ): Promise<T[]> {
+    return await this.table(childTable)
+      .where(DBField.PARENT_ID)
+      .equals(parentId)
+      .sortBy(DBField.CREATED_TIMESTAMP)
   }
 
   private async _getLastParentChild<T extends AnyDBRecord>(
@@ -323,6 +363,46 @@ class Database extends Dexie {
         this._getLastParentChild<ExampleResult>(DBTable.EXAMPLE_RESULTS, id),
       [DBTable.TESTS]: async () => this._getLastParentChild<TestResult>(DBTable.TEST_RESULTS, id),
     }[parentTable]()
+  }
+
+  async getBackupData() {
+    const backupData: BackupData = {
+      appName: AppName,
+      databaseVersion: AppDatabaseVersion,
+      createdTimestamp: Date.now(),
+      Settings: await this.Settings.toArray(),
+      Logs: await this.Logs.toArray(),
+      Examples: (await this.Examples.toArray()).map((record) => {
+        delete record.previous
+        return record
+      }),
+      ExampleResults: await this.ExampleResults.toArray(),
+      Tests: (await this.Tests.toArray()).map((record) => {
+        delete record.previous
+        return record
+      }),
+      TestResults: await this.TestResults.toArray(),
+    }
+
+    return backupData
+  }
+
+  async getParentIdOptions(parentTable: ParentTable): Promise<{ value: string; label: string }[]> {
+    const records = await this.table(parentTable).orderBy(DBField.NAME).toArray()
+
+    return records.map((r: AnyDBRecord) => ({
+      value: r.id as string,
+      label: `${r.name} (${truncateString(r.id, 8, '*')})`,
+    }))
+  }
+
+  async getTestIdsOptions(): Promise<{ value: string; label: string }[]> {
+    const tests = await this.Tests.orderBy(DBField.NAME).toArray()
+
+    return tests.map((r: Test) => ({
+      value: r.id as string,
+      label: `${r.name} (${truncateString(r.id, 8, '*')})`,
+    }))
   }
 
   /////////////////////////////////////////////////////////////////////////////

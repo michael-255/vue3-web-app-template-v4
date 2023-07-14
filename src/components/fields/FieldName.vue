@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { Limit } from '@/types/general'
 import { nameSchema } from '@/models/_Parent'
 import useActionStore from '@/stores/action'
@@ -9,10 +8,6 @@ defineProps<{
 }>()
 
 const actionStore = useActionStore()
-
-onMounted(() => {
-  actionStore.record.name = actionStore.record.name ?? ''
-})
 
 function inspectFormat(val: string) {
   return `${val || '-'}`

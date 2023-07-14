@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { Icon, Limit } from '@/types/general'
 import { textAreaSchema } from '@/models/_Parent'
 import useActionStore from '@/stores/action'
@@ -9,10 +8,6 @@ defineProps<{
 }>()
 
 const actionStore = useActionStore()
-
-onMounted(() => {
-  actionStore.record.note = actionStore.record.note ?? ''
-})
 
 function inspectFormat(val: string) {
   return `${val || '-'}`

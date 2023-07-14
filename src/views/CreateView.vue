@@ -25,9 +25,12 @@ const isFormValid = ref(true)
 
 onMounted(async () => {
   try {
-    // When attaching a child record from the Dashboard
+    // Load default record
+    actionStore.record = DB.getDefaultActionRecord(routeTable as DBTable)
+
+    // Parent id is provided when attaching a child record from the Dashboard
     if (routeParentId) {
-      actionStore.record.parentId = routeParentId // Selects this core record if able
+      actionStore.record.parentId = routeParentId
     }
   } catch (error) {
     log.error('Error loading create view', error)

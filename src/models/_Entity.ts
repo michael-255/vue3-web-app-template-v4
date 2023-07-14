@@ -13,12 +13,15 @@ export const entitySchema = z.object({
   [DBField.ACTIVATED]: booleanSchema,
 })
 
-export class Entity {
-  [DBField.ID]: string;
-  [DBField.CREATED_TIMESTAMP]: number;
-  [DBField.ACTIVATED]: boolean
+const entityOptionalSchema = entitySchema.deepPartial()
+type EntityParams = z.infer<typeof entityOptionalSchema>
 
-  constructor(id: string, createdTimestamp: number, activated: boolean) {
+export class Entity {
+  [DBField.ID]?: string;
+  [DBField.CREATED_TIMESTAMP]?: number;
+  [DBField.ACTIVATED]?: boolean
+
+  constructor({ id, createdTimestamp, activated }: EntityParams) {
     this.id = id
     this.createdTimestamp = createdTimestamp
     this.activated = activated

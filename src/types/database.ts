@@ -61,13 +61,13 @@ export enum DBField {
   // Example Parent
   TEST_IDS = 'testIds',
 
-  // Example Child
+  // Example Child Data
   PERCENT = 'percent',
 
   // Test Parent
   // ...
 
-  // Test Child
+  // Test Child Data
   // ...
 }
 

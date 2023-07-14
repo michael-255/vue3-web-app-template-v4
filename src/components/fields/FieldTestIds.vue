@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
-import { truncateString } from '@/utils/common'
-import { idsSchema, type Test } from '@/models/Test'
-import { DBTable } from '@/types/database'
+import { idsSchema } from '@/models/Test'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
 import DB from '@/services/Database'
@@ -18,14 +16,7 @@ const options: Ref<{ value: string; label: string }[]> = ref([])
 
 onMounted(async () => {
   try {
-    // TODO - default action store value???
-
-    const testRecords = await DB.getAll<Test>(DBTable.TESTS)
-
-    options.value = testRecords.map((r: Test) => ({
-      value: r.id,
-      label: `${r.name} (${truncateString(r.id, 8, '*')})`,
-    }))
+    options.value = await DB.getTestIdsOptions()
   } catch (error) {
     log.error('Error with test ids field', error)
   }

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import useActionStore from '@/stores/action'
 
 defineProps<{
@@ -7,10 +6,6 @@ defineProps<{
 }>()
 
 const actionStore = useActionStore()
-
-onMounted(() => {
-  actionStore.record.favorited = actionStore.record.favorited ?? false
-})
 
 function inspectFormat(val: boolean) {
   return val ? 'Yes' : 'No'

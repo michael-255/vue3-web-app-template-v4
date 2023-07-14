@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar'
 import { Icon } from '@/types/general'
-import { defineAsyncComponent, onUnmounted } from 'vue'
-import type { AnyDBRecord, DBField, InternalField } from '@/types/database'
+import { onUnmounted } from 'vue'
+import type { AnyDBRecord, DBField, DBTable, InternalField } from '@/types/database'
 import useActionStore from '@/stores/action'
+import DB from '@/services/Database'
 
 const props = defineProps<{
   record: AnyDBRecord
-  title: string
-  fieldComponents: ReturnType<typeof defineAsyncComponent>[]
+  table: DBTable
 }>()
 
 defineEmits([...useDialogPluginComponent.emits])
 
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
 const actionStore = useActionStore()
+
+const fieldComponents = DB.getFieldComponents(props.table)
+const title = DB.getLabel(props.table, 'singular')
 
 // Setup action store record with all the record values
 Object.keys(props.record).map((key) => {

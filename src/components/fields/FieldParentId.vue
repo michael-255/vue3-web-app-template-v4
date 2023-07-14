@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
-import { truncateString } from '@/utils/common'
 import { Icon, RouteName } from '@/types/general'
-import { DBTable } from '@/types/database'
-import type { Example } from '@/models/Example'
-import type { Test } from '@/models/Test'
 import { idSchema } from '@/models/_Entity'
 import useLogger from '@/composables/useLogger'
 import useActionStore from '@/stores/action'
@@ -23,19 +19,10 @@ const options: Ref<{ value: string; label: string }[]> = ref([])
 
 onMounted(async () => {
   try {
-    // TODO - default action store value???
     if (routeTable) {
-      const parentRecords = {
-        [DBTable.EXAMPLES]: await DB.getAll<Example>(DBTable.EXAMPLES),
-        [DBTable.EXAMPLE_RESULTS]: await DB.getAll<Example>(DBTable.EXAMPLES),
-        [DBTable.TESTS]: await DB.getAll<Test>(DBTable.TESTS),
-        [DBTable.TEST_RESULTS]: await DB.getAll<Test>(DBTable.TESTS),
-      }[routeTable]
+      const parentTable = DB.getParentTable(routeTable)
 
-      options.value = parentRecords.map((r: Example | Test) => ({
-        value: r.id,
-        label: `${r.name} (${truncateString(r.id, 8, '*')})`,
-      }))
+      options.value = await DB.getParentIdOptions(parentTable)
 
       const parentIdMatch = options.value.some((i) => i.value === actionStore.record.parentId)
 

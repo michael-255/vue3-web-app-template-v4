@@ -3,24 +3,22 @@ import { Entity, entitySchema, idSchema } from '@/models/_Entity'
 import { textAreaSchema } from '@/models/_Parent'
 import type { QTableColumn } from 'quasar'
 import { truncateString } from '@/utils/common'
+import type { z } from 'zod'
 
 export const childSchema = entitySchema.extend({
   [DBField.PARENT_ID]: idSchema,
   [DBField.NOTE]: textAreaSchema,
 })
 
-export class Child extends Entity {
-  [DBField.PARENT_ID]: string;
-  [DBField.NOTE]: string
+const childOptionalSchema = childSchema.deepPartial()
+type ChildParams = z.infer<typeof childOptionalSchema>
 
-  constructor(
-    id: string,
-    createdTimestamp: number,
-    active: boolean,
-    parentId: string,
-    note: string
-  ) {
-    super(id, createdTimestamp, active)
+export class Child extends Entity {
+  [DBField.PARENT_ID]?: string;
+  [DBField.NOTE]?: string
+
+  constructor({ id, createdTimestamp, activated, parentId, note }: ChildParams) {
+    super({ id, createdTimestamp, activated })
     this.parentId = parentId
     this.note = note
   }

@@ -1,12 +1,15 @@
 import { z } from 'zod'
 import { idSchema } from '@/models/_Entity'
-import { Parent, parentSchema, type Previous } from '@/models/_Parent'
+import { Parent, parentSchema } from '@/models/_Parent'
 import type { QTableColumn } from 'quasar'
 import { defineAsyncComponent } from 'vue'
 
 export const idsSchema = z.array(idSchema)
 
 export const testSchema = parentSchema.extend({})
+
+const testOptionalSchema = testSchema.deepPartial()
+type TestParams = z.infer<typeof testOptionalSchema>
 
 export class Test extends Parent {
   constructor({
@@ -18,17 +21,8 @@ export class Test extends Parent {
     enabled,
     favorited,
     previous,
-  }: {
-    id: string
-    createdTimestamp: number
-    activated: boolean
-    name: string
-    desc: string
-    enabled: boolean
-    favorited: boolean
-    previous: Previous
-  }) {
-    super(id, createdTimestamp, activated, name, desc, enabled, favorited, previous)
+  }: TestParams) {
+    super({ id, createdTimestamp, activated, name, desc, enabled, favorited, previous })
   }
 
   static getLabel(style: 'singular' | 'plural') {

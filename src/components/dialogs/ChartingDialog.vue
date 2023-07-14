@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 import { Duration, Icon } from '@/types/general'
+import type { ParentTable } from '@/types/database'
+import ErrorStates from '@/components/ErrorStates.vue'
 import useUIStore from '@/stores/ui'
-defineProps<{
+import DB from '@/services/Database'
+
+const props = defineProps<{
   id: string
-  title: string
-  chartComponents: ReturnType<typeof defineAsyncComponent>[]
+  parentTable: ParentTable
 }>()
 
 defineEmits([...useDialogPluginComponent.emits])
@@ -23,6 +26,8 @@ const options: Ref<string[]> = ref([
   Duration[Duration['One Year']],
   Duration[Duration['All Time']],
 ])
+const chartComponents = DB.getChartComponents(props.parentTable)
+const title = DB.getLabel(props.parentTable, 'singular')
 
 function chartTimeRule(time: string) {
   return time !== undefined && time !== null && time !== ''
@@ -65,7 +70,7 @@ function chartTimeRule(time: string) {
         />
 
         <div v-for="(chart, i) in chartComponents" :key="i" class="q-mb-md">
-          <component :is="chart" :id="id" />
+          <component :is="chart" :id="id" :parentTable="parentTable" />
         </div>
       </QCardSection>
 

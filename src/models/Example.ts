@@ -1,7 +1,7 @@
 import { DBField } from '@/types/database'
 import { z } from 'zod'
 import { idSchema } from '@/models/_Entity'
-import { Parent, parentSchema, type Previous } from '@/models/_Parent'
+import { Parent, parentSchema } from '@/models/_Parent'
 import type { QTableColumn } from 'quasar'
 import { defineAsyncComponent } from 'vue'
 
@@ -11,8 +11,11 @@ export const exampleSchema = parentSchema.extend({
   [DBField.TEST_IDS]: idsSchema,
 })
 
+const exampleOptionalSchema = exampleSchema.deepPartial()
+type ExampleParams = z.infer<typeof exampleOptionalSchema>
+
 export class Example extends Parent {
-  [DBField.TEST_IDS]: string[]
+  [DBField.TEST_IDS]?: string[]
 
   constructor({
     id,
@@ -24,18 +27,8 @@ export class Example extends Parent {
     favorited,
     previous,
     testIds,
-  }: {
-    id: string
-    createdTimestamp: number
-    activated: boolean
-    name: string
-    desc: string
-    enabled: boolean
-    favorited: boolean
-    previous: Previous
-    testIds: string[]
-  }) {
-    super(id, createdTimestamp, activated, name, desc, enabled, favorited, previous)
+  }: ExampleParams) {
+    super({ id, createdTimestamp, activated, name, desc, enabled, favorited, previous })
     this.testIds = testIds
   }
 
@@ -57,7 +50,7 @@ export class Example extends Parent {
   }
 
   static getChartComponents(): ReturnType<typeof defineAsyncComponent>[] {
-    return []
+    return [defineAsyncComponent(() => import('@/components/charts/ChartPercent.vue'))]
   }
 
   static getTableColumns(): QTableColumn[] {

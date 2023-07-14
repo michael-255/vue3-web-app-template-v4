@@ -12,25 +12,14 @@ export const exampleResultSchema = childSchema.extend({
   [DBField.PERCENT]: percentSchema,
 })
 
-export class ExampleResult extends Child {
-  [DBField.PERCENT]: number
+const exampleResultOptionalSchema = exampleResultSchema.deepPartial()
+type ExampleResultParams = z.infer<typeof exampleResultOptionalSchema>
 
-  constructor({
-    id,
-    createdTimestamp,
-    activated,
-    parentId,
-    note,
-    percent,
-  }: {
-    id: string
-    createdTimestamp: number
-    activated: boolean
-    parentId: string
-    note: string
-    percent: number
-  }) {
-    super(id, createdTimestamp, activated, parentId, note)
+export class ExampleResult extends Child {
+  [DBField.PERCENT]?: number
+
+  constructor({ id, createdTimestamp, activated, parentId, note, percent }: ExampleResultParams) {
+    super({ id, createdTimestamp, activated, parentId, note })
     this.percent = percent
   }
 
@@ -47,10 +36,6 @@ export class ExampleResult extends Child {
       defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldActivated.vue')),
     ]
-  }
-
-  static getChartComponents(): ReturnType<typeof defineAsyncComponent>[] {
-    return []
   }
 
   static getTableColumns(): QTableColumn[] {
