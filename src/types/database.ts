@@ -76,7 +76,7 @@ export type AnyDBRecord = { [key in DBField | InternalField]?: any }
 export type BackupData = {
   appName: string
   databaseVersion: number
-  createdTimestamp: number
+  [DBField.CREATED_TIMESTAMP]: number
   [InternalTable.SETTINGS]: Setting[]
   [InternalTable.LOGS]: Log[]
   [DBTable.EXAMPLES]: Example[]
