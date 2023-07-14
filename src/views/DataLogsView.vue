@@ -5,38 +5,32 @@ import { Icon } from '@/types/general'
 import { useMeta } from 'quasar'
 import { AppName } from '@/constants/global'
 import { getRecordsCountDisplay } from '@/utils/common'
-import { hiddenColumnNames, logColumns } from '@/services/table-columns'
-import { allFields, type AnyDatabaseRecord, type AnyField, type Log } from '@/types/core'
+import { Log } from '@/models/Log'
+import type { InternalField } from '@/types/database'
 import useLogger from '@/composables/useLogger'
-import useRoutables from '@/composables/useRoutables'
+import useRouting from '@/composables/useRouting'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/Database'
-import DataSchema from '@/services/DataSchema'
 
-useMeta({ title: `${AppName} - Logs Data` })
+useMeta({ title: `${AppName} - Logs Data Table` })
 
 const { log } = useLogger()
-const { goBack } = useRoutables()
+const { goBack } = useRouting()
 const { inspectDialog } = useDialogs()
 
 const searchFilter: Ref<string> = ref('')
 const rows: Ref<Log[]> = ref([])
-const visibleColumns: Ref<AnyField[]> = ref([
-  allFields.Values.timestamp,
-  allFields.Values.logLevel,
-  allFields.Values.logLabel,
-])
-const columns: Ref<QTableColumn[]> = ref(logColumns)
+const columns: Ref<QTableColumn[]> = ref(Log.getTableColumns())
 const columnOptions: Ref<QTableColumn[]> = ref(
   columns.value.filter((col: QTableColumn) => !col.required)
 )
+const visibleColumns: Ref<InternalField[]> = ref(
+  columnOptions.value.map((col) => col.name) as InternalField[]
+)
+
 const subscription = DB.liveLogs().subscribe({
-  next: (records) => {
-    rows.value = records
-  },
-  error: (error) => {
-    log.error('Error fetching live Logs', error)
-  },
+  next: (records) => (rows.value = records),
+  error: (error) => log.error('Error fetching live Logs', error),
 })
 
 onUnmounted(() => {
@@ -44,9 +38,13 @@ onUnmounted(() => {
 })
 
 async function onInspect(autoId: number) {
-  const record = (await DB.getLog(Number(autoId))) as AnyDatabaseRecord
-  const fields = DataSchema.getLogFields()
-  inspectDialog('Log', record, fields)
+  const record = await DB.getLog(Number(autoId))
+
+  if (record) {
+    inspectDialog(record, Log.getLabel('singular'), Log.getFieldComponents())
+  } else {
+    log.error('Failed to find Log', { autoId })
+  }
 }
 </script>
 
@@ -61,13 +59,11 @@ async function onInspect(autoId: number) {
     fullscreen
     row-key="id"
   >
-    <!-- Column Headers -->
     <template v-slot:header="props">
       <QTr :props="props">
-        <!-- Do not show hidden columns -->
         <QTh
           v-for="col in props.cols"
-          v-show="!hiddenColumnNames.includes(col.name)"
+          v-show="col.name !== 'hiddenAutoId'"
           :key="col.name"
           :props="props"
         >
@@ -77,14 +73,12 @@ async function onInspect(autoId: number) {
       </QTr>
     </template>
 
-    <!-- Rows -->
     <template v-slot:body="props">
       <QTr :props="props">
         <QTd v-for="col in props.cols" :key="col.name" :props="props">
           {{ col.value }}
         </QTd>
         <QTd auto-width>
-          <!-- INSPECT -->
           <QBtn
             flat
             round
@@ -100,9 +94,8 @@ async function onInspect(autoId: number) {
 
     <template v-slot:top>
       <div class="row justify-start full-width q-mb-md">
-        <!-- Table Title -->
         <div class="col-10 text-h6 text-bold ellipsis">Logs</div>
-        <!-- Go Back Button -->
+
         <QBtn
           round
           flat
@@ -114,7 +107,6 @@ async function onInspect(autoId: number) {
 
       <div class="row justify-start full-width">
         <div class="col-12">
-          <!-- SEARCH -->
           <QInput
             :disable="!rows.length"
             outlined
@@ -125,7 +117,6 @@ async function onInspect(autoId: number) {
             placeholder="Search"
           >
             <template v-slot:before>
-              <!-- COLUMN OPTIONS (Visible Columns) -->
               <QSelect
                 v-model="visibleColumns"
                 :options="columnOptions"

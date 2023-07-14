@@ -1,6 +1,6 @@
 import { useQuasar } from 'quasar'
 import { Icon } from '@/types/general'
-import type { AnyDatabaseRecord, RecordType } from '@/types/core'
+import type { AnyDBRecord, DBTable, ParentTable } from '@/types/database'
 import type { defineAsyncComponent } from 'vue'
 import ConfirmationDialog from '@/components/dialogs/ConfirmationDialog.vue'
 import DismissalDialog from '@/components/dialogs/DismissalDialog.vue'
@@ -47,29 +47,22 @@ export default function useDialogs() {
     })
   }
 
-  function inspectDialog(
-    title: string,
-    record: AnyDatabaseRecord,
-    fields: ReturnType<typeof defineAsyncComponent>[]
-  ) {
+  function inspectDialog(record: AnyDBRecord, table: DBTable) {
     $q.dialog({
       component: InspectionDialog,
       componentProps: {
-        title,
         record,
-        fields,
+        table,
       },
     })
   }
 
-  function chartsDialog(title: string, type: RecordType, id: string) {
+  function chartsDialog(id: string, parentTable: ParentTable) {
     $q.dialog({
       component: ChartingDialog,
       componentProps: {
-        title,
-
-        type,
         id,
+        parentTable,
       },
     })
   }

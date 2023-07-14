@@ -13,17 +13,17 @@ import {
   LineElement,
 } from 'chart.js'
 import { onMounted, ref, type Ref } from 'vue'
-import { idSchema, allFields, recordTypes, type RecordType } from '@/types/core'
 import { Duration } from '@/types/general'
-import ErrorStates from '../ErrorStates.vue'
+import type { AnyDBRecord, ParentTable } from '@/types/database'
+import ErrorStates from '@/components/ErrorStates.vue'
 import useLogger from '@/composables/useLogger'
 import useUIStore from '@/stores/ui'
 import useChartTimeWatcher from '@/composables/useChartTimeWatcher'
 import DB from '@/services/Database'
 
 const props = defineProps<{
-  type: RecordType
   id: string
+  parentTable: ParentTable
 }>()
 
 ChartJS.register(
@@ -47,8 +47,7 @@ const chartLabel = 'Percentages'
 const chartOptions = {
   reactive: true,
   responsive: true,
-  maintainAspectRatio: true,
-  aspectRatio: 1.7,
+  aspectRatio: 1,
   radius: 2,
   plugins: {
     legend: {
@@ -89,8 +88,6 @@ onMounted(async () => {
 
 /**
  * Returns the color for the chart line if the trend is downward.
- * @param ctx
- * @param value
  */
 function downwardTrend(ctx: any, color: any) {
   return ctx.p0.parsed.y > ctx.p1.parsed.y ? color : undefined
@@ -98,53 +95,46 @@ function downwardTrend(ctx: any, color: any) {
 
 async function recalculateChart() {
   try {
-    // Get all records for the current route type and id
-    const isTypeValid = recordTypes.safeParse(props.type).success
-    const isIdValid = idSchema.safeParse(props.id).success
+    const childTable = DB.getChildTable(props.parentTable)
+    const childRecords = await DB.getSortedChildren(childTable, props.id)
 
-    if (isTypeValid && isIdValid) {
-      const chartingRecords = await DB.getCoreSubRecords(props.id)
+    // Continue if there are records
+    if (childRecords.length > 0) {
+      // Filter records to only include those within the chart time
+      const timeRestrictedRecords = childRecords.filter((record: AnyDBRecord) => {
+        const timeDifference = new Date().getTime() - record.createdTimestamp
+        return timeDifference <= Duration[uiStore.chartTime]
+      })
 
-      // Continue if there are records
-      if (chartingRecords.length > 0) {
-        // Filter records to only include those within the chart time
-        const timeRestrictedRecords = chartingRecords.filter((record: any) => {
-          const timeDifference = new Date().getTime() - record[allFields.Values.timestamp]
-          return timeDifference <= Duration[uiStore.chartTime]
-        })
+      recordCount.value = timeRestrictedRecords.length
 
-        recordCount.value = timeRestrictedRecords.length
+      // Create chart label dates from the created timestamps
+      const chartLabels = timeRestrictedRecords.map((record: AnyDBRecord) =>
+        date.formatDate(record.createdTimestamp, 'YYYY MMM D')
+      )
 
-        // Create chart label dates from the created timestamps
-        const chartLabels = timeRestrictedRecords.map((record: any) =>
-          date.formatDate(record[allFields.Values.timestamp], 'YYYY MMM D')
-        )
+      // Create chart data from the number fields
+      const chartDataItems = timeRestrictedRecords.map((record: AnyDBRecord) => record.percent)
 
-        // Create chart data from the number fields
-        const chartDataItems = timeRestrictedRecords.map(
-          (record: any) => record[allFields.Values.percent]
-        )
-
-        // Set chart data with the labels and data
-        chartData.value = {
-          labels: chartLabels,
-          datasets: [
-            {
-              label: '', // Legend label
-              backgroundColor: getPaletteColor('primary'),
-              borderColor: getPaletteColor('primary'),
-              segment: {
-                borderColor: (ctx: any) =>
-                  downwardTrend(ctx, getPaletteColor('accent')) || getPaletteColor('primary'),
-              },
-              data: chartDataItems,
+      // Set chart data with the labels and data
+      chartData.value = {
+        labels: chartLabels,
+        datasets: [
+          {
+            label: '', // Legend label
+            backgroundColor: getPaletteColor('primary'),
+            borderColor: getPaletteColor('primary'),
+            segment: {
+              borderColor: (ctx: any) =>
+                downwardTrend(ctx, getPaletteColor('accent')) || getPaletteColor('primary'),
             },
-          ],
-        }
+            data: chartDataItems,
+          },
+        ],
       }
     }
   } catch (error) {
-    log.error('Error loading numbers chart', error)
+    log.error('Error loading percent chart', error)
   }
 }
 </script>
@@ -154,7 +144,7 @@ async function recalculateChart() {
 
   <!-- Chart -->
   <div v-if="recordCount > 0">
-    <Line :options="chartOptions" :data="chartData" />
+    <Line :options="chartOptions" :data="chartData" style="max-height: 500px" />
 
     <QBadge rounded color="secondary" class="q-py-none">
       <span class="text-caption">{{ recordCount }} in time frame</span>

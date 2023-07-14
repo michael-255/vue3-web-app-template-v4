@@ -2,24 +2,16 @@
 import { exportFile } from 'quasar'
 import { Duration, Icon, Limit } from '@/types/general'
 import { type Ref, ref, onUnmounted } from 'vue'
-import { AppDatabaseVersion, AppName } from '@/constants/global'
+import { AppName } from '@/constants/global'
 import { useMeta } from 'quasar'
-import {
-  type Setting,
-  type BackupData,
-  type SettingKey,
-  type RecordGroup,
-  type RecordType,
-  settingkeys,
-  recordGroups,
-} from '@/types/core'
-import DataSchema from '@/services/DataSchema'
+import { Setting, SettingKey } from '@/models/Setting'
+import { DBTable, type BackupData } from '@/types/database'
 import useLogger from '@/composables/useLogger'
 import useNotifications from '@/composables/useNotifications'
 import useDialogs from '@/composables/useDialogs'
 import useDefaults from '@/composables/useDefaults'
-import useRoutables from '@/composables/useRoutables'
 import ResponsivePage from '@/components/ResponsivePage.vue'
+import useRouting from '@/composables/useRouting'
 import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Settings` })
@@ -28,18 +20,13 @@ const { log } = useLogger()
 const { notify } = useNotifications()
 const { confirmDialog } = useDialogs()
 const { onDefaultExamples, onDefaultTests } = useDefaults()
-const { goToRecordsData, goToLogsData } = useRoutables()
+const { goToLogsData } = useRouting()
 
-const allOptions = DataSchema.getAllOptions()
 const settings: Ref<Setting[]> = ref([])
 const logDurationIndex: Ref<number> = ref(0)
 const importFile: Ref<any> = ref(null)
-const accessOptions = ref(allOptions)
-const accessModel = ref(accessOptions.value[0])
-const deleteOptions = ref(allOptions)
-const deleteModel = ref(deleteOptions.value[0])
 const logDurationKeys = [
-  // Duration[Duration.Now], // For testing log purges
+  // Duration[Duration.Now], // Uncomment to test log purges
   Duration[Duration['One Week']],
   Duration[Duration['One Month']],
   Duration[Duration['Three Months']],
@@ -52,9 +39,8 @@ const subscription = DB.liveSettings().subscribe({
   next: (liveSettings) => {
     settings.value = liveSettings
 
-    const logDuration = liveSettings.find(
-      (s) => s.key === settingkeys.Values['log-retention-duration']
-    )?.value as number
+    const logDuration = liveSettings.find((s) => s.key === SettingKey.LOG_RETENTION_DURATION)
+      ?.value as number
 
     logDurationIndex.value = logDurationKeys.findIndex((i) => i === Duration[logDuration])
   },
@@ -97,18 +83,19 @@ function onImportFile() {
         }
 
         // Import settings first in case errors stop type importing below
-        if (backupData.settings.length > 0) {
+        if (backupData.Settings.length > 0) {
           await Promise.all(
-            backupData.settings
-              .filter((s) => settingkeys.options.includes(s.key))
-              .map(async (s) => await DB.setSetting(s.key, s.value))
+            backupData.Settings.filter((setting) =>
+              Object.values(SettingKey).includes(setting.key)
+            ).map(async (setting) => await DB.setSetting(setting.key, setting.value))
           )
         }
 
         // Logs are never imported
         await Promise.all([
-          DB.importRecords(recordGroups.Values.core, backupData.coreRecords),
-          DB.importRecords(recordGroups.Values.sub, backupData.subRecords),
+          Object.values(DBTable).map(
+            async (table) => await DB.importRecords(table, backupData[table])
+          ),
         ])
 
         importFile.value = null // Clear input
@@ -132,18 +119,7 @@ function onExportRecords() {
     'info',
     async () => {
       try {
-        const backupData: BackupData = {
-          appName: AppName,
-          databaseVersion: AppDatabaseVersion,
-          timestamp: Date.now(),
-          logs: await DB.getLogs(),
-          settings: await DB.getSettings(),
-          coreRecords: (await DB.getAllCoreRecords()).map((p) => {
-            delete p.lastSub
-            return p
-          }),
-          subRecords: await DB.getAllSubRecords(),
-        }
+        const backupData = await DB.getBackupData()
 
         log.silentDebug('backupData:', backupData)
 
@@ -169,7 +145,7 @@ async function onChangeLogRetention(logDurationIndex: number) {
     const logDurationKey = logDurationKeys[logDurationIndex]
     const logDuration = Duration[logDurationKey as keyof typeof Duration]
 
-    await DB.setSetting(settingkeys.Values['log-retention-duration'], logDuration)
+    await DB.setSetting(SettingKey.LOG_RETENTION_DURATION, logDuration)
 
     log.info('Updated log retention duration', {
       logDurationKey,
@@ -210,23 +186,6 @@ async function onDeleteLogs() {
         log.info('Successfully deleted logs data')
       } catch (error) {
         log.error(`Error deleting Logs`, error)
-      }
-    }
-  )
-}
-
-async function onDeleteBy(label: string, optionValue: { group: RecordGroup; type: RecordType }) {
-  confirmDialog(
-    `Delete ${label}`,
-    `Permanetly delete all ${label} from the database?`,
-    Icon.CLEAR,
-    'negative',
-    async () => {
-      try {
-        await DB.clearRecordsByType(optionValue.group, optionValue.type)
-        log.info('Successfully deleted selected data')
-      } catch (error) {
-        log.error(`Error deleting ${label}`, error)
       }
     }
   )
@@ -287,8 +246,8 @@ function getSettingValue(key: SettingKey) {
         </p>
         <QToggle
           label="Show Welcome Overlay"
-          :model-value="getSettingValue(settingkeys.Values['welcome-overlay'])"
-          @update:model-value="DB.setSetting(settingkeys.Values['welcome-overlay'], $event)"
+          :model-value="getSettingValue(SettingKey.WELCOME_OVERLAY)"
+          @update:model-value="DB.setSetting(SettingKey.WELCOME_OVERLAY, $event)"
         />
       </div>
 
@@ -296,8 +255,8 @@ function getSettingValue(key: SettingKey) {
         <p>Show descriptions for records displayed on the Dashboard page.</p>
         <QToggle
           label="Show Dashboard Descriptions"
-          :model-value="getSettingValue(settingkeys.Values['dashboard-descriptions'])"
-          @update:model-value="DB.setSetting(settingkeys.Values['dashboard-descriptions'], $event)"
+          :model-value="getSettingValue(SettingKey.DASHBOARD_DESCRIPTIONS)"
+          @update:model-value="DB.setSetting(SettingKey.DASHBOARD_DESCRIPTIONS, $event)"
         />
       </div>
 
@@ -305,8 +264,8 @@ function getSettingValue(key: SettingKey) {
         <p>Dark mode allows you to switch between a light or dark theme for the app.</p>
         <QToggle
           label="Dark Mode"
-          :model-value="getSettingValue(settingkeys.Values['dark-mode'])"
-          @update:model-value="DB.setSetting(settingkeys.Values['dark-mode'], $event)"
+          :model-value="getSettingValue(SettingKey.DARK_MODE)"
+          @update:model-value="DB.setSetting(SettingKey.DARK_MODE, $event)"
         />
       </div>
     </section>
@@ -318,11 +277,11 @@ function getSettingValue(key: SettingKey) {
         <p>Load default demostration records into the database. This action can be repeated.</p>
 
         <div class="q-mb-md">
-          <QBtn label="Load Examples" color="primary" @click="onDefaultExamples()" />
+          <QBtn label="Examples" color="primary" @click="onDefaultExamples()" />
         </div>
 
         <div>
-          <QBtn label="Load Tests" color="primary" @click="onDefaultTests()" />
+          <QBtn label="Tests" color="primary" @click="onDefaultTests()" />
         </div>
       </div>
     </section>
@@ -367,6 +326,10 @@ function getSettingValue(key: SettingKey) {
         </p>
         <QBtn label="Export" color="primary" @click="onExportRecords()" />
       </div>
+    </section>
+
+    <section class="q-mb-xl">
+      <p class="text-h6">Logging</p>
 
       <div class="q-mb-md">
         <p>View the app logs to troubleshoot issues.</p>
@@ -374,29 +337,19 @@ function getSettingValue(key: SettingKey) {
       </div>
 
       <div class="q-mb-md">
-        <p>Access any app data tables to view your records.</p>
-        <QSelect v-model="accessModel" outlined dense label="Record Type" :options="accessOptions">
-          <template v-slot:before>
-            <QBtn
-              :disable="!accessModel"
-              label="Access Data"
-              color="primary"
-              @click="goToRecordsData(accessModel?.value?.group, accessModel?.value?.type)"
-            />
-          </template>
-        </QSelect>
+        <p>
+          Validate that the logging settings below are working as expected by generating some test
+          logs.
+        </p>
+        <QBtn label="Test Logger" color="primary" @click="onTestLogger()" />
       </div>
-    </section>
-
-    <section class="q-mb-xl">
-      <p class="text-h6">Logging</p>
 
       <div class="q-mb-md">
         <p>Show Console Logs will display all log messages in the browser console.</p>
         <QToggle
           label="Show Console Logs"
-          :model-value="getSettingValue(settingkeys.Values['console-logs'])"
-          @update:model-value="DB.setSetting(settingkeys.Values['console-logs'], $event)"
+          :model-value="getSettingValue(SettingKey.CONSOLE_LOGS)"
+          @update:model-value="DB.setSetting(SettingKey.CONSOLE_LOGS, $event)"
         />
       </div>
 
@@ -404,17 +357,9 @@ function getSettingValue(key: SettingKey) {
         <p>Show Info Messages will display info level notifications.</p>
         <QToggle
           label="Show Info Messages"
-          :model-value="getSettingValue(settingkeys.Values['info-messages'])"
-          @update:model-value="DB.setSetting(settingkeys.Values['info-messages'], $event)"
+          :model-value="getSettingValue(SettingKey.INFO_MESSAGES)"
+          @update:model-value="DB.setSetting(SettingKey.INFO_MESSAGES, $event)"
         />
-      </div>
-
-      <div class="q-mb-md">
-        <p>
-          Validate that your logging settings above are working as expected by using the test action
-          below.
-        </p>
-        <QBtn label="Test Logger" color="primary" @click="onTestLogger()" />
       </div>
 
       <div class="q-mb-md">
@@ -452,21 +397,7 @@ function getSettingValue(key: SettingKey) {
       </div>
 
       <div class="q-mb-md">
-        <p>Select a data type and permanently delete all of its records.</p>
-        <QSelect v-model="deleteModel" outlined dense label="Record Type" :options="deleteOptions">
-          <template v-slot:before>
-            <QBtn
-              :disable="!deleteModel"
-              label="Delete Data"
-              color="negative"
-              @click="onDeleteBy(deleteModel.label, deleteModel.value)"
-            />
-          </template>
-        </QSelect>
-      </div>
-
-      <div class="q-mb-md">
-        <p>Permanently delete all data records from the database.</p>
+        <p>Permanently delete all data from the database.</p>
         <QBtn label="Delete All Data" color="negative" @click="onDeleteAll()" />
       </div>
 

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar'
 import { Icon } from '@/types/general'
-import type { AnyDatabaseRecord, AnyField } from '@/types/core'
-import { defineAsyncComponent, onUnmounted } from 'vue'
+import { onUnmounted } from 'vue'
+import type { AnyDBRecord, DBField, DBTable, InternalField } from '@/types/database'
 import useActionStore from '@/stores/action'
+import DB from '@/services/Database'
 
 const props = defineProps<{
-  title: string
-  record: AnyDatabaseRecord
-  fields: ReturnType<typeof defineAsyncComponent>[]
+  record: AnyDBRecord
+  table: DBTable
 }>()
 
 defineEmits([...useDialogPluginComponent.emits])
@@ -16,9 +16,13 @@ defineEmits([...useDialogPluginComponent.emits])
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
 const actionStore = useActionStore()
 
+const fieldComponents = DB.getFieldComponents(props.table)
+const title = DB.getLabel(props.table, 'singular')
+
 // Setup action store record with all the record values
 Object.keys(props.record).map((key) => {
-  actionStore.record[key as AnyField] = props.record[key as AnyField]
+  // Includes InternalField to support inspecting Logs
+  actionStore.record[key as DBField | InternalField] = props.record[key as DBField | InternalField]
 })
 
 onUnmounted(() => {
@@ -44,7 +48,7 @@ onUnmounted(() => {
       <QCardSection>
         <p class="text-h5">{{ title }}</p>
 
-        <div v-for="(field, i) in fields" :key="i" class="q-mb-md">
+        <div v-for="(field, i) in fieldComponents" :key="i" class="q-mb-md">
           <component :is="field" :inspecting="true" />
         </div>
       </QCardSection>

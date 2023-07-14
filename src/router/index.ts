@@ -1,99 +1,98 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { routeNames } from '@/types/general'
-import { idSchema, recordGroups, recordTypes } from '@/types/core'
+import { RouteName } from '@/types/general'
+import { tableSchema } from '@/types/database'
+import { idSchema } from '@/models/_Entity'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: routeNames.Values.Dashboard,
+      name: RouteName.DASHBOARD,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DashboardView.vue'),
     },
     {
+      path: '/active',
+      name: RouteName.ACTIVE,
+      meta: { layout: 'ActiveLayout' },
+      component: () => import('../views/ActiveView.vue'),
+    },
+    {
       path: '/logs-data',
-      name: routeNames.Values.DataLogs,
+      name: RouteName.DATA_LOGS,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DataLogsView.vue'),
     },
     {
-      path: '/records-data/:group/:type',
-      name: routeNames.Values.DataRecords,
+      path: '/records-data/:table',
+      name: RouteName.DATA_RECORDS,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DataRecordsView.vue'),
       beforeEnter: (to, _, next) => {
-        if (
-          recordGroups.safeParse(to.params.group).success &&
-          recordTypes.safeParse(to.params.type).success
-        ) {
+        if (tableSchema.safeParse(to.params.table).success) {
           next()
         } else {
-          next({ name: routeNames.Values.NotFound })
+          next({ name: RouteName.NOT_FOUND })
         }
       },
     },
     {
-      path: '/create/:group/:type/:coreId?',
-      name: routeNames.Values.Create,
+      path: '/create/:table/:parentId?',
+      name: RouteName.CREATE,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/CreateView.vue'),
       beforeEnter: (to, _, next) => {
-        if (
-          recordGroups.safeParse(to.params.group).success &&
-          recordTypes.safeParse(to.params.type).success
-        ) {
+        if (tableSchema.safeParse(to.params.table).success) {
           next()
         } else {
-          next({ name: routeNames.Values.NotFound })
+          next({ name: RouteName.NOT_FOUND })
         }
       },
     },
     {
-      path: '/edit/:group/:type/:id',
-      name: routeNames.Values.Edit,
+      path: '/edit/:table/:id',
+      name: RouteName.EDIT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/EditView.vue'),
       beforeEnter: (to, _, next) => {
         if (
-          recordGroups.safeParse(to.params.group).success &&
-          recordTypes.safeParse(to.params.type).success &&
+          tableSchema.safeParse(to.params.table).success &&
           idSchema.safeParse(to.params.id).success
         ) {
           next()
         } else {
-          next({ name: routeNames.Values.NotFound })
+          next({ name: RouteName.NOT_FOUND })
         }
       },
     },
-
     {
       path: '/settings',
-      name: routeNames.Values.Settings,
+      name: RouteName.SETTINGS,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/SettingsView.vue'),
     },
     {
       path: '/faq',
-      name: routeNames.Values.FAQ,
+      name: RouteName.FAQ,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/FAQView.vue'),
     },
     {
       path: '/about',
-      name: routeNames.Values.About,
+      name: RouteName.ABOUT,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/AboutView.vue'),
     },
     {
       path: '/donate',
-      name: routeNames.Values.Donate,
+      name: RouteName.DONATE,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/DonateView.vue'),
     },
     {
       path: '/:pathMatch(.*)*', // 404 Not Found
-      name: routeNames.Values.NotFound,
+      name: RouteName.NOT_FOUND,
       meta: { layout: 'MenuLayout' },
       component: () => import('../views/NotFoundView.vue'),
     },

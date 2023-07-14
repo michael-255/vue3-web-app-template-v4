@@ -72,7 +72,7 @@ onMounted(async () => {
   }
 
   try {
-    const logsPurged = await DB.deleteExpiredLogs()
+    const logsPurged = await DB.purgeLogs()
     log.silentDebug('Expired logs purged', { logsPurged })
   } catch (error) {
     log.error('Error purging expired logs', error)

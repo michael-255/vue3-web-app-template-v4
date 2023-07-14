@@ -1,14 +1,13 @@
 import { defineStore } from 'pinia'
 import { Duration } from '@/types/general'
-import DataSchema from '@/services/DataSchema'
-import type { RecordType } from '@/types/core'
+import { DBTable } from '@/types/database'
 
 const useUIStore = defineStore({
   id: 'ui',
 
   state: () => ({
     drawer: false,
-    dashboardSelection: DataSchema.getDashboardOptions()[0].value as RecordType,
+    dashboardSelection: Object.values(DBTable)[0], // First table in the list
     chartTime: Duration[Duration['Three Months']] as keyof typeof Duration,
   }),
 })

@@ -1,14 +1,11 @@
 import { Icon } from '@/types/general'
 import { uid } from 'quasar'
-import {
-  recordGroups,
-  recordTypes,
-  type ExampleCoreRecord,
-  type ExampleSubRecord,
-  type TestCoreRecord,
-  type TestSubRecord,
-} from '@/types/core'
 import { Duration } from '@/types/general'
+import { ExampleResult } from '@/models/ExampleResults'
+import { Example } from '@/models/Example'
+import { DBTable } from '@/types/database'
+import { TestResult } from '@/models/TestResults'
+import { Test } from '@/models/Test'
 import useLogger from '@/composables/useLogger'
 import useDialogs from '@/composables/useDialogs'
 import DB from '@/services/Database'
@@ -72,42 +69,48 @@ export default function useDefaults() {
       'info',
       async () => {
         try {
-          const coreRecords: ExampleCoreRecord[] = []
-          const subRecords: ExampleSubRecord[] = []
+          const examples: Example[] = []
+          const exampleResults: ExampleResult[] = []
 
           const buildRecords = (count: number) => {
-            const coreId = uid()
+            const parentId = uid()
             const name = `Example - ${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
-            coreRecords.push({
-              type: recordTypes.Values.example,
-              id: coreId,
-              timestamp: Date.now(),
+            const example = new Example({
+              id: parentId,
+              createdTimestamp: Date.now(),
               name,
               desc: `${name} description.`,
               enabled: true,
               favorited: randomBoolean(),
-              lastSub: undefined,
+              activated: false,
+              previous: undefined,
               testIds: [uid(), uid(), uid()], // Fake test ids
             })
 
             for (let i = 0; i < count; i++) {
-              subRecords.push({
-                type: recordTypes.Values.example,
-                id: uid(),
-                coreId,
-                timestamp: previousDateMilliseconds() + Duration['One Day'] * i,
-                note: `Example sub-record note ${i}`,
-                percent: randomPercent(),
-              })
+              exampleResults.push(
+                new ExampleResult({
+                  id: uid(),
+                  createdTimestamp: previousDateMilliseconds() + Duration['One Day'] * i,
+                  activated: false,
+                  parentId,
+                  note: `Example sub-record note ${i}`,
+                  percent: randomPercent(),
+                })
+              )
             }
+
+            examples.push(example)
           }
 
           buildRecords(360)
+          buildRecords(2)
+          buildRecords(0)
 
           await Promise.all([
-            DB.importRecords(recordGroups.Values.core, coreRecords),
-            DB.importRecords(recordGroups.Values.sub, subRecords),
+            DB.importRecords(DBTable.EXAMPLES, examples),
+            DB.importRecords(DBTable.EXAMPLE_RESULTS, exampleResults),
           ])
 
           log.info('Default examples loaded')
@@ -126,40 +129,45 @@ export default function useDefaults() {
       'info',
       async () => {
         try {
-          const coreRecords: TestCoreRecord[] = []
-          const subRecords: TestSubRecord[] = []
+          const tests: Test[] = []
+          const testResults: TestResult[] = []
 
           const buildRecords = (count: number) => {
-            const coreId = uid()
+            const parentId = uid()
             const name = `Test - ${randomGreekAlpha()} ${randomEnglishAlpha()}`
 
-            coreRecords.push({
-              type: recordTypes.Values.test,
-              id: coreId,
-              timestamp: Date.now(),
+            const test = new Test({
+              id: parentId,
+              createdTimestamp: Date.now(),
               name,
               desc: `${name} description.`,
               enabled: true,
               favorited: randomBoolean(),
-              lastSub: undefined,
+              activated: false,
+              previous: undefined,
             })
 
             for (let i = 0; i < count; i++) {
-              subRecords.push({
-                type: recordTypes.Values.test,
-                id: uid(),
-                coreId,
-                timestamp: previousDateMilliseconds() + Duration['One Day'] * i,
-                note: `Test sub-record note ${i}`,
-              })
+              testResults.push(
+                new TestResult({
+                  id: uid(),
+                  activated: false,
+                  parentId,
+                  createdTimestamp: previousDateMilliseconds() + Duration['One Day'] * i,
+                  note: `Test sub-record note ${i}`,
+                })
+              )
             }
+
+            tests.push(test)
           }
 
+          buildRecords(1)
           buildRecords(0)
 
           await Promise.all([
-            DB.importRecords(recordGroups.Values.core, coreRecords),
-            DB.importRecords(recordGroups.Values.sub, subRecords),
+            DB.importRecords(DBTable.TESTS, tests),
+            DB.importRecords(DBTable.TEST_RESULTS, testResults),
           ])
 
           log.info('Default tests loaded')

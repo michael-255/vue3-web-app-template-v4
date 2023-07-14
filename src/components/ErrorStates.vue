@@ -26,7 +26,7 @@ defineProps<{
   <!-- No Data -->
   <div v-else-if="error === 'no-data'">
     <div class="row justify-center">
-      <QIcon class="col-12 text-center q-mb-sm" :name="Icon.TABLE" size="80px" color="grey" />
+      <QIcon class="col-12 text-center q-mb-sm" :name="Icon.PARENTS" size="80px" color="grey" />
       <p class="text-body1">No data available</p>
     </div>
   </div>

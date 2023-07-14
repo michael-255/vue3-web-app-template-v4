@@ -2,14 +2,14 @@
 import { ref, type Ref } from 'vue'
 import { useDialogPluginComponent } from 'quasar'
 import { Duration, Icon } from '@/types/general'
-import type { RecordType } from '@/types/core'
+import type { ParentTable } from '@/types/database'
+import ErrorStates from '@/components/ErrorStates.vue'
 import useUIStore from '@/stores/ui'
-import DataSchema from '@/services/DataSchema'
+import DB from '@/services/Database'
 
 const props = defineProps<{
-  title: string
-  type: RecordType
   id: string
+  parentTable: ParentTable
 }>()
 
 defineEmits([...useDialogPluginComponent.emits])
@@ -26,7 +26,8 @@ const options: Ref<string[]> = ref([
   Duration[Duration['One Year']],
   Duration[Duration['All Time']],
 ])
-const charts = DataSchema.getCharts(props.type)
+const chartComponents = DB.getChartComponents(props.parentTable)
+const title = DB.getLabel(props.parentTable, 'singular')
 
 function chartTimeRule(time: string) {
   return time !== undefined && time !== null && time !== ''
@@ -48,7 +49,7 @@ function chartTimeRule(time: string) {
     </QToolbar>
 
     <QCard class="q-dialog-plugin">
-      <QCardSection v-if="charts.length > 0">
+      <QCardSection v-if="chartComponents.length > 0">
         <p class="text-h5">{{ title }}</p>
 
         <p>Select how far back you want the charts to display.</p>
@@ -68,9 +69,8 @@ function chartTimeRule(time: string) {
           @blur="!!inputRef?.value?.validate()"
         />
 
-        <!-- Chart components -->
-        <div v-for="(chart, i) in charts" :key="i" class="q-mb-md">
-          <component :is="chart" :type="type" :id="id" />
+        <div v-for="(chart, i) in chartComponents" :key="i" class="q-mb-md">
+          <component :is="chart" :id="id" :parentTable="parentTable" />
         </div>
       </QCardSection>
 

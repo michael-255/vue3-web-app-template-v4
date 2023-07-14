@@ -1,45 +1,217 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
-import { Dark } from 'quasar'
+import { Dark, uid } from 'quasar'
 import { Duration } from '@/types/general'
 import { AppDatabaseVersion, AppName } from '@/constants/global'
 import {
-  type Log,
-  type Setting,
-  type AnyRecord,
-  type AnyCoreRecord,
-  type AnySubRecord,
-  type LogLevel,
-  type SettingKey,
-  type RecordType,
-  type RecordGroup,
-  allFields,
-  settingkeys,
-  recordTypes,
-  recordGroups,
-} from '@/types/core'
-import DataSchema from '@/services/DataSchema'
+  type ParentTable,
+  type ChildTable,
+  type AnyDBRecord,
+  DBTable,
+  DBField,
+  InternalTable,
+  InternalField,
+  type BackupData,
+} from '@/types/database'
+import { Setting, SettingKey, settingSchema, type SettingValue } from '@/models/Setting'
+import { Log, LogLevel, logSchema, type LogDetails } from '@/models/Log'
+import { Example, exampleSchema } from '@/models/Example'
+import { ExampleResult, exampleResultSchema } from '@/models/ExampleResults'
+import { Test, testSchema } from '@/models/Test'
+import { TestResult, testResultSchema } from '@/models/TestResults'
+import type { z } from 'zod'
+import type { Previous } from '@/models/_Parent'
+import { truncateString } from '@/utils/common'
 
 class Database extends Dexie {
   // Required for easier TypeScript usage
-  Logs!: Table<Log>
-  Settings!: Table<Setting>
-  CoreRecords!: Table<AnyCoreRecord>
-  SubRecords!: Table<AnySubRecord>
+  [InternalTable.SETTINGS]!: Table<Setting>;
+  [InternalTable.LOGS]!: Table<Log>;
+  [DBTable.EXAMPLES]!: Table<Example>;
+  [DBTable.EXAMPLE_RESULTS]!: Table<ExampleResult>;
+  [DBTable.TESTS]!: Table<Test>;
+  [DBTable.TEST_RESULTS]!: Table<TestResult>
 
   constructor(name: string) {
     super(name)
 
     this.version(1).stores({
-      Logs: `++${allFields.Values.autoId}`,
-      Settings: `&${allFields.Values.key}`,
-      CoreRecords: `&${allFields.Values.id}, ${allFields.Values.type}`,
-      SubRecords: `&${allFields.Values.id}, ${allFields.Values.type}, ${allFields.Values.coreId}`,
+      [InternalTable.SETTINGS]: `&${InternalField.KEY}`,
+      [InternalTable.LOGS]: `++${InternalField.AUTO_ID}`,
+      [DBTable.EXAMPLES]: `&${DBField.ID}, ${DBField.NAME}`,
+      [DBTable.EXAMPLE_RESULTS]: `&${DBField.ID}, ${DBField.PARENT_ID}, ${DBField.CREATED_TIMESTAMP}`,
+      [DBTable.TESTS]: `&${DBField.ID}, ${DBField.NAME}`,
+      [DBTable.TEST_RESULTS]: `&${DBField.ID}, ${DBField.PARENT_ID}, ${DBField.CREATED_TIMESTAMP}`,
     })
+
+    // Required
+    this[InternalTable.SETTINGS].mapToClass(Setting)
+    this[InternalTable.LOGS].mapToClass(Log)
+    this[DBTable.EXAMPLES].mapToClass(Example)
+    this[DBTable.EXAMPLE_RESULTS].mapToClass(ExampleResult)
+    this[DBTable.TESTS].mapToClass(Test)
+    this[DBTable.TEST_RESULTS].mapToClass(TestResult)
   }
 
-  //
-  // LOGS
-  //
+  /////////////////////////////////////////////////////////////////////////////
+  //                                                                         //
+  //     Data Properties                                                     //
+  //                                                                         //
+  /////////////////////////////////////////////////////////////////////////////
+
+  getParentTable(table: DBTable): ParentTable {
+    return {
+      [DBTable.EXAMPLES]: DBTable.EXAMPLES as ParentTable,
+      [DBTable.EXAMPLE_RESULTS]: DBTable.EXAMPLES as ParentTable,
+      [DBTable.TESTS]: DBTable.TESTS as ParentTable,
+      [DBTable.TEST_RESULTS]: DBTable.TESTS as ParentTable,
+    }[table]
+  }
+
+  getChildTable(table: DBTable): ChildTable {
+    return {
+      [DBTable.EXAMPLES]: DBTable.EXAMPLE_RESULTS as ChildTable,
+      [DBTable.EXAMPLE_RESULTS]: DBTable.EXAMPLE_RESULTS as ChildTable,
+      [DBTable.TESTS]: DBTable.TEST_RESULTS as ChildTable,
+      [DBTable.TEST_RESULTS]: DBTable.TEST_RESULTS as ChildTable,
+    }[table]
+  }
+
+  getLabel(table: DBTable, style: 'singular' | 'plural') {
+    return {
+      [DBTable.EXAMPLES]: Example.getLabel(style),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getLabel(style),
+      [DBTable.TESTS]: Test.getLabel(style),
+      [DBTable.TEST_RESULTS]: TestResult.getLabel(style),
+    }[table]
+  }
+
+  getFieldComponents(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: Example.getFieldComponents(),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getFieldComponents(),
+      [DBTable.TESTS]: Test.getFieldComponents(),
+      [DBTable.TEST_RESULTS]: TestResult.getFieldComponents(),
+    }[table]
+  }
+
+  getChartComponents(parentTable: ParentTable) {
+    return {
+      [DBTable.EXAMPLES]: Example.getChartComponents(),
+      [DBTable.TESTS]: Test.getChartComponents(),
+    }[parentTable]
+  }
+
+  getTableColumns(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: Example.getTableColumns(),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getTableColumns(),
+      [DBTable.TESTS]: Test.getTableColumns(),
+      [DBTable.TEST_RESULTS]: TestResult.getTableColumns(),
+    }[table]
+  }
+
+  getDefaultActionRecord(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: new Example({
+        id: uid(),
+        createdTimestamp: Date.now(),
+        activated: false,
+        name: '',
+        desc: '',
+        enabled: true,
+        favorited: false,
+        previous: undefined,
+        testIds: [],
+      }),
+      [DBTable.EXAMPLE_RESULTS]: new ExampleResult({
+        id: uid(),
+        createdTimestamp: Date.now(),
+        activated: false,
+        parentId: undefined,
+        note: '',
+        percent: undefined,
+      }),
+      [DBTable.TESTS]: new Test({
+        id: uid(),
+        createdTimestamp: Date.now(),
+        activated: false,
+        name: '',
+        desc: '',
+        enabled: true,
+        favorited: false,
+        previous: undefined,
+      }),
+      [DBTable.TEST_RESULTS]: new TestResult({
+        id: uid(),
+        createdTimestamp: Date.now(),
+        activated: false,
+        parentId: undefined,
+        note: '',
+      }),
+    }[table]
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  //                                                                         //
+  //     Settings (internal)                                                 //
+  //                                                                         //
+  /////////////////////////////////////////////////////////////////////////////
+
+  async getSettings() {
+    return await this.Settings.toArray()
+  }
+
+  async getSetting(key: SettingKey) {
+    return await this.Settings.get(key)
+  }
+
+  async getSettingValue(key: SettingKey) {
+    return (await this.Settings.get(key))?.value
+  }
+
+  async initSettings() {
+    const defaultSettings: Readonly<{
+      [key in SettingKey]: SettingValue
+    }> = {
+      [SettingKey.WELCOME_OVERLAY]: true,
+      [SettingKey.DASHBOARD_DESCRIPTIONS]: true,
+      [SettingKey.DARK_MODE]: true,
+      [SettingKey.CONSOLE_LOGS]: false,
+      [SettingKey.INFO_MESSAGES]: true,
+      [SettingKey.LOG_RETENTION_DURATION]: Duration['Three Months'],
+    }
+
+    const keys = Object.values(SettingKey)
+
+    const settings = await Promise.all(
+      keys.map(async (key) => {
+        const setting = await this.Settings.get(key)
+
+        if (setting) {
+          return setting
+        } else {
+          return { key, value: defaultSettings[key] }
+        }
+      })
+    )
+
+    Dark.set(Boolean(settings.find((s) => s.key === SettingKey.DARK_MODE)?.value))
+
+    await Promise.all(settings.map((s) => this.setSetting(s.key, s.value)))
+  }
+
+  async setSetting(key: SettingKey, value: SettingValue) {
+    if (key === SettingKey.DARK_MODE) {
+      Dark.set(Boolean(value))
+    }
+    return await this.Settings.put(settingSchema.parse({ key, value }))
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  //                                                                         //
+  //     Logs (internal)                                                     //
+  //                                                                         //
+  /////////////////////////////////////////////////////////////////////////////
 
   async getLogs() {
     return await this.Logs.toArray()
@@ -49,32 +221,13 @@ class Database extends Dexie {
     return await this.Logs.get(autoId)
   }
 
-  async addLog(logLevel: LogLevel, logLabel: string, details?: any) {
-    const log: Log = {
-      // Auto Id handled by Dexie
-      timestamp: Date.now(),
-      logLevel,
-      logLabel,
-    }
-
-    // Remaining properties determined by details
-    if (details && typeof details === 'object') {
-      if ('message' in details || 'stack' in details) {
-        // An object with a message or stack property is a JS Error
-        log.errorMessage = details?.message
-        log.stackTrace = details?.stack
-      } else {
-        // Should be safe to store most other objects into the details property
-        // Details only used with non-error logs
-        log.details = details
-      }
-    }
-
-    return await this.Logs.add(log)
+  async addLog(logLevel: LogLevel, logLabel: string, details?: LogDetails) {
+    const log = new Log(logLevel, logLabel, details)
+    return await this.Logs.add(logSchema.parse(log))
   }
 
-  async deleteExpiredLogs() {
-    const logDuration = (await this.Settings.get(settingkeys.Values['log-retention-duration']))
+  async purgeLogs() {
+    const logDuration = (await this.Settings.get(SettingKey.LOG_RETENTION_DURATION))
       ?.value as Duration
 
     if (!logDuration || logDuration === Duration.Forever) {
@@ -90,212 +243,236 @@ class Database extends Dexie {
         const logAge = Date.now() - logTimestamp
         return logAge > logDuration
       })
-      .map((log: Log) => log.autoId as number) // Map remaining Log ids for removal
+      .map((log: Log) => log.autoId) // Map remaining Log ids for removal
 
     await this.Logs.bulkDelete(removableLogs)
 
     return removableLogs.length // Number of logs deleted
   }
 
-  //
-  // SETTINGS
-  //
-
-  async getSettings() {
-    return await this.Settings.toArray()
-  }
-
-  async getSetting(key: SettingKey) {
-    return await this.Settings.get(key)
-  }
-
-  async initSettings() {
-    const defaultSettings: Readonly<{
-      [key in SettingKey]: any
-    }> = {
-      [settingkeys.Values['welcome-overlay']]: true,
-      [settingkeys.Values['dashboard-descriptions']]: true,
-      [settingkeys.Values['dark-mode']]: true,
-      [settingkeys.Values['console-logs']]: false,
-      [settingkeys.Values['info-messages']]: true,
-      [settingkeys.Values['log-retention-duration']]: Duration['Three Months'],
-    }
-
-    const keys = settingkeys.options
-
-    const settings = await Promise.all(
-      keys.map(async (key) => {
-        const setting = await this.Settings.get(key)
-
-        if (setting) {
-          return setting
-        } else {
-          return { key, value: defaultSettings[key] }
-        }
-      })
-    )
-
-    Dark.set(Boolean(settings.find((s) => s.key === settingkeys.Values['dark-mode'])?.value))
-
-    await Promise.all(settings.map((s) => this.setSetting(s.key as SettingKey, s.value)))
-  }
-
-  async setSetting(key: SettingKey, value: any) {
-    if (key === settingkeys.Values['dark-mode']) {
-      Dark.set(Boolean(value))
-    }
-
-    const currentSetting = await this.Settings.get(key)
-
-    if (!currentSetting) {
-      return await this.Settings.add({ key, value })
-    } else {
-      return await this.Settings.update(key, { value })
-    }
-  }
-
-  //
-  // LIVE QUERIES
-  //
-
-  liveLogs() {
-    return liveQuery(() => this.Logs.orderBy(allFields.Values.autoId).reverse().toArray())
-  }
+  /////////////////////////////////////////////////////////////////////////////
+  //                                                                         //
+  //     Live Queries                                                        //
+  //                                                                         //
+  /////////////////////////////////////////////////////////////////////////////
 
   liveSettings() {
-    return liveQuery(() => this.Settings.orderBy(allFields.Values.key).toArray())
+    return liveQuery(() => this.Settings.toArray())
   }
 
-  liveCoreRecords(type: RecordType) {
-    return liveQuery(() =>
-      this.CoreRecords.where(allFields.Values.type).equals(type).sortBy(allFields.Values.name)
-    )
+  liveLogs() {
+    return liveQuery(() => this.Logs.orderBy(InternalField.AUTO_ID).reverse().toArray())
   }
 
-  liveSubRecords(type: RecordType) {
-    return liveQuery(async () =>
-      (
-        await this.SubRecords.where(allFields.Values.type)
-          .equals(type)
-          .sortBy(allFields.Values.timestamp)
-      ).reverse()
-    )
+  private _sortDashboardData<T extends AnyDBRecord>(records: T[]) {
+    const active: T[] = []
+    const favorites: T[] = []
+    const nonFavorites: T[] = []
+
+    records.forEach((i) => {
+      if (i.activated) {
+        active.push(i)
+      } else if (i.favorited === true) {
+        favorites.push(i)
+      } else {
+        nonFavorites.push(i)
+      }
+    })
+
+    return [...active, ...favorites, ...nonFavorites]
   }
 
-  liveDashboard() {
+  liveDashboardData<T extends AnyDBRecord>(parentTable: ParentTable) {
     return liveQuery(async () => {
-      const parents = await this.CoreRecords.filter((p) => p.enabled === true).sortBy(
-        allFields.Values.name
+      return this._sortDashboardData<T>(
+        await this.table(parentTable)
+          .orderBy(DBField.NAME)
+          .filter((i) => i.enabled === true)
+          .toArray()
       )
-
-      const favorites: AnyCoreRecord[] = []
-      const nonFavorites: AnyCoreRecord[] = []
-
-      parents.forEach((p) => {
-        if (p.favorited === true) {
-          favorites.push(p)
-        } else {
-          nonFavorites.push(p)
-        }
-      })
-
-      return recordTypes.options.reduce((acc, type) => {
-        acc[type] = [
-          ...favorites.filter((p) => p.type === type),
-          ...nonFavorites.filter((p) => p.type === type),
-        ]
-        return acc
-      }, {} as { [key in RecordType]: AnyCoreRecord[] })
     })
   }
 
-  //
-  // RECORD GETS
-  //
-
-  async getAllCoreRecords() {
-    return await this.CoreRecords.toArray()
+  private async _getParentDataTable<T extends AnyDBRecord>(parentTable: ParentTable): Promise<T[]> {
+    return await this.table(parentTable)
+      .orderBy(DBField.NAME)
+      .filter((i) => i.activated !== true)
+      .toArray()
   }
 
-  async getAllSubRecords() {
-    return await this.SubRecords.toArray()
+  private async _getChildDataTable<T extends AnyDBRecord>(childTable: ChildTable): Promise<T[]> {
+    return await this.table(childTable)
+      .orderBy(DBField.CREATED_TIMESTAMP)
+      .reverse()
+      .filter((i) => i.activated !== true)
+      .toArray()
   }
 
-  async getRecords(group: RecordGroup, type: RecordType) {
-    if (group === recordGroups.Values.core) {
-      return await this.CoreRecords.where(allFields.Values.type)
-        .equals(type)
-        .sortBy(allFields.Values.name)
-    } else {
-      return (
-        await this.SubRecords.where(allFields.Values.type)
-          .equals(type)
-          .sortBy(allFields.Values.timestamp)
-      ).reverse()
+  liveDataTable(table: DBTable) {
+    return liveQuery(async () => {
+      return {
+        [DBTable.EXAMPLES]: async () => this._getParentDataTable<Example>(DBTable.EXAMPLES),
+        [DBTable.EXAMPLE_RESULTS]: async () =>
+          this._getChildDataTable<ExampleResult>(DBTable.EXAMPLE_RESULTS),
+        [DBTable.TESTS]: async () => this._getParentDataTable<Test>(DBTable.TESTS),
+        [DBTable.TEST_RESULTS]: async () =>
+          this._getChildDataTable<TestResult>(DBTable.TEST_RESULTS),
+      }[table]()
+    })
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  //                                                                         //
+  //     Gets                                                                //
+  //                                                                         //
+  /////////////////////////////////////////////////////////////////////////////
+
+  async getRecord<T extends AnyDBRecord>(table: DBTable, id: string): Promise<T | undefined> {
+    return await this.table(table).get(id)
+  }
+
+  async getAll<T extends AnyDBRecord>(table: DBTable): Promise<T[]> {
+    return await this.table(table).toArray()
+  }
+
+  async getSortedChildren<T extends AnyDBRecord>(
+    childTable: ChildTable,
+    parentId: string
+  ): Promise<T[]> {
+    return await this.table(childTable)
+      .where(DBField.PARENT_ID)
+      .equals(parentId)
+      .sortBy(DBField.CREATED_TIMESTAMP)
+  }
+
+  private async _getLastParentChild<T extends AnyDBRecord>(
+    childTable: ChildTable,
+    id: string
+  ): Promise<T | undefined> {
+    return (
+      await this.table(childTable)
+        .where(DBField.PARENT_ID)
+        .equals(id)
+        .sortBy(DBField.CREATED_TIMESTAMP)
+    ).reverse()[0]
+  }
+
+  async getLastChild(parentTable: ParentTable, id: string) {
+    return await {
+      [DBTable.EXAMPLES]: async () =>
+        this._getLastParentChild<ExampleResult>(DBTable.EXAMPLE_RESULTS, id),
+      [DBTable.TESTS]: async () => this._getLastParentChild<TestResult>(DBTable.TEST_RESULTS, id),
+    }[parentTable]()
+  }
+
+  async getBackupData() {
+    const backupData: BackupData = {
+      appName: AppName,
+      databaseVersion: AppDatabaseVersion,
+      createdTimestamp: Date.now(),
+      Settings: await this.Settings.toArray(),
+      Logs: await this.Logs.toArray(),
+      Examples: (await this.Examples.toArray()).map((record) => {
+        delete record.previous
+        return record
+      }),
+      ExampleResults: await this.ExampleResults.toArray(),
+      Tests: (await this.Tests.toArray()).map((record) => {
+        delete record.previous
+        return record
+      }),
+      TestResults: await this.TestResults.toArray(),
     }
+
+    return backupData
   }
 
-  async getRecord(group: RecordGroup, id: string) {
-    if (group === recordGroups.Values.core) {
-      return await this.CoreRecords.get(id)
-    } else {
-      return await this.SubRecords.get(id)
-    }
+  async getParentIdOptions(parentTable: ParentTable): Promise<{ value: string; label: string }[]> {
+    const records = await this.table(parentTable).orderBy(DBField.NAME).toArray()
+
+    return records.map((r: AnyDBRecord) => ({
+      value: r.id as string,
+      label: `${r.name} (${truncateString(r.id, 8, '*')})`,
+    }))
   }
 
-  async getCoreSubRecords(coreId: string) {
-    return await this.SubRecords.where(allFields.Values.coreId)
-      .equals(coreId)
-      .sortBy(allFields.Values.timestamp)
+  async getTestIdsOptions(): Promise<{ value: string; label: string }[]> {
+    const tests = await this.Tests.orderBy(DBField.NAME).toArray()
+
+    return tests.map((r: Test) => ({
+      value: r.id as string,
+      label: `${r.name} (${truncateString(r.id, 8, '*')})`,
+    }))
   }
 
-  //
-  // RECORD CREATES
-  //
+  /////////////////////////////////////////////////////////////////////////////
+  //                                                                         //
+  //     Creates                                                             //
+  //                                                                         //
+  /////////////////////////////////////////////////////////////////////////////
 
-  async addRecord(group: RecordGroup, type: RecordType, record: AnyRecord) {
-    const schema = DataSchema.getSchema(group, type)
-
-    if (!schema || !schema.safeParse(record).success) {
-      throw new Error(
-        `Invalid schema with parameters: ${group}, ${type}, ${JSON.stringify(record)}`
-      )
-    }
-
-    if (group === recordGroups.Values.core) {
-      const newRecord = schema.parse(record) as AnyCoreRecord
-      const result = await this.CoreRecords.add(newRecord)
-      await this.updateLastSub(newRecord.id)
-      return result
-    } else {
-      const newRecord = schema.parse(record) as AnySubRecord
-      const result = await this.SubRecords.add(newRecord)
-      await this.updateLastSub(newRecord.coreId)
-      return result
-    }
+  private async _addParent(
+    parentTable: ParentTable,
+    record: AnyDBRecord,
+    schema: z.ZodObject<any, any, any> | z.ZodEffects<any, any, any>
+  ) {
+    await this.table(parentTable).add(schema.parse(record))
+    return await this.updatePrevious(parentTable, record.id)
   }
 
-  async importRecords(group: RecordGroup, records: AnyRecord[]) {
-    const validRecords: AnyRecord[] = []
-    const skippedRecords: AnyRecord[] = []
+  private async _addChild(
+    childTable: ChildTable,
+    record: AnyDBRecord,
+    schema: z.ZodObject<any, any, any> | z.ZodEffects<any, any, any>
+  ) {
+    await this.table(childTable).add(schema.parse(record))
+    const parentTable = this.getParentTable(childTable)
+    return await this.updatePrevious(parentTable, record.parentId)
+  }
 
-    for await (const r of records) {
-      const schema = DataSchema.getSchema(group, r.type)
+  async addRecord(table: DBTable, record: AnyDBRecord) {
+    return await {
+      [DBTable.EXAMPLES]: async () => this._addParent(DBTable.EXAMPLES, record, exampleSchema),
+      [DBTable.EXAMPLE_RESULTS]: async () =>
+        this._addChild(DBTable.EXAMPLE_RESULTS, record, exampleResultSchema),
+      [DBTable.TESTS]: async () => this._addParent(DBTable.TESTS, record, testSchema),
+      [DBTable.TEST_RESULTS]: async () =>
+        this._addChild(DBTable.TEST_RESULTS, record, testResultSchema),
+    }[table]()
+  }
 
-      if (schema && schema.safeParse(r).success) {
-        validRecords.push(schema.parse(r) as AnyRecord)
+  private async processImport(
+    table: DBTable,
+    records: AnyDBRecord[],
+    schema: z.ZodObject<any, any, any> | z.ZodEffects<any, any, any>
+  ) {
+    const validRecords: AnyDBRecord[] = []
+    const skippedRecords: AnyDBRecord[] = []
+
+    records.forEach((r) => {
+      if (schema.safeParse(r).success) {
+        validRecords.push(schema.parse(r))
       } else {
         skippedRecords.push(r)
       }
-    }
+    })
 
-    if (group === recordGroups.Values.core) {
-      await this.CoreRecords.bulkAdd(validRecords as AnyCoreRecord[])
-    } else {
-      await this.SubRecords.bulkAdd(validRecords as AnySubRecord[])
-    }
+    await this.table(table).bulkAdd(validRecords)
+    const parentTable = this.getParentTable(table)
+    await this.updateAllPrevious(parentTable)
 
-    await this.updateAllLastSub()
+    return skippedRecords
+  }
+
+  async importRecords(table: DBTable, records: AnyDBRecord[]) {
+    const skippedRecords = await {
+      [DBTable.EXAMPLES]: async () => this.processImport(DBTable.EXAMPLES, records, exampleSchema),
+      [DBTable.EXAMPLE_RESULTS]: async () =>
+        this.processImport(DBTable.EXAMPLE_RESULTS, records, exampleResultSchema),
+      [DBTable.TESTS]: async () => this.processImport(DBTable.TESTS, records, testSchema),
+      [DBTable.TEST_RESULTS]: async () =>
+        this.processImport(DBTable.TEST_RESULTS, records, testResultSchema),
+    }[table]()
 
     if (skippedRecords.length > 0) {
       // Error for the frontend to report if any records were skipped
@@ -307,82 +484,120 @@ class Database extends Dexie {
     }
   }
 
-  //
-  // RECORD UPDATES
-  //
+  /////////////////////////////////////////////////////////////////////////////
+  //                                                                         //
+  //     Updates                                                             //
+  //                                                                         //
+  /////////////////////////////////////////////////////////////////////////////
 
-  async updateRecord(group: RecordGroup, type: RecordType, id: string, updatedRecord: AnyRecord) {
-    const schema = DataSchema.getSchema(group, type)
+  private async _putParent(
+    parentTable: ParentTable,
+    record: AnyDBRecord,
+    schema: z.ZodObject<any, any, any> | z.ZodEffects<any, any, any>
+  ) {
+    await this.table(parentTable).put(schema.parse(record))
+    return await this.updatePrevious(parentTable, record.id)
+  }
 
-    if (!schema || !schema.safeParse(updatedRecord).success) {
-      throw new Error(
-        `Invalid schema with parameters: ${group}, ${type}, ${id}, ${JSON.stringify(updatedRecord)}`
-      )
+  private async _putChild(
+    childTable: ChildTable,
+    record: AnyDBRecord,
+    schema: z.ZodObject<any, any, any> | z.ZodEffects<any, any, any>
+  ) {
+    await this.table(childTable).put(schema.parse(record))
+    const parentTable = this.getParentTable(childTable)
+    return await this.updatePrevious(parentTable, record.parentId)
+  }
+
+  async putRecord(table: DBTable, record: AnyDBRecord) {
+    console.log('putRecord', table, record)
+    return await {
+      [DBTable.EXAMPLES]: async () =>
+        await this._putParent(DBTable.EXAMPLES, record, exampleSchema),
+      [DBTable.EXAMPLE_RESULTS]: async () =>
+        await this._putChild(DBTable.EXAMPLE_RESULTS, record, exampleResultSchema),
+      [DBTable.TESTS]: async () => await this._putParent(DBTable.TESTS, record, testSchema),
+      [DBTable.TEST_RESULTS]: async () =>
+        await this._putChild(DBTable.TEST_RESULTS, record, testResultSchema),
+    }[table]()
+  }
+
+  async updatePrevious(parentTable: ParentTable, id: string) {
+    const childTable = this.getChildTable(parentTable)
+
+    const previousChild = (
+      await this.table(childTable)
+        .where(DBField.PARENT_ID)
+        .equals(id)
+        .sortBy(DBField.CREATED_TIMESTAMP)
+    ).reverse()[0] as AnyDBRecord | undefined
+
+    const previous: Previous = {}
+
+    if (previousChild) {
+      previous.createdTimestamp = previousChild.createdTimestamp
+      previous.note = previousChild.note
     }
 
-    if (group === recordGroups.Values.core) {
-      const result = await this.CoreRecords.update(id, schema.parse(updatedRecord))
-      await this.updateLastSub(id)
-      return result
-    } else {
-      const result = await this.SubRecords.update(id, schema.parse(updatedRecord))
-      await this.updateLastSub(updatedRecord.coreId)
-      return result
+    return await this.table(parentTable).update(id, { previous })
+  }
+
+  async updateAllPrevious(parentTable: ParentTable) {
+    const records = await this.table(parentTable).toArray()
+    return await Promise.all(records.map((i) => this.updatePrevious(parentTable, i.id)))
+  }
+
+  async toggleFavorite(parentTable: ParentTable, id: string) {
+    const record = (await this.getRecord(parentTable, id)) as AnyDBRecord | undefined
+
+    if (record && record.favorited !== undefined) {
+      record.favorited = !record.favorited
+      return await this.putRecord(parentTable, record)
     }
   }
 
-  async updateLastSub(coreId: string) {
-    const lastSub = (
-      await this.SubRecords.where(allFields.Values.coreId)
-        .equals(coreId)
-        .sortBy(allFields.Values.timestamp)
-    ).reverse()[0]
-    return await this.CoreRecords.update(coreId, { lastSub })
+  async toggleActive(table: DBTable, id: string) {
+    const record = (await this.getRecord(table, id)) as AnyDBRecord | undefined
+
+    if (record && record.activated !== undefined) {
+      record.activated = !record.activated
+      return await this.putRecord(table, record)
+    }
   }
 
-  /**
-   * - Call after imports to update the lastSub property of all core records
-   */
-  async updateAllLastSub() {
-    const coreRecords = await this.CoreRecords.toArray()
-    return await Promise.all(coreRecords.map((p) => this.updateLastSub(p.id)))
+  /////////////////////////////////////////////////////////////////////////////
+  //                                                                         //
+  //     Deletes                                                             //
+  //                                                                         //
+  /////////////////////////////////////////////////////////////////////////////
+
+  private async _deleteParent(parentTable: ParentTable, id: string) {
+    await this.table(parentTable).delete(id)
+    const childTable = this.getChildTable(parentTable)
+    return await this.table(childTable).where(DBField.PARENT_ID).equals(id).delete()
   }
 
-  //
-  // RECORD DELETES
-  //
+  private async _deleteChild(childTable: ChildTable, id: string, recordToDelete: AnyDBRecord) {
+    await this.table(childTable).delete(id)
+    const parentTable = this.getParentTable(childTable)
+    return await this.updatePrevious(parentTable, recordToDelete.parentId)
+  }
 
-  async deleteRecord(group: RecordGroup, id: string) {
-    const recordToDelete = (await this.getRecord(group, id)) as AnyRecord | undefined
+  async deleteRecord(table: DBTable, id: string) {
+    const recordToDelete = (await this.getRecord(table, id)) as AnyDBRecord | undefined
 
     if (!recordToDelete) {
-      throw new Error(`No record found to delete with: ${group}, ${id}`)
+      throw new Error(`No record to delete in table ${table} for id ${id}`)
     }
 
-    if (group === recordGroups.Values.core) {
-      await this.CoreRecords.delete(id)
-      await this.SubRecords.where(allFields.Values.coreId).equals(id).delete()
-    } else {
-      await this.SubRecords.delete(id)
-      await this.updateLastSub(recordToDelete.coreId)
-    }
-
-    return recordToDelete
-  }
-
-  async clearRecordsByType(group: RecordGroup, type: RecordType) {
-    if (group === recordGroups.Values.core) {
-      await this.CoreRecords.where(allFields.Values.type).equals(type).delete()
-      return await this.SubRecords.where(allFields.Values.type).equals(type).delete()
-    } else {
-      await this.SubRecords.where(allFields.Values.type).equals(type).delete()
-      const parentsToUpdate = await this.CoreRecords.where(allFields.Values.type)
-        .equals(type)
-        .toArray()
-      return await Promise.all(
-        parentsToUpdate.map((r) => this.CoreRecords.update(r.id, { lastChild: undefined }))
-      )
-    }
+    return await {
+      [DBTable.EXAMPLES]: async () => this._deleteParent(DBTable.EXAMPLES, id),
+      [DBTable.EXAMPLE_RESULTS]: async () =>
+        this._deleteChild(DBTable.EXAMPLE_RESULTS, id, recordToDelete),
+      [DBTable.TESTS]: async () => this._deleteParent(DBTable.TESTS, id),
+      [DBTable.TEST_RESULTS]: async () =>
+        this._deleteChild(DBTable.TEST_RESULTS, id, recordToDelete),
+    }[table]()
   }
 
   async clearLogs() {
@@ -395,14 +610,16 @@ class Database extends Dexie {
   }
 
   async clearAll() {
-    await this.Logs.clear()
-    await this.Settings.clear()
-    await this.CoreRecords.clear()
-    await this.SubRecords.clear()
+    await Promise.all([
+      Object.values(InternalTable).map(async (table) => await this.table(table).clear()),
+      Object.values(DBTable).map(async (table) => await this.table(table).clear()),
+    ])
     return await this.initSettings()
   }
 
-  // Deletes entire database. Require app reload to reinitialize the database.
+  /**
+   * Deletes entire database. Require app reload to reinitialize the database.
+   */
   async deleteDatabase() {
     return await this.delete()
   }
