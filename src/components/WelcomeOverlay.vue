@@ -1,31 +1,20 @@
 <script setup lang="ts">
 import { Icon, RouteName } from '@/types/general'
-import { type Ref, ref, onUnmounted } from 'vue'
+import { type Ref, ref, onMounted } from 'vue'
 import { AppDescription, AppName } from '@/constants/global'
 import { SettingKey } from '@/models/Setting'
-import useLogger from '@/composables/useLogger'
 import DB from '@/services/Database'
-
-const { log } = useLogger()
 
 const exampleFavorite: Ref<number> = ref(0)
 const showWelcome: Ref<any> = ref(false)
 
-const subscription = DB.liveSettings().subscribe({
-  next: (liveSettings) => {
-    showWelcome.value = liveSettings.find((s) => s.key === SettingKey.WELCOME_OVERLAY)?.value
-  },
-  error: (error) => {
-    log.error('Error fetching live Settings', error)
-  },
-})
-
-onUnmounted(() => {
-  subscription.unsubscribe()
+onMounted(async () => {
+  showWelcome.value = Boolean(await DB.getSettingValue(SettingKey.WELCOME_OVERLAY))
 })
 
 async function onCloseWelcomeOverlay() {
   await DB.setSetting(SettingKey.WELCOME_OVERLAY, false)
+  showWelcome.value = false
 }
 </script>
 
@@ -47,7 +36,7 @@ async function onCloseWelcomeOverlay() {
             You are currently on the Dashboard page. This page gives you quick access to the primary
             data you work with in the app. You can favorite items on the Dashboard by clicking the
             star icon in the top right corner of the item. This prioritizes the item to the top of
-            the list. An example of the favorite icon button is below.
+            the list.
           </p>
           <QRating
             v-model="exampleFavorite"
@@ -67,6 +56,16 @@ async function onCloseWelcomeOverlay() {
             for the app are available on the Settings page.
           </p>
           <QBtn disable color="primary" class="q-px-sm" :icon="Icon.MENU" />
+        </div>
+
+        <div class="q-mb-md">
+          <p>
+            You can access the data tables for the current Dashboard selection by clicking the
+            buttons in the top right corner of the page. The left button is for the parent records.
+            The right button is for the child records.
+          </p>
+          <QBtn disable color="info" class="q-px-sm q-mr-sm" :icon="Icon.PARENTS" />
+          <QBtn disable color="info" class="q-px-sm" :icon="Icon.CHILDREN" />
         </div>
 
         <div class="q-mb-md">
