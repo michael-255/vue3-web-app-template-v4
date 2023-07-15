@@ -18,8 +18,8 @@ export const parentSchema = entitySchema.extend({
   [DBField.PREVIOUS]: previousSchema,
 })
 
-const parentOptionalSchema = parentSchema.deepPartial()
-type ParentParams = z.infer<typeof parentOptionalSchema>
+const partialParentSchema = parentSchema.deepPartial()
+type ParentParams = z.infer<typeof partialParentSchema>
 
 export class Parent extends Entity {
   [DBField.NAME]?: string;

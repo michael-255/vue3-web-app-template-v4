@@ -1,19 +1,17 @@
 import { DBField } from '@/types/database'
 import { z } from 'zod'
-import { idSchema } from '@/models/_Entity'
 import { Child, childSchema } from '@/models/_Child'
 import type { QTableColumn } from 'quasar'
 import { defineAsyncComponent } from 'vue'
 
-export const idsSchema = z.array(idSchema)
 export const percentSchema = z.number().min(0).max(100)
 
 export const exampleResultSchema = childSchema.extend({
   [DBField.PERCENT]: percentSchema,
 })
 
-const exampleResultOptionalSchema = exampleResultSchema.deepPartial()
-type ExampleResultParams = z.infer<typeof exampleResultOptionalSchema>
+const partialExampleResultSchema = exampleResultSchema.deepPartial()
+type ExampleResultParams = z.infer<typeof partialExampleResultSchema>
 
 export class ExampleResult extends Child {
   [DBField.PERCENT]?: number

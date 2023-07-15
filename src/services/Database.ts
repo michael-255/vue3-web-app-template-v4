@@ -27,8 +27,8 @@ class Database extends Dexie {
   [InternalTable.SETTINGS]!: Table<Setting>;
   [InternalTable.LOGS]!: Table<Log>;
   [DBTable.EXAMPLES]!: Table<Example>;
-  [DBTable.EXAMPLE_RESULTS]!: Table<ExampleResult>;
   [DBTable.TESTS]!: Table<Test>;
+  [DBTable.EXAMPLE_RESULTS]!: Table<ExampleResult>;
   [DBTable.TEST_RESULTS]!: Table<TestResult>
 
   constructor(name: string) {
@@ -38,8 +38,8 @@ class Database extends Dexie {
       [InternalTable.SETTINGS]: `&${InternalField.KEY}`,
       [InternalTable.LOGS]: `++${InternalField.AUTO_ID}`,
       [DBTable.EXAMPLES]: `&${DBField.ID}, ${DBField.NAME}`,
-      [DBTable.EXAMPLE_RESULTS]: `&${DBField.ID}, ${DBField.PARENT_ID}, ${DBField.CREATED_TIMESTAMP}`,
       [DBTable.TESTS]: `&${DBField.ID}, ${DBField.NAME}`,
+      [DBTable.EXAMPLE_RESULTS]: `&${DBField.ID}, ${DBField.PARENT_ID}, ${DBField.CREATED_TIMESTAMP}`,
       [DBTable.TEST_RESULTS]: `&${DBField.ID}, ${DBField.PARENT_ID}, ${DBField.CREATED_TIMESTAMP}`,
     })
 
@@ -47,8 +47,8 @@ class Database extends Dexie {
     this[InternalTable.SETTINGS].mapToClass(Setting)
     this[InternalTable.LOGS].mapToClass(Log)
     this[DBTable.EXAMPLES].mapToClass(Example)
-    this[DBTable.EXAMPLE_RESULTS].mapToClass(ExampleResult)
     this[DBTable.TESTS].mapToClass(Test)
+    this[DBTable.EXAMPLE_RESULTS].mapToClass(ExampleResult)
     this[DBTable.TEST_RESULTS].mapToClass(TestResult)
   }
 
@@ -61,8 +61,8 @@ class Database extends Dexie {
   getParentTable(table: DBTable): ParentTable {
     return {
       [DBTable.EXAMPLES]: DBTable.EXAMPLES as ParentTable,
-      [DBTable.EXAMPLE_RESULTS]: DBTable.EXAMPLES as ParentTable,
       [DBTable.TESTS]: DBTable.TESTS as ParentTable,
+      [DBTable.EXAMPLE_RESULTS]: DBTable.EXAMPLES as ParentTable,
       [DBTable.TEST_RESULTS]: DBTable.TESTS as ParentTable,
     }[table]
   }
@@ -70,8 +70,8 @@ class Database extends Dexie {
   getChildTable(table: DBTable): ChildTable {
     return {
       [DBTable.EXAMPLES]: DBTable.EXAMPLE_RESULTS as ChildTable,
-      [DBTable.EXAMPLE_RESULTS]: DBTable.EXAMPLE_RESULTS as ChildTable,
       [DBTable.TESTS]: DBTable.TEST_RESULTS as ChildTable,
+      [DBTable.EXAMPLE_RESULTS]: DBTable.EXAMPLE_RESULTS as ChildTable,
       [DBTable.TEST_RESULTS]: DBTable.TEST_RESULTS as ChildTable,
     }[table]
   }
@@ -79,8 +79,8 @@ class Database extends Dexie {
   getLabel(table: DBTable, style: 'singular' | 'plural') {
     return {
       [DBTable.EXAMPLES]: Example.getLabel(style),
-      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getLabel(style),
       [DBTable.TESTS]: Test.getLabel(style),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getLabel(style),
       [DBTable.TEST_RESULTS]: TestResult.getLabel(style),
     }[table]
   }
@@ -88,8 +88,8 @@ class Database extends Dexie {
   getFieldComponents(table: DBTable) {
     return {
       [DBTable.EXAMPLES]: Example.getFieldComponents(),
-      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getFieldComponents(),
       [DBTable.TESTS]: Test.getFieldComponents(),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getFieldComponents(),
       [DBTable.TEST_RESULTS]: TestResult.getFieldComponents(),
     }[table]
   }
@@ -104,8 +104,8 @@ class Database extends Dexie {
   getTableColumns(table: DBTable) {
     return {
       [DBTable.EXAMPLES]: Example.getTableColumns(),
-      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getTableColumns(),
       [DBTable.TESTS]: Test.getTableColumns(),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getTableColumns(),
       [DBTable.TEST_RESULTS]: TestResult.getTableColumns(),
     }[table]
   }
@@ -123,14 +123,6 @@ class Database extends Dexie {
         previous: undefined,
         testIds: [],
       }),
-      [DBTable.EXAMPLE_RESULTS]: new ExampleResult({
-        id: uid(),
-        createdTimestamp: Date.now(),
-        activated: false,
-        parentId: undefined,
-        note: '',
-        percent: undefined,
-      }),
       [DBTable.TESTS]: new Test({
         id: uid(),
         createdTimestamp: Date.now(),
@@ -140,6 +132,14 @@ class Database extends Dexie {
         enabled: true,
         favorited: false,
         previous: undefined,
+      }),
+      [DBTable.EXAMPLE_RESULTS]: new ExampleResult({
+        id: uid(),
+        createdTimestamp: Date.now(),
+        activated: false,
+        parentId: undefined,
+        note: '',
+        percent: undefined,
       }),
       [DBTable.TEST_RESULTS]: new TestResult({
         id: uid(),
@@ -312,9 +312,9 @@ class Database extends Dexie {
     return liveQuery(async () => {
       return {
         [DBTable.EXAMPLES]: async () => this._getParentDataTable<Example>(DBTable.EXAMPLES),
+        [DBTable.TESTS]: async () => this._getParentDataTable<Test>(DBTable.TESTS),
         [DBTable.EXAMPLE_RESULTS]: async () =>
           this._getChildDataTable<ExampleResult>(DBTable.EXAMPLE_RESULTS),
-        [DBTable.TESTS]: async () => this._getParentDataTable<Test>(DBTable.TESTS),
         [DBTable.TEST_RESULTS]: async () =>
           this._getChildDataTable<TestResult>(DBTable.TEST_RESULTS),
       }[table]()
@@ -365,6 +365,21 @@ class Database extends Dexie {
     }[parentTable]()
   }
 
+  private cleanParents<T extends AnyDBRecord>(records: T[]) {
+    return records.map((r) => {
+      delete r.previous
+      delete r.activated
+      return r
+    })
+  }
+
+  private cleanChildren<T extends AnyDBRecord>(records: T[]) {
+    return records.map((r) => {
+      delete r.activated
+      return r
+    })
+  }
+
   async getBackupData() {
     const backupData: BackupData = {
       appName: AppName,
@@ -372,24 +387,10 @@ class Database extends Dexie {
       createdTimestamp: Date.now(),
       Settings: await this.Settings.toArray(),
       Logs: await this.Logs.toArray(),
-      Examples: (await this.Examples.toArray()).map((record) => {
-        delete record.previous
-        delete record.activated
-        return record
-      }),
-      ExampleResults: (await this.ExampleResults.toArray()).map((record) => {
-        delete record.activated
-        return record
-      }),
-      Tests: (await this.Tests.toArray()).map((record) => {
-        delete record.previous
-        delete record.activated
-        return record
-      }),
-      TestResults: (await this.TestResults.toArray()).map((record) => {
-        delete record.activated
-        return record
-      }),
+      Examples: this.cleanParents<Example>(await this.Examples.toArray()),
+      Tests: this.cleanParents<Test>(await this.Tests.toArray()),
+      ExampleResults: this.cleanChildren<ExampleResult>(await this.ExampleResults.toArray()),
+      TestResults: this.cleanChildren<TestResult>(await this.TestResults.toArray()),
     }
 
     return backupData
@@ -445,9 +446,9 @@ class Database extends Dexie {
   async addRecord(table: DBTable, record: AnyDBRecord) {
     return await {
       [DBTable.EXAMPLES]: async () => this._addParent(DBTable.EXAMPLES, record, exampleSchema),
+      [DBTable.TESTS]: async () => this._addParent(DBTable.TESTS, record, testSchema),
       [DBTable.EXAMPLE_RESULTS]: async () =>
         this._addChild(DBTable.EXAMPLE_RESULTS, record, exampleResultSchema),
-      [DBTable.TESTS]: async () => this._addParent(DBTable.TESTS, record, testSchema),
       [DBTable.TEST_RESULTS]: async () =>
         this._addChild(DBTable.TEST_RESULTS, record, testResultSchema),
     }[table]()
@@ -479,9 +480,9 @@ class Database extends Dexie {
   async importRecords(table: DBTable, records: AnyDBRecord[]) {
     const skippedRecords = await {
       [DBTable.EXAMPLES]: async () => this.processImport(DBTable.EXAMPLES, records, exampleSchema),
+      [DBTable.TESTS]: async () => this.processImport(DBTable.TESTS, records, testSchema),
       [DBTable.EXAMPLE_RESULTS]: async () =>
         this.processImport(DBTable.EXAMPLE_RESULTS, records, exampleResultSchema),
-      [DBTable.TESTS]: async () => this.processImport(DBTable.TESTS, records, testSchema),
       [DBTable.TEST_RESULTS]: async () =>
         this.processImport(DBTable.TEST_RESULTS, records, testResultSchema),
     }[table]()
@@ -525,9 +526,9 @@ class Database extends Dexie {
     return await {
       [DBTable.EXAMPLES]: async () =>
         await this._putParent(DBTable.EXAMPLES, record, exampleSchema),
+      [DBTable.TESTS]: async () => await this._putParent(DBTable.TESTS, record, testSchema),
       [DBTable.EXAMPLE_RESULTS]: async () =>
         await this._putChild(DBTable.EXAMPLE_RESULTS, record, exampleResultSchema),
-      [DBTable.TESTS]: async () => await this._putParent(DBTable.TESTS, record, testSchema),
       [DBTable.TEST_RESULTS]: async () =>
         await this._putChild(DBTable.TEST_RESULTS, record, testResultSchema),
     }[table]()
@@ -603,9 +604,9 @@ class Database extends Dexie {
 
     return await {
       [DBTable.EXAMPLES]: async () => this._deleteParent(DBTable.EXAMPLES, id),
+      [DBTable.TESTS]: async () => this._deleteParent(DBTable.TESTS, id),
       [DBTable.EXAMPLE_RESULTS]: async () =>
         this._deleteChild(DBTable.EXAMPLE_RESULTS, id, recordToDelete),
-      [DBTable.TESTS]: async () => this._deleteParent(DBTable.TESTS, id),
       [DBTable.TEST_RESULTS]: async () =>
         this._deleteChild(DBTable.TEST_RESULTS, id, recordToDelete),
     }[table]()

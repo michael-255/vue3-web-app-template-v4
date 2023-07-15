@@ -5,8 +5,8 @@ import type { z } from 'zod'
 
 export const testResultSchema = childSchema.extend({})
 
-const testResultOptionalSchema = testResultSchema.deepPartial()
-type TestResultParams = z.infer<typeof testResultOptionalSchema>
+const partialTestResultSchema = testResultSchema.deepPartial()
+type TestResultParams = z.infer<typeof partialTestResultSchema>
 
 export class TestResult extends Child {
   constructor({ id, createdTimestamp, activated, parentId, note }: TestResultParams) {

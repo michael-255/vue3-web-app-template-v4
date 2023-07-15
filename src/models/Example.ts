@@ -1,18 +1,16 @@
 import { DBField } from '@/types/database'
-import { z } from 'zod'
-import { idSchema } from '@/models/_Entity'
+import type { z } from 'zod'
 import { Parent, parentSchema } from '@/models/_Parent'
 import type { QTableColumn } from 'quasar'
 import { defineAsyncComponent } from 'vue'
-
-export const idsSchema = z.array(idSchema)
+import { idsSchema } from '@/models/_Entity'
 
 export const exampleSchema = parentSchema.extend({
   [DBField.TEST_IDS]: idsSchema,
 })
 
-const exampleOptionalSchema = exampleSchema.deepPartial()
-type ExampleParams = z.infer<typeof exampleOptionalSchema>
+const partialExampleSchema = exampleSchema.deepPartial()
+type ExampleParams = z.infer<typeof partialExampleSchema>
 
 export class Example extends Parent {
   [DBField.TEST_IDS]?: string[]

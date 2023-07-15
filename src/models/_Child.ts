@@ -10,8 +10,8 @@ export const childSchema = entitySchema.extend({
   [DBField.NOTE]: textAreaSchema,
 })
 
-const childOptionalSchema = childSchema.deepPartial()
-type ChildParams = z.infer<typeof childOptionalSchema>
+const partialChildSchema = childSchema.deepPartial()
+type ChildParams = z.infer<typeof partialChildSchema>
 
 export class Child extends Entity {
   [DBField.PARENT_ID]?: string;

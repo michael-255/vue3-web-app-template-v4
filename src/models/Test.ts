@@ -1,15 +1,12 @@
-import { z } from 'zod'
-import { idSchema } from '@/models/_Entity'
+import type { z } from 'zod'
 import { Parent, parentSchema } from '@/models/_Parent'
 import type { QTableColumn } from 'quasar'
 import { defineAsyncComponent } from 'vue'
 
-export const idsSchema = z.array(idSchema)
-
 export const testSchema = parentSchema.extend({})
 
-const testOptionalSchema = testSchema.deepPartial()
-type TestParams = z.infer<typeof testOptionalSchema>
+const partialTestSchema = testSchema.deepPartial()
+type TestParams = z.infer<typeof partialTestSchema>
 
 export class Test extends Parent {
   constructor({

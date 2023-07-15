@@ -34,16 +34,16 @@ const dashboardOptions = [
   },
 ]
 const showDescriptions = ref(false)
-const dashboardExamples: Ref<Example[]> = ref([])
-const dashboardTests: Ref<Test[]> = ref([])
+const examples: Ref<Example[]> = ref([])
+const tests: Ref<Test[]> = ref([])
 
 const examplesSubscription = DB.liveDashboardData<Example>(DBTable.EXAMPLES).subscribe({
-  next: (liveExamples) => (dashboardExamples.value = liveExamples),
+  next: (liveData) => (examples.value = liveData),
   error: (error) => log.error('Error fetching live Examples', error),
 })
 
 const testsSubscription = DB.liveDashboardData<Test>(DBTable.TESTS).subscribe({
-  next: (liveTests) => (dashboardTests.value = liveTests),
+  next: (liveData) => (tests.value = liveData),
   error: (error) => log.error('Error fetching live Tests', error),
 })
 
@@ -84,14 +84,14 @@ onUnmounted(() => {
       <DashboardRecordCardList
         v-show="uiStore.dashboardSelection === DBTable.EXAMPLES"
         :parentTable="DBTable.EXAMPLES"
-        :records="dashboardExamples"
+        :records="examples"
         :showDescriptions="showDescriptions"
         :defaultsFunc="onDefaultExamples"
       />
       <DashboardRecordCardList
         v-show="uiStore.dashboardSelection === DBTable.TESTS"
         :parentTable="DBTable.TESTS"
-        :records="dashboardTests"
+        :records="tests"
         :showDescriptions="showDescriptions"
         :defaultsFunc="onDefaultTests"
       />
