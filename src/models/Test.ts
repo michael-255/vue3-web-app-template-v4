@@ -18,9 +18,9 @@ export class Test extends Parent {
     desc,
     enabled,
     favorited,
-    previous,
+    previousChild,
   }: TestParams) {
-    super({ id, createdTimestamp, activated, name, desc, enabled, favorited, previous })
+    super({ id, createdTimestamp, activated, name, desc, enabled, favorited, previousChild })
   }
 
   static getLabel(style: 'singular' | 'plural') {

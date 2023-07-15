@@ -23,10 +23,10 @@ export class Example extends Parent {
     desc,
     enabled,
     favorited,
-    previous,
+    previousChild,
     testIds,
   }: ExampleParams) {
-    super({ id, createdTimestamp, activated, name, desc, enabled, favorited, previous })
+    super({ id, createdTimestamp, activated, name, desc, enabled, favorited, previousChild })
     this.testIds = testIds
   }
 
