@@ -14,7 +14,7 @@ import DB from '@/services/Database'
 
 useMeta({ title: `${AppName} - Create Record` })
 
-const { routeTable, routeParentId, goBack } = useRouting()
+const { routeTable, goBack } = useRouting()
 const { log } = useLogger()
 const { confirmDialog } = useDialogs()
 const actionStore = useActionStore()
@@ -25,16 +25,8 @@ const isFormValid = ref(true)
 
 onMounted(async () => {
   try {
-    // Table being used for the action
     actionStore.table = routeTable as DBTable
-
-    // Load default record
     actionStore.record = DB.getDefaultActionRecord(routeTable as DBTable)
-
-    // Parent id is provided when attaching a child record from the Dashboard
-    if (routeParentId) {
-      actionStore.record.parentId = routeParentId
-    }
   } catch (error) {
     log.error('Error loading create view', error)
   }
