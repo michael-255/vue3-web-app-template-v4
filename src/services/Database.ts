@@ -19,7 +19,6 @@ import { ExampleResult, exampleResultSchema } from '@/models/ExampleResults'
 import { Test, testSchema } from '@/models/Test'
 import { TestResult, testResultSchema } from '@/models/TestResults'
 import type { z } from 'zod'
-import type { Previous } from '@/models/_Parent'
 import { truncateString } from '@/utils/common'
 
 class Database extends Dexie {
@@ -129,7 +128,7 @@ class Database extends Dexie {
         desc: '',
         enabled: true,
         favorited: false,
-        previous: undefined,
+        previousChild: undefined,
         testIds: [],
       }),
       [DBTable.TESTS]: new Test({
@@ -140,7 +139,7 @@ class Database extends Dexie {
         desc: '',
         enabled: true,
         favorited: false,
-        previous: undefined,
+        previousChild: undefined,
       }),
       [DBTable.EXAMPLE_RESULTS]: new ExampleResult({
         id: uid(),
@@ -371,7 +370,7 @@ class Database extends Dexie {
 
   private cleanParents<T extends AnyDBRecord>(records: T[]) {
     return records.map((r) => {
-      delete r.previous
+      delete r.previousChild
       delete r.activated
       return r
     })
@@ -552,14 +551,7 @@ class Database extends Dexie {
         .sortBy(DBField.CREATED_TIMESTAMP)
     ).reverse()[0] as AnyDBRecord | undefined
 
-    const previous: Previous = {}
-
-    if (previousChild) {
-      previous.createdTimestamp = previousChild.createdTimestamp
-      previous.note = previousChild.note
-    }
-
-    return await this.table(parentTable).update(id, { previous })
+    return await this.table(parentTable).update(id, { previousChild })
   }
 
   async updateAllPrevious(parentTable: ParentTable) {

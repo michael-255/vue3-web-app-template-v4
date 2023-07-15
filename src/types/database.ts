@@ -52,7 +52,7 @@ export enum DBField {
   DESC = 'desc',
   ENABLED = 'enabled',
   FAVORITED = 'favorited',
-  PREVIOUS = 'previous',
+  PREVIOUS_CHILD = 'previousChild',
 
   // Child
   PARENT_ID = 'parentId',
