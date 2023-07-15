@@ -84,3 +84,10 @@ export type BackupData = {
   [DBTable.TESTS]: Test[]
   [DBTable.TEST_RESULTS]: TestResult[]
 }
+
+export type InspectionItem = {
+  field: keyof AnyDBRecord
+  label: string
+  output: 'single' | 'list' | 'key-values'
+  format: (val: any) => any
+}

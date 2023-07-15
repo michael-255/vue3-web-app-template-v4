@@ -1,4 +1,4 @@
-import { DBField } from '@/types/database'
+import { DBField, type InspectionItem } from '@/types/database'
 import type { z } from 'zod'
 import { Parent, parentSchema } from '@/models/_Parent'
 import type { QTableColumn } from 'quasar'
@@ -36,19 +36,29 @@ export class Example extends Parent {
 
   static getFieldComponents(): ReturnType<typeof defineAsyncComponent>[] {
     return [
-      defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldName.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldDesc.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldTestIds.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldCreatedTimestamp.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldEnabled.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldFavorited.vue')),
-      defineAsyncComponent(() => import('@/components/fields/FieldActivated.vue')),
     ]
   }
 
   static getChartComponents(): ReturnType<typeof defineAsyncComponent>[] {
     return [defineAsyncComponent(() => import('@/components/charts/ChartPercent.vue'))]
+  }
+
+  static getInspectionItems(): InspectionItem[] {
+    return [
+      ...Parent.getInspectionItems(),
+      {
+        field: DBField.TEST_IDS,
+        label: 'Test Ids',
+        output: 'list',
+        format: (val: string[]) => val || [],
+      },
+    ]
   }
 
   static getTableColumns(): QTableColumn[] {

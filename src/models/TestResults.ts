@@ -1,4 +1,5 @@
 import { Child, childSchema } from '@/models/_Child'
+import type { InspectionItem } from '@/types/database'
 import type { QTableColumn } from 'quasar'
 import { defineAsyncComponent } from 'vue'
 import type { z } from 'zod'
@@ -19,12 +20,14 @@ export class TestResult extends Child {
 
   static getFieldComponents(): ReturnType<typeof defineAsyncComponent>[] {
     return [
-      defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldParentId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldNote.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldCreatedTimestamp.vue')),
-      defineAsyncComponent(() => import('@/components/fields/FieldActivated.vue')),
     ]
+  }
+
+  static getInspectionItems(): InspectionItem[] {
+    return [...Child.getInspectionItems()]
   }
 
   static getTableColumns(): QTableColumn[] {

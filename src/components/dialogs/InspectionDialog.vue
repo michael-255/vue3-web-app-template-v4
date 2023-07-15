@@ -17,8 +17,9 @@ defineEmits([...useDialogPluginComponent.emits])
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
 const actionStore = useActionStore()
 
-const fieldComponents =
-  props.table === InternalTable.LOGS ? Log.getFieldComponents() : DB.getFieldComponents(props.table)
+const inspectionItems =
+  props.table === InternalTable.LOGS ? Log.getInspectionItems() : DB.getInspectionItems(props.table)
+
 const title =
   props.table === InternalTable.LOGS
     ? Log.getLabel('singular')
@@ -49,8 +50,24 @@ onUnmounted(() => {
       <QCardSection>
         <p class="text-h5">{{ title }}</p>
 
-        <div v-for="(field, i) in fieldComponents" :key="i" class="q-mb-md">
-          <component :is="field" :inspecting="true" />
+        <div v-for="(item, i) in inspectionItems" :key="i" class="q-mb-md">
+          <div class="text-weight-bold text-body1">{{ item.label }}</div>
+
+          <div v-if="item.output === 'single'">
+            {{ item.format(actionStore.record[item.field]) }}
+          </div>
+
+          <div v-else-if="item.output === 'list'">
+            <li v-for="(value, i) in actionStore.record[item.field]" :key="i" class="q-ml-sm">
+              {{ item.format(value) }}
+            </li>
+          </div>
+
+          <div v-else>
+            <li v-for="(value, key) in actionStore.record[item.field]" :key="key" class="q-ml-sm">
+              {{ key }}: {{ value }}
+            </li>
+          </div>
         </div>
       </QCardSection>
     </QCard>

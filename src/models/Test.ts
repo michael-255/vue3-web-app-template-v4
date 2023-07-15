@@ -2,6 +2,7 @@ import type { z } from 'zod'
 import { Parent, parentSchema } from '@/models/_Parent'
 import type { QTableColumn } from 'quasar'
 import { defineAsyncComponent } from 'vue'
+import type { InspectionItem } from '@/types/database'
 
 export const testSchema = parentSchema.extend({})
 
@@ -28,18 +29,20 @@ export class Test extends Parent {
 
   static getFieldComponents(): ReturnType<typeof defineAsyncComponent>[] {
     return [
-      defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldName.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldDesc.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldCreatedTimestamp.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldEnabled.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldFavorited.vue')),
-      defineAsyncComponent(() => import('@/components/fields/FieldActivated.vue')),
     ]
   }
 
   static getChartComponents(): ReturnType<typeof defineAsyncComponent>[] {
     return []
+  }
+
+  static getInspectionItems(): InspectionItem[] {
+    return [...Parent.getInspectionItems()]
   }
 
   static getTableColumns(): QTableColumn[] {

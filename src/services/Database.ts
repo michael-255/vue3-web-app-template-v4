@@ -101,6 +101,15 @@ class Database extends Dexie {
     }[parentTable]
   }
 
+  getInspectionItems(table: DBTable) {
+    return {
+      [DBTable.EXAMPLES]: Example.getInspectionItems(),
+      [DBTable.TESTS]: Test.getInspectionItems(),
+      [DBTable.EXAMPLE_RESULTS]: ExampleResult.getInspectionItems(),
+      [DBTable.TEST_RESULTS]: TestResult.getInspectionItems(),
+    }[table]
+  }
+
   getTableColumns(table: DBTable) {
     return {
       [DBTable.EXAMPLES]: Example.getTableColumns(),
