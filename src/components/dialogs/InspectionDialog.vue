@@ -51,22 +51,24 @@ onUnmounted(() => {
         <p class="text-h5">{{ title }}</p>
 
         <div v-for="(item, i) in inspectionItems" :key="i" class="q-mb-md">
-          <div class="text-weight-bold text-body1">{{ item.label }}</div>
+          <div v-if="actionStore.record[item.field] !== undefined">
+            <div class="text-weight-bold text-body1">{{ item.label }}</div>
 
-          <div v-if="item.output === 'single'">
-            {{ item.format(actionStore.record[item.field]) }}
-          </div>
+            <div v-if="item.output === 'single'">
+              {{ item.format(actionStore.record[item.field]) }}
+            </div>
 
-          <div v-else-if="item.output === 'list'">
-            <li v-for="(value, i) in actionStore.record[item.field]" :key="i" class="q-ml-sm">
-              {{ item.format(value) }}
-            </li>
-          </div>
+            <div v-else-if="item.output === 'list'">
+              <li v-for="(value, i) in actionStore.record[item.field]" :key="i" class="q-ml-sm">
+                {{ item.format(value) }}
+              </li>
+            </div>
 
-          <div v-else>
-            <li v-for="(value, key) in actionStore.record[item.field]" :key="key" class="q-ml-sm">
-              {{ key }}: {{ value }}
-            </li>
+            <div v-else>
+              <li v-for="(value, key) in actionStore.record[item.field]" :key="key" class="q-ml-sm">
+                {{ key }}: {{ value }}
+              </li>
+            </div>
           </div>
         </div>
       </QCardSection>
