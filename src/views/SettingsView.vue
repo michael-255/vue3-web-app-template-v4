@@ -274,7 +274,7 @@ function getSettingValue(key: SettingKey) {
       <p class="text-h6">Defaults</p>
 
       <div>
-        <p>Load default demostration records into the database. This action can be repeated.</p>
+        <p>Load default records into the database to get started using the app.</p>
 
         <div class="q-mb-md">
           <QBtn label="Examples" color="primary" @click="onDefaultExamples()" />

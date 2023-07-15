@@ -19,10 +19,10 @@ export class TestResult extends Child {
 
   static getFieldComponents(): ReturnType<typeof defineAsyncComponent>[] {
     return [
+      defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldParentId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldNote.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldCreatedTimestamp.vue')),
-      defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldActivated.vue')),
     ]
   }

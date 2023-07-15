@@ -36,13 +36,13 @@ export class Example extends Parent {
 
   static getFieldComponents(): ReturnType<typeof defineAsyncComponent>[] {
     return [
+      defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldName.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldDesc.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldTestIds.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldCreatedTimestamp.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldEnabled.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldFavorited.vue')),
-      defineAsyncComponent(() => import('@/components/fields/FieldId.vue')),
       defineAsyncComponent(() => import('@/components/fields/FieldActivated.vue')),
     ]
   }
