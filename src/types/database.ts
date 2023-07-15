@@ -7,8 +7,8 @@ import type { TestResult } from '@/models/TestResults'
 import { z } from 'zod'
 
 export enum InternalTable {
-  SETTINGS = 'Settings',
-  LOGS = 'Logs',
+  SETTINGS = 'settings',
+  LOGS = 'logs',
 }
 
 export enum InternalField {
@@ -30,10 +30,10 @@ export enum InternalField {
  * First table must be a Parent table for UI store dashboard selection default
  */
 export enum DBTable {
-  EXAMPLES = 'Examples',
-  EXAMPLE_RESULTS = 'ExampleResults',
-  TESTS = 'Tests',
-  TEST_RESULTS = 'TestResults',
+  EXAMPLES = 'examples',
+  EXAMPLE_RESULTS = 'example-results',
+  TESTS = 'tests',
+  TEST_RESULTS = 'test-results',
 }
 
 export type ParentTable = DBTable.EXAMPLES | DBTable.TESTS

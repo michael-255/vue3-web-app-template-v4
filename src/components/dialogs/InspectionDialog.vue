@@ -1,15 +1,9 @@
 <script setup lang="ts">
-import { useDialogPluginComponent } from 'quasar'
+import { extend, useDialogPluginComponent } from 'quasar'
 import { Icon } from '@/types/general'
 import { onUnmounted } from 'vue'
 import { Log } from '@/models/Log'
-import {
-  InternalTable,
-  type AnyDBRecord,
-  type DBField,
-  type DBTable,
-  type InternalField,
-} from '@/types/database'
+import { InternalTable, type AnyDBRecord, type DBTable } from '@/types/database'
 import useActionStore from '@/stores/action'
 import DB from '@/services/Database'
 
@@ -30,11 +24,7 @@ const title =
     ? Log.getLabel('singular')
     : DB.getLabel(props.table, 'singular')
 
-// Setup action store record with all the record values
-Object.keys(props.record).map((key) => {
-  // Includes InternalField to support inspecting Logs
-  actionStore.record[key as DBField | InternalField] = props.record[key as DBField | InternalField]
-})
+extend(true, actionStore.record, props.record) // Copy record values to action store
 
 onUnmounted(() => {
   actionStore.$reset()
