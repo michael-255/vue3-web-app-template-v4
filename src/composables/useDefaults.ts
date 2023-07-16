@@ -61,7 +61,7 @@ export default function useDefaults() {
     return Date.now() - Duration['One Year']
   }
 
-  async function onDefaultExamples() {
+  function onDefaultExamples() {
     confirmDialog(
       'Load Default Examples',
       `Would you like the load default Examples into the database?`,
@@ -121,7 +121,7 @@ export default function useDefaults() {
     )
   }
 
-  async function onDefaultTests() {
+  function onDefaultTests() {
     confirmDialog(
       'Load Default Tests',
       `Would you like the load default Tests into the database?`,

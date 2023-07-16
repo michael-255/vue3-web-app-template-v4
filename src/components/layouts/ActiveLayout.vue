@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, type Ref } from 'vue'
+import { ref, watch } from 'vue'
 import { RouterView } from 'vue-router'
 import { AppHeaderColor } from '@/constants/global'
 import { Icon, RouteName } from '@/types/general'
@@ -7,13 +7,12 @@ import { getDurationFromMilliseconds } from '@/utils/common'
 import { useInterval } from '@vueuse/core'
 
 const counter = useInterval(1000)
-const workoutName: Ref<string> = ref('')
-const workoutCreatedTimestamp: Ref<number> = ref(Date.now())
-const workoutDuration: Ref<string> = ref('')
+const title = ref('')
+const createdTimestamp = ref(Date.now())
+const elapsedTime = ref('')
 
 watch(counter, () => {
-  workoutDuration.value =
-    getDurationFromMilliseconds(Date.now() - workoutCreatedTimestamp.value) || ''
+  elapsedTime.value = getDurationFromMilliseconds(Date.now() - createdTimestamp.value) || ''
 })
 </script>
 
@@ -21,7 +20,7 @@ watch(counter, () => {
   <QLayout view="hHh LpR fFf">
     <QHeader elevated :class="`bg-${AppHeaderColor}`">
       <QToolbar>
-        <QToolbarTitle class="q-ml-xs">{{ workoutName }}</QToolbarTitle>
+        <QToolbarTitle class="q-ml-xs">{{ title }}</QToolbarTitle>
         <QBtn flat round :icon="Icon.BACK" :to="{ name: RouteName.DASHBOARD }" />
       </QToolbar>
     </QHeader>
@@ -38,7 +37,7 @@ watch(counter, () => {
       <QToolbar>
         <QSpace />
         <QIcon :name="Icon.STOPWATCH" size="sm" class="q-mr-sm" />
-        <div class="text-h6">{{ workoutDuration }}</div>
+        <div class="text-h6">{{ elapsedTime }}</div>
         <QSpace />
       </QToolbar>
     </QFooter>

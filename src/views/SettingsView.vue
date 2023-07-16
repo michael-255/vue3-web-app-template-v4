@@ -69,7 +69,7 @@ function onRejectedFile(entries: any) {
 function onImportFile() {
   confirmDialog(
     'Import',
-    `Import backup data from ${importFile?.value?.name} and attempt to load records into the database from it? Please note that Logs are NOT imported.`,
+    `Import backup data from ${importFile?.value?.name} and attempt to load records into the database from it?`,
     Icon.INFO,
     'info',
     async () => {
@@ -157,7 +157,7 @@ async function onChangeLogRetention(logDurationIndex: number) {
   }
 }
 
-async function onResetSettings() {
+function onResetSettings() {
   confirmDialog(
     'Reset Settings',
     'Would you like to reset your app Settings to the defaults? This does not impact your data.',
@@ -174,7 +174,7 @@ async function onResetSettings() {
   )
 }
 
-async function onDeleteLogs() {
+function onDeleteLogs() {
   confirmDialog(
     `Delete Logs`,
     `Permanetly delete all Logs from the database?`,
@@ -191,7 +191,7 @@ async function onDeleteLogs() {
   )
 }
 
-async function onDeleteAll() {
+function onDeleteAll() {
   confirmDialog(
     'Delete All',
     'Permanetly delete all data from the database?',
@@ -208,7 +208,7 @@ async function onDeleteAll() {
   )
 }
 
-async function onDeleteDatabase() {
+function onDeleteDatabase() {
   confirmDialog(
     'Delete Database',
     'Delete the underlining database? All data will be lost. You must reload the website after this action to reinitialize the database.',
@@ -292,7 +292,7 @@ function getSettingValue(key: SettingKey) {
       <div class="q-mb-md">
         <p>
           Import data into the database from a JSON file. The app expects the data in the file to be
-          structured the same as the exported version.
+          structured the same as the exported version. Logs are ignored during imports.
         </p>
         <QFile
           v-model="importFile"
