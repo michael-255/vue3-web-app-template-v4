@@ -84,7 +84,7 @@ export default function useDefaults() {
               enabled: true,
               favorited: randomBoolean(),
               activated: false,
-              previous: undefined,
+              previousChild: undefined,
               testIds: [uid(), uid(), uid()], // Fake test ids
             })
 
@@ -144,7 +144,7 @@ export default function useDefaults() {
               enabled: true,
               favorited: randomBoolean(),
               activated: false,
-              previous: undefined,
+              previousChild: undefined,
             })
 
             for (let i = 0; i < count; i++) {
