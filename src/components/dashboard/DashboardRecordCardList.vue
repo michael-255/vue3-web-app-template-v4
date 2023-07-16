@@ -11,7 +11,7 @@ const props = defineProps<{
   parentTable: ParentTable
   records: AnyDBRecord[]
   showDescriptions: boolean
-  defaultsFunc?: () => Promise<void>
+  defaultsFunc?: () => any
 }>()
 
 const { goToCreate, goToActive } = useRouting()
