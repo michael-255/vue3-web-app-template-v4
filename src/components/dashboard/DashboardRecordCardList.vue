@@ -37,7 +37,7 @@ async function onActivate(table: DBTable, id: string) {
             style="left: -4px; top: -6px"
           >
             <QIcon :name="Icon.LOCK" />
-            <span class="text-caption q-ml-xs">Active</span>
+            <span class="text-caption q-mx-xs">Active</span>
           </QBadge>
 
           <p class="text-h6">{{ record.name }}</p>
