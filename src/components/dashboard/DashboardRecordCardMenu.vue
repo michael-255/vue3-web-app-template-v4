@@ -88,15 +88,15 @@ function onDeactivate(table: DBTable, id: string) {
       @click="onDeactivate(parentTable, record.id)"
     />
 
-    <span v-else>
-      <QIcon
-        :name="record.favorited ? Icon.FAVORITE_ON : Icon.FAVORITE_OFF"
-        :color="record.favorited ? 'warning' : 'grey'"
-        size="md"
-        class="cursor-pointer"
-        @click="onToggleFavorite(record.id, record.name, record.favorited)"
-      />
-    </span>
+    <QBtn
+      v-else
+      round
+      flat
+      size="md"
+      :color="record.favorited ? 'warning' : 'grey'"
+      :icon="record.favorited ? Icon.FAVORITE_ON : Icon.FAVORITE_OFF"
+      @click="onToggleFavorite(record.id, record.name, record.favorited)"
+    />
 
     <QBtn round flat :icon="Icon.MENU_VERTICAL">
       <QMenu auto-close anchor="top right" transition-show="flip-right" transition-hide="flip-left">
