@@ -33,7 +33,7 @@ structured.
 
     - [ ] Uncheck `Releases`
     - [ ] Uncheck `Packages`
-    - [ ] Uncheck `Environments` (or keep checked to show gh-pages deployment)
+    - [ ] Uncheck `Deployments` (or keep checked to show gh-pages deployment)
 
 - [ ] Generate a new Favicon here: <https://favicon.io/> (credit original artists)
 
@@ -390,3 +390,5 @@ See [Vite Configuration Reference](https://vitejs.dev/config/).
 Recognize the work of anyone whose material you used in the project here.
 
 Original `Web App Template` created by Michael Joy (michael-255 on GitHub)
+
+For icons go to https://favicon.io/emoji-favicons/
